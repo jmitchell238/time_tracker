@@ -1,0 +1,248 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_provider.dart';
+import '../models/job.dart';
+import '../theme/app_theme.dart';
+import 'job_detail_screen.dart';
+
+class JobsScreen extends StatefulWidget {
+  const JobsScreen({super.key});
+
+  @override
+  State<JobsScreen> createState() => _JobsScreenState();
+}
+
+class _JobsScreenState extends State<JobsScreen> {
+  bool _showArchived = false;
+
+  Future<void> _showAddJobDialog() async {
+    final nameCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    final rateCtrl = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.bgBase,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Add Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.fg)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _dialogField(nameCtrl, 'Job name *'),
+            const SizedBox(height: 12),
+            _dialogField(descCtrl, 'Description (optional)'),
+            const SizedBox(height: 12),
+            _dialogField(rateCtrl, 'Hourly rate override (optional)', numeric: true),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.fg2)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameCtrl.text.trim();
+              if (name.isEmpty) return;
+              context.read<AppProvider>().addJob(
+                    name,
+                    descCtrl.text.trim(),
+                    double.tryParse(rateCtrl.text.trim()),
+                  );
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text('Add', style: GoogleFonts.dmSans(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  TextField _dialogField(TextEditingController ctrl, String hint, {bool numeric = false}) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: numeric ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
+      style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+        filled: true,
+        fillColor: AppColors.bgElevated,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.primary),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final visible = provider.jobs.where((j) => j.isArchived == _showArchived).toList();
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+      children: [
+        // Header
+        Row(
+          children: [
+            Text('Jobs', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+            const Spacer(),
+            ElevatedButton.icon(
+              onPressed: _showAddJobDialog,
+              icon: const Icon(Icons.add, size: 16),
+              label: Text('Add Job', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 36),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Active/Archived toggle
+        Container(
+          height: 40,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: AppColors.bgCard,
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              _toggleBtn('Active', !_showArchived, () => setState(() => _showArchived = false)),
+              _toggleBtn('Archived', _showArchived, () => setState(() => _showArchived = true)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Job list
+        if (visible.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Text(
+              'No ${_showArchived ? 'archived' : 'active'} jobs',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg3),
+            ),
+          ),
+        ...visible.map((job) => _JobCard(job: job, provider: provider)),
+      ],
+    );
+  }
+
+  Widget _toggleBtn(String label, bool active, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: double.infinity,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: active ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontSize: 13, fontWeight: FontWeight.w600,
+              color: active ? Colors.white : AppColors.fg2,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _JobCard extends StatelessWidget {
+  final Job job;
+  final AppProvider provider;
+  const _JobCard({required this.job, required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final jobEntries = provider.entries.where((e) => e.jobId == job.id).toList();
+    final hours = jobEntries.fold(0.0, (a, e) => a + e.hours);
+    final rate = provider.getRate(job);
+    final amount = hours * rate;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => JobDetailScreen(jobId: job.id)),
+        ),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+          decoration: BoxDecoration(
+            color: AppColors.bgCard,
+            border: Border(
+              left: const BorderSide(color: AppColors.primary, width: 4),
+              top: const BorderSide(color: AppColors.border),
+              right: const BorderSide(color: AppColors.border),
+              bottom: const BorderSide(color: AppColors.border),
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(job.name, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                    if (job.description.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(job.description, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                    ],
+                    if (job.rate != null) ...[
+                      const SizedBox(height: 4),
+                      Text('\$${job.rate!.toStringAsFixed(0)}/hr override',
+                          style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.accent, fontWeight: FontWeight.w600)),
+                    ],
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('${hours.toStringAsFixed(1)}h',
+                      style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                  Text('\$${amount.toStringAsFixed(2)}',
+                      style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.accent, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right, color: AppColors.fg3, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
