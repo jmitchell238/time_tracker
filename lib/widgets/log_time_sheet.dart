@@ -11,14 +11,15 @@ import 'segmented_toggle_bar.dart';
 class LogTimeSheet extends StatefulWidget {
   final String? preJobId;
   final double? preHours;
-  const LogTimeSheet({super.key, this.preJobId, this.preHours});
+  final VoidCallback? onConfirmSave;
+  const LogTimeSheet({super.key, this.preJobId, this.preHours, this.onConfirmSave});
 
-  static Future<void> show(BuildContext context, {String? preJobId, double? preHours}) {
+  static Future<void> show(BuildContext context, {String? preJobId, double? preHours, VoidCallback? onConfirmSave}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => LogTimeSheet(preJobId: preJobId, preHours: preHours),
+      builder: (_) => LogTimeSheet(preJobId: preJobId, preHours: preHours, onConfirmSave: onConfirmSave),
     );
   }
 
@@ -130,6 +131,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
           hours: hours,
           description: _description,
         );
+    widget.onConfirmSave?.call();
     Navigator.pop(context);
   }
 

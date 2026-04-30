@@ -148,8 +148,12 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           child: ElevatedButton.icon(
                             onPressed: () {
                               final elapsedH = _elapsedHours(activeTimer.startedAt);
-                              provider.stopTimer(widget.jobId);
-                              LogTimeSheet.show(context, preJobId: widget.jobId, preHours: elapsedH);
+                              LogTimeSheet.show(
+                                context,
+                                preJobId: widget.jobId,
+                                preHours: elapsedH,
+                                onConfirmSave: () => provider.stopTimer(widget.jobId),
+                              );
                             },
                             icon: const Icon(Icons.stop, size: 16),
                             label: Text('Stop & Log Time',
