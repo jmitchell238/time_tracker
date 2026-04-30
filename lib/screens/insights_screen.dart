@@ -5,6 +5,7 @@ import '../models/job.dart';
 import '../models/time_entry.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/icon_stat_card.dart';
 
 enum _Period { allTime, currentMonth, lastMonth, currentYear, lastYear }
 
@@ -165,42 +166,16 @@ class _InsightsScreenState extends State<InsightsScreen> {
     return Row(
       children: [
         Expanded(
-            child: _statCard(
-                'Hours', hours.toStringAsFixed(1), Icons.access_time_outlined)),
+            child: IconStatCard(
+                label: 'Hours', value: hours.toStringAsFixed(1), icon: Icons.access_time_outlined)),
         const SizedBox(width: 10),
         Expanded(
-            child: _statCard('Earned', '\$${earned.toStringAsFixed(2)}',
-                Icons.attach_money_outlined)),
+            child: IconStatCard(
+                label: 'Earned', value: '\$${earned.toStringAsFixed(2)}', icon: Icons.attach_money_outlined)),
         const SizedBox(width: 10),
         Expanded(
-            child: _statCard('Entries', '$count', Icons.list_alt_outlined)),
+            child: IconStatCard(label: 'Entries', value: '$count', icon: Icons.list_alt_outlined)),
       ],
-    );
-  }
-
-  Widget _statCard(String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppColors.bgCard,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 15, color: AppColors.accent),
-          const SizedBox(height: 6),
-          Text(value,
-              style: GoogleFonts.lora(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.fg)),
-          const SizedBox(height: 2),
-          Text(label,
-              style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.fg3)),
-        ],
-      ),
     );
   }
 
