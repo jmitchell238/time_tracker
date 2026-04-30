@@ -7,6 +7,7 @@ import '../models/invoice.dart';
 import '../services/pdf_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/metric_item.dart';
+import '../widgets/labeled_text_field.dart';
 
 class InvoicesScreen extends StatefulWidget {
   const InvoicesScreen({super.key});
@@ -169,11 +170,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         Text('CLIENT INFO (OPTIONAL)',
             style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
-        _clientField('Client Name', _clientNameCtrl, TextInputType.name),
+        LabeledTextField(label: 'Client Name', controller: _clientNameCtrl, keyboardType: TextInputType.name),
         const SizedBox(height: 8),
-        _clientField('Company', _clientCompanyCtrl, TextInputType.text),
+        LabeledTextField(label: 'Company', controller: _clientCompanyCtrl),
         const SizedBox(height: 8),
-        _clientField('Phone', _clientPhoneCtrl, TextInputType.phone),
+        LabeledTextField(label: 'Phone', controller: _clientPhoneCtrl, keyboardType: TextInputType.phone),
         const SizedBox(height: 16),
 
         Text('SELECT ENTRIES',
@@ -489,23 +490,6 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     );
   }
 
-  Widget _clientField(String label, TextEditingController ctrl, TextInputType type) {
-    return TextField(
-      controller: ctrl,
-      keyboardType: type,
-      style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: AppColors.bgCard,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
-        labelStyle: GoogleFonts.dmSans(color: AppColors.fg2, fontSize: 13),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      ),
-    );
-  }
 }
 
 class _PdfButton extends StatefulWidget {

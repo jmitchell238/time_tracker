@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
-import '../models/app_settings.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/labeled_text_field.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,25 +15,44 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _rateCtrl;
+  late TextEditingController _billingNameCtrl;
+  late TextEditingController _billingAddressCtrl;
+  late TextEditingController _billingPhoneCtrl;
   bool _saved = false;
+  final _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
-    final rate = context.read<AppProvider>().settings.defaultRate;
-    _rateCtrl = TextEditingController(text: rate.toStringAsFixed(2));
+    final s = context.read<AppProvider>().settings;
+    _rateCtrl = TextEditingController(text: s.defaultRate.toStringAsFixed(2));
+    _billingNameCtrl = TextEditingController(text: s.billingName ?? '');
+    _billingAddressCtrl = TextEditingController(text: s.billingAddress ?? '');
+    _billingPhoneCtrl = TextEditingController(text: s.billingPhone ?? '');
   }
 
   @override
   void dispose() {
     _rateCtrl.dispose();
+    _billingNameCtrl.dispose();
+    _billingAddressCtrl.dispose();
+    _billingPhoneCtrl.dispose();
     super.dispose();
   }
 
   void _save() {
     final rate = double.tryParse(_rateCtrl.text.trim());
     if (rate == null) return;
-    context.read<AppProvider>().updateSettings(AppSettings(defaultRate: rate));
+    final s = context.read<AppProvider>().settings;
+    context.read<AppProvider>().updateSettings(s.copyWith(
+      defaultRate: rate,
+      billingName: _billingNameCtrl.text.trim().isEmpty ? null : _billingNameCtrl.text.trim(),
+      clearBillingName: _billingNameCtrl.text.trim().isEmpty,
+      billingAddress: _billingAddressCtrl.text.trim().isEmpty ? null : _billingAddressCtrl.text.trim(),
+      clearBillingAddress: _billingAddressCtrl.text.trim().isEmpty,
+      billingPhone: _billingPhoneCtrl.text.trim().isEmpty ? null : _billingPhoneCtrl.text.trim(),
+      clearBillingPhone: _billingPhoneCtrl.text.trim().isEmpty,
+    ));
     setState(() => _saved = true);
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _saved = false);
@@ -129,6 +149,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
+        // Billing profile
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.bgCard,
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Your Billing Info',
+                        style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                    const SizedBox(height: 2),
+                    Text('Appears on PDF invoices as the service provider',
+                        style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                  ],
+                ),
+              ),
+              Container(height: 1, color: AppColors.border),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                child: Column(
+                  children: [
+                    LabeledTextField(label: 'Name', controller: _billingNameCtrl, keyboardType: TextInputType.name),
+                    const SizedBox(height: 10),
+                    LabeledTextField(label: 'Address', controller: _billingAddressCtrl, keyboardType: TextInputType.streetAddress),
+                    const SizedBox(height: 10),
+                    LabeledTextField(label: 'Phone', controller: _billingPhoneCtrl, keyboardType: TextInputType.phone),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
         // App info
         Container(
           padding: const EdgeInsets.all(16),
@@ -163,8 +224,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ),
+        const SizedBox(height: 12),
+
+        // Logout button
+        SizedBox(
+          height: 48,
+          child: OutlinedButton.icon(
+            onPressed: _confirmLogout,
+            icon: const Icon(Icons.logout, size: 18, color: AppColors.danger),
+            label: Text('Log Out',
+                style: GoogleFonts.dmSans(
+                    fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.danger)),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.danger),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Log Out',
+            style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.fg)),
+        content: Text('Are you sure you want to log out?',
+            style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg2)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel',
+                style: GoogleFonts.dmSans(color: AppColors.fg2)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Log Out',
+                style: GoogleFonts.dmSans(
+                    color: AppColors.danger, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _authService.signOut();
+      // StreamBuilder in main.dart navigates to LoginScreen automatically.
+    }
   }
 
   Widget _userRow(String initials, String name, String email) {
