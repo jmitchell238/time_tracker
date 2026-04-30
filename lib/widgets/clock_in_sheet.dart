@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import 'rate_input_field.dart';
 
 class ClockInSheet extends StatefulWidget {
   const ClockInSheet({super.key});
@@ -39,23 +40,6 @@ class _ClockInSheetState extends State<ClockInSheet> {
     provider.clockIn(jobId: _selectedJobId, rateOverride: rate);
     Navigator.pop(context);
   }
-
-  InputDecoration _inputDec(String hint) => InputDecoration(
-        hintText: hint,
-        filled: true,
-        fillColor: AppColors.bgElevated,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.primary)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
-      );
 
   Widget _label(String text) => Padding(
         padding: const EdgeInsets.only(bottom: 6),
@@ -265,43 +249,10 @@ class _ClockInSheetState extends State<ClockInSheet> {
 
                     // Rate override
                     _label('Hourly Rate (Optional)'),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 6, bottom: 2),
-                          child: Text('\$',
-                              style: GoogleFonts.dmSans(
-                                  color: AppColors.fg2, fontSize: 16)),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: _rateCtrl,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                                    decimal: true),
-                            style: GoogleFonts.dmSans(
-                                color: AppColors.fg, fontSize: 13),
-                            decoration: _inputDec('0.00'),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Text('/hr',
-                              style: GoogleFonts.dmSans(
-                                  color: AppColors.fg2, fontSize: 13)),
-                        ),
-                      ],
+                    RateInputField(
+                      controller: _rateCtrl,
+                      jobDefaultRate: selectedJob?.rate,
                     ),
-                    if (selectedJob?.rate != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          'Job default: \$${selectedJob!.rate!.toStringAsFixed(2)}/hr',
-                          style: GoogleFonts.dmSans(
-                              fontSize: 11, color: AppColors.fg3),
-                        ),
-                      ),
                     const SizedBox(height: 24),
 
                     // Clock In button

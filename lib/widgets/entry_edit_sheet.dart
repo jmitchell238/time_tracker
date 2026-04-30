@@ -5,6 +5,7 @@ import '../models/time_entry.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import 'field_label.dart';
+import 'rate_input_field.dart';
 
 class EntryEditSheet extends StatefulWidget {
   final TimeEntry entry;
@@ -323,44 +324,10 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
 
                     // Rate override
                     _label('Hourly Rate (Optional)'),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(right: 6, bottom: 2),
-                          child: Text('\$',
-                              style: GoogleFonts.dmSans(
-                                  color: AppColors.fg2, fontSize: 16)),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: _rateCtrl,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                                    decimal: true),
-                            style: GoogleFonts.dmSans(
-                                color: AppColors.fg, fontSize: 13),
-                            decoration: _inputDec('0.00'),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Text('/hr',
-                              style: GoogleFonts.dmSans(
-                                  color: AppColors.fg2, fontSize: 13)),
-                        ),
-                      ],
+                    RateInputField(
+                      controller: _rateCtrl,
+                      jobDefaultRate: selectedJob?.rate,
                     ),
-                    if (selectedJob?.rate != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          'Job default: \$${selectedJob!.rate!.toStringAsFixed(2)}/hr',
-                          style: GoogleFonts.dmSans(
-                              fontSize: 11, color: AppColors.fg3),
-                        ),
-                      ),
                     const SizedBox(height: 16),
 
                     // Description
