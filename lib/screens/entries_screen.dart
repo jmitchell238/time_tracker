@@ -8,6 +8,7 @@ import '../widgets/segmented_toggle_bar.dart';
 import '../widgets/metric_item.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/amount_display_pair.dart';
+import '../widgets/left_accent_card.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -258,22 +259,9 @@ class _EntryRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: GestureDetector(
         onTap: onToggle,
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(width: 4, color: entry.invoiceId != null ? AppColors.fg3 : AppColors.accent),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 10, 12, 10),
-                    child: Column(
+        child: LeftAccentCard(
+          accentColor: entry.invoiceId != null ? AppColors.fg3 : AppColors.accent,
+          child: Column(
                       children: [
                         Row(
                           children: [
@@ -333,15 +321,10 @@ class _EntryRow extends StatelessWidget {
                             ],
                           ),
                         ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
-    );
+    ),
+  );
   }
 }

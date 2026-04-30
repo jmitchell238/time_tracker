@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/log_time_sheet.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/amount_display_pair.dart';
+import '../widgets/left_accent_card.dart';
 
 class JobDetailScreen extends StatefulWidget {
   final String jobId;
@@ -237,53 +238,35 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   final entryRate = provider.getEntryRate(e);
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Container(
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        color: AppColors.bgCard,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Container(width: 4, color: e.invoiceId != null ? AppColors.fg3 : AppColors.accent),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 10, 12, 10),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(_fmtDateShort(e.date),
-                                              style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                                          const SizedBox(height: 2),
-                                          Text(e.description,
-                                              style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            e.invoiceId != null ? 'Invoiced' : 'Uninvoiced',
-                                            style: GoogleFonts.dmSans(
-                                              fontSize: 10, fontWeight: FontWeight.w600,
-                                              color: e.invoiceId != null ? AppColors.fg3 : AppColors.accent,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    AmountDisplayPair(
-                                      hoursText: '${e.hours.toStringAsFixed(1)}h',
-                                      amountText: '\$${(e.hours * entryRate).toStringAsFixed(2)}',
-                                    ),
-                                  ],
+                    child: LeftAccentCard(
+                      accentColor: e.invoiceId != null ? AppColors.fg3 : AppColors.accent,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(_fmtDateShort(e.date),
+                                    style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                                const SizedBox(height: 2),
+                                Text(e.description,
+                                    style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  e.invoiceId != null ? 'Invoiced' : 'Uninvoiced',
+                                  style: GoogleFonts.dmSans(
+                                    fontSize: 10, fontWeight: FontWeight.w600,
+                                    color: e.invoiceId != null ? AppColors.fg3 : AppColors.accent,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                          AmountDisplayPair(
+                            hoursText: '${e.hours.toStringAsFixed(1)}h',
+                            amountText: '\$${(e.hours * entryRate).toStringAsFixed(2)}',
+                          ),
+                        ],
                       ),
                     ),
                   );

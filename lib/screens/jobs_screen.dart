@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/segmented_toggle_bar.dart';
 import '../widgets/empty_state.dart';
 import 'job_detail_screen.dart';
+import '../widgets/left_accent_card.dart';
 
 class JobsScreen extends StatefulWidget {
   const JobsScreen({super.key});
@@ -159,57 +160,41 @@ class _JobCard extends StatelessWidget {
           context,
           MaterialPageRoute(builder: (_) => JobDetailScreen(jobId: job.id)),
         ),
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(width: 4, color: AppColors.primary),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 14, 10, 14),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(job.name, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                              if (job.description.isNotEmpty) ...[
-                                const SizedBox(height: 2),
-                                Text(job.description, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
-                              ],
-                              if (job.rate != null) ...[
-                                const SizedBox(height: 4),
-                                Text('\$${job.rate!.toStringAsFixed(0)}/hr override',
-                                    style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.accent, fontWeight: FontWeight.w600)),
-                              ],
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text('${hours.toStringAsFixed(1)}h',
-                                style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                            Text('\$${amount.toStringAsFixed(2)}',
-                                style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.accent, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.chevron_right, color: AppColors.fg3, size: 18),
-                      ],
-                    ),
-                  ),
+        child: LeftAccentCard(
+          accentColor: AppColors.primary,
+          borderRadius: 12,
+          contentPadding: const EdgeInsets.fromLTRB(10, 14, 10, 14),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(job.name, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                    if (job.description.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(job.description, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                    ],
+                    if (job.rate != null) ...[
+                      const SizedBox(height: 4),
+                      Text('\$${job.rate!.toStringAsFixed(0)}/hr override',
+                          style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.accent, fontWeight: FontWeight.w600)),
+                    ],
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('${hours.toStringAsFixed(1)}h',
+                      style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                  Text('\$${amount.toStringAsFixed(2)}',
+                      style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.accent, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right, color: AppColors.fg3, size: 18),
+            ],
           ),
         ),
       ),

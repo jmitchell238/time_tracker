@@ -8,6 +8,7 @@ import '../widgets/stat_card.dart';
 import '../widgets/clock_in_sheet.dart';
 import '../widgets/entry_edit_sheet.dart';
 import '../widgets/log_time_sheet.dart';
+import '../widgets/left_accent_card.dart';
 import 'job_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -229,57 +230,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 padding: const EdgeInsets.only(bottom: 6),
                 child: GestureDetector(
                   onTap: () => EntryEditSheet.show(context, e),
-                  child: Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: AppColors.bgCard,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.accent.withAlpha(100)),
-                    ),
-                    child: IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Container(width: 4, color: AppColors.accent),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'No job assigned · ${e.startTime} – ${e.endTime}',
-                                          style: GoogleFonts.dmSans(
-                                              fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          _fmtDateShort(e.date),
-                                          style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text('${e.hours.toStringAsFixed(1)}h',
-                                          style: GoogleFonts.dmSans(
-                                              fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                                      Text('Tap to complete',
-                                          style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.accent)),
-                                    ],
-                                  ),
-                                ],
+                  child: LeftAccentCard(
+                    accentColor: AppColors.accent,
+                    outerBorderColor: AppColors.accent.withAlpha(100),
+                    contentPadding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'No job assigned · ${e.startTime} – ${e.endTime}',
+                                style: GoogleFonts.dmSans(
+                                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
                               ),
-                            ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _fmtDateShort(e.date),
+                                style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('${e.hours.toStringAsFixed(1)}h',
+                                style: GoogleFonts.dmSans(
+                                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                            Text('Tap to complete',
+                                style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.accent)),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
