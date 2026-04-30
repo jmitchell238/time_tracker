@@ -5,6 +5,7 @@ import '../providers/app_provider.dart';
 import '../models/time_entry.dart';
 import '../theme/app_theme.dart';
 import '../widgets/segmented_toggle_bar.dart';
+import '../widgets/metric_item.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -91,11 +92,11 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ),
             child: Row(
               children: [
-                _summaryItem('Hours', totalHours.toStringAsFixed(1)),
+                MetricItem(label: 'Hours', value: totalHours.toStringAsFixed(1)),
                 const SizedBox(width: 20),
-                _summaryItem('Earnings', '\$${totalAmount.toStringAsFixed(2)}', color: AppColors.accent),
+                MetricItem(label: 'Earnings', value: '\$${totalAmount.toStringAsFixed(2)}', color: AppColors.accent),
                 const SizedBox(width: 20),
-                _summaryItem('Entries', '${visible.length}'),
+                MetricItem(label: 'Entries', value: '${visible.length}'),
               ],
             ),
           ),
@@ -224,16 +225,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ),
           );
         }),
-      ],
-    );
-  }
-
-  Widget _summaryItem(String label, String value, {Color? color}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label.toUpperCase(), style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.fg2, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-        Text(value, style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: color ?? AppColors.fg)),
       ],
     );
   }
