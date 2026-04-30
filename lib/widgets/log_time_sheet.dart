@@ -3,9 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
-import 'field_label.dart';
-import 'segmented_toggle_bar.dart';
 import 'date_picker_button.dart';
+import 'field_label.dart';
+import 'job_picker_dropdown.dart';
+import 'segmented_toggle_bar.dart';
 
 class LogTimeSheet extends StatefulWidget {
   final String? preJobId;
@@ -33,8 +34,6 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
   String _description = '';
   bool _useManual = false;
   double _manualHours = 0;
-  String _jobSearch = '';
-  bool _showJobPicker = false;
 
   final _descController = TextEditingController();
   final _manualController = TextEditingController();
@@ -160,10 +159,6 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final activeJobs = provider.jobs.where((j) => !j.isArchived).toList();
-    final selectedJob = activeJobs.where((j) => j.id == _jobId).firstOrNull;
-    final filtered = activeJobs
-        .where((j) => j.name.toLowerCase().contains(_jobSearch.toLowerCase()))
-        .toList();
     final hours = _calculatedHours;
     final canSave = _jobId.isNotEmpty && hours > 0;
 
@@ -213,109 +208,16 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                 children: [
                   // Job picker
                   _label('Job'),
-                  GestureDetector(
-                    onTap: () => setState(() => _showJobPicker = !_showJobPicker),
-                    child: Container(
-                      height: 44,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgElevated,
-                        border: Border.all(color: _showJobPicker ? AppColors.primary : AppColors.border),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              selectedJob?.name ?? 'Select a job…',
-                              style: GoogleFonts.dmSans(
-                                fontSize: 13,
-                                color: selectedJob != null ? AppColors.fg : AppColors.fg3,
-                              ),
-                            ),
-                          ),
-                          Icon(_showJobPicker ? Icons.expand_less : Icons.expand_more, color: AppColors.fg2, size: 18),
-                        ],
-                      ),
-                    ),
+                  JobPickerDropdown(
+                    jobs: activeJobs,
+                    selectedJobId: _jobId.isEmpty ? null : _jobId,
+                    allowDeselect: false,
+                    maxDropdownHeight: 200,
+                    onJobSelected: (id) {
+                      if (id != null) setState(() => _jobId = id);
+                    },
+                    onAddJob: () => _addJobInline(context.read<AppProvider>()),
                   ),
-                  if (_showJobPicker) ...[
-                    const SizedBox(height: 6),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.bgCard,
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: TextField(
-                              onChanged: (v) => setState(() => _jobSearch = v),
-                              style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
-                              decoration: InputDecoration(
-                                hintText: 'Search jobs…',
-                                hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                            ),
-                          ),
-                          const Divider(height: 1, color: AppColors.border),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 200),
-                            child: ListView(
-                              shrinkWrap: true,
-                              children: [
-                                ...filtered.map((j) {
-                                  final isSelected = j.id == _jobId;
-                                  return InkWell(
-                                    onTap: () => setState(() {
-                                      _jobId = j.id;
-                                      _showJobPicker = false;
-                                      _jobSearch = '';
-                                    }),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      color: isSelected ? AppColors.primary.withAlpha(38) : Colors.transparent,
-                                      child: Text(
-                                        j.name,
-                                        style: GoogleFonts.dmSans(
-                                          fontSize: 13,
-                                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                                          color: isSelected ? AppColors.primary : AppColors.fg,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                                if (filtered.isNotEmpty)
-                                  const Divider(height: 1, color: AppColors.border),
-                                InkWell(
-                                  onTap: () => _addJobInline(context.read<AppProvider>()),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.add, size: 16, color: AppColors.accent),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Add new job…',
-                                          style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.accent),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 16),
 
                   // Date
@@ -460,11 +362,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
     if (confirmed == true && name.isNotEmpty) {
       provider.addJob(name, '', null);
       final newJob = provider.jobs.lastWhere((j) => j.name == name);
-      setState(() {
-        _jobId = newJob.id;
-        _showJobPicker = false;
-        _jobSearch = '';
-      });
+      setState(() => _jobId = newJob.id);
     }
   }
 

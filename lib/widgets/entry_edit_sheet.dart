@@ -5,6 +5,7 @@ import '../models/time_entry.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import 'field_label.dart';
+import 'job_picker_dropdown.dart';
 import 'rate_input_field.dart';
 
 class EntryEditSheet extends StatefulWidget {
@@ -27,8 +28,6 @@ class EntryEditSheet extends StatefulWidget {
 
 class _EntryEditSheetState extends State<EntryEditSheet> {
   String? _selectedJobId;
-  String _jobSearch = '';
-  bool _showJobPicker = false;
   late final TextEditingController _hoursCtrl;
   late final TextEditingController _rateCtrl;
   late final TextEditingController _descCtrl;
@@ -97,10 +96,6 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
     final activeJobs = provider.jobs.where((j) => !j.isArchived).toList();
     final selectedJob =
         activeJobs.where((j) => j.id == _selectedJobId).firstOrNull;
-    final filtered = activeJobs
-        .where((j) =>
-            j.name.toLowerCase().contains(_jobSearch.toLowerCase()))
-        .toList();
 
     return Padding(
       padding:
@@ -182,132 +177,23 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
                   children: [
                     // Job picker
                     _label('Job'),
-                    GestureDetector(
-                      onTap: () =>
-                          setState(() => _showJobPicker = !_showJobPicker),
-                      child: Container(
-                        height: 44,
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: AppColors.bgElevated,
-                          border: Border.all(
-                              color: _showJobPicker
-                                  ? AppColors.primary
-                                  : AppColors.border),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                selectedJob?.name ?? 'Select a job…',
-                                style: GoogleFonts.dmSans(
-                                    fontSize: 13,
-                                    color: selectedJob != null
-                                        ? AppColors.fg
-                                        : AppColors.fg3),
-                              ),
-                            ),
-                            if (_selectedJobId != null)
-                              GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () => setState(() {
-                                  _selectedJobId = null;
-                                  _rateCtrl.clear();
-                                  _showJobPicker = false;
-                                }),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(4),
-                                  child: Icon(Icons.clear,
-                                      size: 16, color: AppColors.fg3),
-                                ),
-                              )
-                            else
-                              Icon(
-                                  _showJobPicker
-                                      ? Icons.expand_less
-                                      : Icons.expand_more,
-                                  color: AppColors.fg2,
-                                  size: 18),
-                          ],
-                        ),
-                      ),
+                    JobPickerDropdown(
+                      jobs: activeJobs,
+                      selectedJobId: _selectedJobId,
+                      allowDeselect: true,
+                      maxDropdownHeight: 160,
+                      onJobSelected: (id) {
+                        setState(() => _selectedJobId = id);
+                        if (id == null) {
+                          _rateCtrl.clear();
+                        } else {
+                          final job = activeJobs.where((j) => j.id == id).firstOrNull;
+                          if (job?.rate != null && _rateCtrl.text.isEmpty) {
+                            _rateCtrl.text = job!.rate!.toStringAsFixed(2);
+                          }
+                        }
+                      },
                     ),
-                    if (_showJobPicker) ...[
-                      const SizedBox(height: 6),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.bgCard,
-                          border: Border.all(color: AppColors.border),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: TextField(
-                                onChanged: (v) =>
-                                    setState(() => _jobSearch = v),
-                                style: GoogleFonts.dmSans(
-                                    color: AppColors.fg, fontSize: 13),
-                                decoration: InputDecoration(
-                                  hintText: 'Search jobs…',
-                                  hintStyle: GoogleFonts.dmSans(
-                                      color: AppColors.fg3, fontSize: 13),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                              ),
-                            ),
-                            const Divider(
-                                height: 1, color: AppColors.border),
-                            ConstrainedBox(
-                              constraints:
-                                  const BoxConstraints(maxHeight: 160),
-                              child: ListView(
-                                shrinkWrap: true,
-                                children: filtered.map((j) {
-                                  final isSel = j.id == _selectedJobId;
-                                  return InkWell(
-                                    onTap: () => setState(() {
-                                      _selectedJobId = j.id;
-                                      _showJobPicker = false;
-                                      _jobSearch = '';
-                                      if (j.rate != null &&
-                                          _rateCtrl.text.isEmpty) {
-                                        _rateCtrl.text =
-                                            j.rate!.toStringAsFixed(2);
-                                      }
-                                    }),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 10),
-                                      color: isSel
-                                          ? AppColors.primary.withAlpha(38)
-                                          : Colors.transparent,
-                                      child: Text(
-                                        j.name,
-                                        style: GoogleFonts.dmSans(
-                                          fontSize: 13,
-                                          fontWeight: isSel
-                                              ? FontWeight.w700
-                                              : FontWeight.w400,
-                                          color: isSel
-                                              ? AppColors.primary
-                                              : AppColors.fg,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 16),
 
                     // Hours
