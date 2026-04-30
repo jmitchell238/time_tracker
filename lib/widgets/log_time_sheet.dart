@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import 'field_label.dart';
+import 'segmented_toggle_bar.dart';
 
 class LogTimeSheet extends StatefulWidget {
   final String? preJobId;
@@ -151,16 +153,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
         hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
       );
 
-  Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(
-          text.toUpperCase(),
-          style: GoogleFonts.dmSans(
-            fontSize: 11, fontWeight: FontWeight.w700,
-            color: AppColors.fg2, letterSpacing: 0.6,
-          ),
-        ),
-      );
+  Widget _label(String text) => FieldLabel(text);
 
   @override
   Widget build(BuildContext context) {
@@ -349,20 +342,10 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
 
                   // Time mode toggle
                   _label('Time'),
-                  Container(
-                    height: 38,
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgCard,
-                      border: Border.all(color: AppColors.border),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        _toggleBtn('Start & End', !_useManual, () => setState(() => _useManual = false)),
-                        _toggleBtn('Enter Duration', _useManual, () => setState(() => _useManual = true)),
-                      ],
-                    ),
+                  SegmentedToggleBar(
+                    labels: const ['Start & End', 'Enter Duration'],
+                    selected: _useManual ? 'Enter Duration' : 'Start & End',
+                    onChanged: (v) => setState(() => _useManual = v == 'Enter Duration'),
                   ),
                   const SizedBox(height: 10),
                   if (_useManual)
@@ -499,28 +482,6 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
     }
   }
 
-  Widget _toggleBtn(String label, bool active, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: double.infinity,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: active ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: Text(
-            label,
-            style: GoogleFonts.dmSans(
-              fontSize: 12, fontWeight: FontWeight.w600,
-              color: active ? Colors.white : AppColors.fg2,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _timeTile(String time, VoidCallback onTap) {
     return GestureDetector(

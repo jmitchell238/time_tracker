@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/time_entry.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import 'field_label.dart';
 
 class EntryEditSheet extends StatefulWidget {
   final TimeEntry entry;
@@ -87,17 +88,7 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
         hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
       );
 
-  Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(
-          text.toUpperCase(),
-          style: GoogleFonts.dmSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.fg2,
-              letterSpacing: 0.6),
-        ),
-      );
+  Widget _label(String text) => FieldLabel(text);
 
   @override
   Widget build(BuildContext context) {

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
+import '../widgets/segmented_toggle_bar.dart';
 import 'job_detail_screen.dart';
 
 class JobsScreen extends StatefulWidget {
@@ -122,20 +123,10 @@ class _JobsScreenState extends State<JobsScreen> {
         const SizedBox(height: 16),
 
         // Active/Archived toggle
-        Container(
-          height: 40,
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              _toggleBtn('Active', !_showArchived, () => setState(() => _showArchived = false)),
-              _toggleBtn('Archived', _showArchived, () => setState(() => _showArchived = true)),
-            ],
-          ),
+        SegmentedToggleBar(
+          labels: const ['Active', 'Archived'],
+          selected: _showArchived ? 'Archived' : 'Active',
+          onChanged: (v) => setState(() => _showArchived = v == 'Archived'),
         ),
         const SizedBox(height: 16),
 
@@ -151,29 +142,6 @@ class _JobsScreenState extends State<JobsScreen> {
           ),
         ...visible.map((job) => _JobCard(job: job, provider: provider)),
       ],
-    );
-  }
-
-  Widget _toggleBtn(String label, bool active, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: double.infinity,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: active ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            label,
-            style: GoogleFonts.dmSans(
-              fontSize: 13, fontWeight: FontWeight.w600,
-              color: active ? Colors.white : AppColors.fg2,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

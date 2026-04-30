@@ -1,13 +1,21 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
 import 'providers/app_provider.dart';
+import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
+import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/jobs_screen.dart';
 import 'screens/entries_screen.dart';
 import 'screens/invoices_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/insights_screen.dart';
+
+final _authService = AuthService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +23,7 @@ void main() async {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const TimeTrackerApp());
 }
 
@@ -23,13 +32,40 @@ class TimeTrackerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AppProvider()..load(),
-      child: MaterialApp(
-        title: 'Time Tracker',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark,
-        home: const AppShell(),
+    return MaterialApp(
+      title: 'Time Tracker',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.dark,
+      home: StreamBuilder<User?>(
+        stream: _authService.authStateChanges,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const _SplashScreen();
+          }
+          if (snapshot.data != null) {
+            // AppProvider is scoped inside the authenticated tree so it is
+            // re-created (and load() re-runs) on every fresh login.
+            return ChangeNotifierProvider(
+              create: (_) => AppProvider()..load(),
+              child: const AppShell(),
+            );
+          }
+          return const LoginScreen();
+        },
+      ),
+    );
+  }
+}
+
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: AppColors.bgDeep,
+      body: Center(
+        child: CircularProgressIndicator(color: AppColors.accent),
       ),
     );
   }
@@ -45,12 +81,13 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _index = 0;
 
-  static const _labels = ['Home', 'Jobs', 'Entries', 'Invoices', 'Settings'];
+  static const _labels = ['Home', 'Jobs', 'Entries', 'Invoices', 'Insights', 'Settings'];
   static const _icons = [
     Icons.dashboard_outlined,
     Icons.work_outline,
     Icons.list_alt_outlined,
     Icons.receipt_long_outlined,
+    Icons.bar_chart_outlined,
     Icons.settings_outlined,
   ];
 
@@ -73,6 +110,7 @@ class _AppShellState extends State<AppShell> {
           JobsScreen(),
           EntriesScreen(),
           InvoicesScreen(),
+          InsightsScreen(),
           SettingsScreen(),
         ],
       ),
@@ -85,7 +123,7 @@ class _AppShellState extends State<AppShell> {
           child: SizedBox(
             height: 62,
             child: Row(
-              children: List.generate(5, (i) {
+              children: List.generate(6, (i) {
                 final active = _index == i;
                 return Expanded(
                   child: GestureDetector(

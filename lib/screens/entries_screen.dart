@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/time_entry.dart';
 import '../theme/app_theme.dart';
+import '../widgets/segmented_toggle_bar.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -13,7 +14,7 @@ class EntriesScreen extends StatefulWidget {
 }
 
 class _EntriesScreenState extends State<EntriesScreen> {
-  String _tab = 'week';
+  String _tab = 'Week';
   String? _expandedId;
 
   String _today() => DateTime.now().toIso8601String().substring(0, 10);
@@ -45,11 +46,11 @@ class _EntriesScreenState extends State<EntriesScreen> {
   List<TimeEntry> _getVisible(AppProvider provider) {
     final all = [...provider.entries]..sort((a, b) => b.date.compareTo(a.date));
     switch (_tab) {
-      case 'day':
+      case 'Day':
         return all.where((e) => e.date == _today()).toList();
-      case 'week':
+      case 'Week':
         return all.where((e) => _inRange(e.date, _startOf('week'))).toList();
-      case 'month':
+      case 'Month':
         return all.where((e) => _inRange(e.date, _startOf('month'))).toList();
       default:
         return all;
@@ -73,22 +74,15 @@ class _EntriesScreenState extends State<EntriesScreen> {
         const SizedBox(height: 14),
 
         // Tabs
-        Container(
-          height: 38,
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: ['day','week','month','job'].map((t) => _tabBtn(t)).toList(),
-          ),
+        SegmentedToggleBar(
+          labels: const ['Day', 'Week', 'Month', 'Job'],
+          selected: _tab,
+          onChanged: (v) => setState(() => _tab = v),
         ),
         const SizedBox(height: 14),
 
         // Summary (not for "job" tab)
-        if (_tab != 'job')
+        if (_tab != 'Job')
           Container(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             decoration: BoxDecoration(
@@ -106,10 +100,10 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ),
           ),
 
-        if (_tab != 'job') const SizedBox(height: 14),
+        if (_tab != 'Job') const SizedBox(height: 14),
 
         // Entries
-        if (_tab == 'job')
+        if (_tab == 'Job')
           _buildByJobTab(provider)
         else
           _buildByDateTab(provider, visible),
@@ -231,30 +225,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
           );
         }),
       ],
-    );
-  }
-
-  Widget _tabBtn(String tab) {
-    final active = _tab == tab;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _tab = tab),
-        child: Container(
-          height: double.infinity,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: active ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: Text(
-            tab[0].toUpperCase() + tab.substring(1),
-            style: GoogleFonts.dmSans(
-              fontSize: 11, fontWeight: FontWeight.w600,
-              color: active ? Colors.white : AppColors.fg2,
-            ),
-          ),
-        ),
-      ),
     );
   }
 
