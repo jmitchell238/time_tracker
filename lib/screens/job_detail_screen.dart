@@ -6,6 +6,7 @@ import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/log_time_sheet.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/amount_display_pair.dart';
 
 class JobDetailScreen extends StatefulWidget {
   final String jobId;
@@ -273,14 +274,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                         ],
                                       ),
                                     ),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text('${e.hours.toStringAsFixed(1)}h',
-                                            style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                                        Text('\$${(e.hours * entryRate).toStringAsFixed(2)}',
-                                            style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
-                                      ],
+                                    AmountDisplayPair(
+                                      hoursText: '${e.hours.toStringAsFixed(1)}h',
+                                      amountText: '\$${(e.hours * entryRate).toStringAsFixed(2)}',
                                     ),
                                   ],
                                 ),

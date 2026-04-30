@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/segmented_toggle_bar.dart';
 import '../widgets/metric_item.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/amount_display_pair.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -302,14 +303,9 @@ class _EntryRow extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text('${entry.hours.toStringAsFixed(1)}h',
-                                    style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                                Text('\$${(entry.hours * rate).toStringAsFixed(2)}',
-                                    style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
-                              ],
+                            AmountDisplayPair(
+                              hoursText: '${entry.hours.toStringAsFixed(1)}h',
+                              amountText: '\$${(entry.hours * rate).toStringAsFixed(2)}',
                             ),
                           ],
                         ),

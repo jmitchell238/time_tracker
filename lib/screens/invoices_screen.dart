@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../widgets/metric_item.dart';
 import '../widgets/labeled_text_field.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/amount_display_pair.dart';
 
 class InvoicesScreen extends StatefulWidget {
   const InvoicesScreen({super.key});
@@ -223,14 +224,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                         ],
                       ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('${e.hours.toStringAsFixed(1)}h',
-                            style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                        Text(_fmtMoney(e.hours * rate),
-                            style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.accent)),
-                      ],
+                    AmountDisplayPair(
+                      hoursText: '${e.hours.toStringAsFixed(1)}h',
+                      amountText: _fmtMoney(e.hours * rate),
+                      hoursSize: 12,
+                      amountColor: AppColors.accent,
                     ),
                   ],
                 ),
@@ -465,14 +463,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                       ],
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('${e.hours.toStringAsFixed(1)}h',
-                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                      Text(_fmtMoney(e.hours * rate),
-                          style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
-                    ],
+                  AmountDisplayPair(
+                    hoursText: '${e.hours.toStringAsFixed(1)}h',
+                    amountText: _fmtMoney(e.hours * rate),
+                    hoursSize: 12,
                   ),
                 ],
               ),
