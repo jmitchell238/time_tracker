@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/log_time_sheet.dart';
+import '../widgets/empty_state.dart';
 
 class JobDetailScreen extends StatefulWidget {
   final String jobId;
@@ -230,11 +231,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 ),
                 const SizedBox(height: 8),
                 if (jobEntries.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Text('No entries yet', textAlign: TextAlign.center,
-                        style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg3)),
-                  ),
+                  const EmptyStateWidget('No entries yet', verticalPadding: 24),
                 ...jobEntries.map((e) {
                   final entryRate = provider.getEntryRate(e);
                   return Padding(

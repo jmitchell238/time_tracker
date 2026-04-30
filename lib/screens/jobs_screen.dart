@@ -5,6 +5,7 @@ import '../providers/app_provider.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
 import '../widgets/segmented_toggle_bar.dart';
+import '../widgets/empty_state.dart';
 import 'job_detail_screen.dart';
 
 class JobsScreen extends StatefulWidget {
@@ -132,14 +133,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
         // Job list
         if (visible.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            child: Text(
-              'No ${_showArchived ? 'archived' : 'active'} jobs',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg3),
-            ),
-          ),
+          EmptyStateWidget('No ${_showArchived ? 'archived' : 'active'} jobs'),
         ...visible.map((job) => _JobCard(job: job, provider: provider)),
       ],
     );

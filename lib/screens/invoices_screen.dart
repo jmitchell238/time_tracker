@@ -8,6 +8,7 @@ import '../services/pdf_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/metric_item.dart';
 import '../widgets/labeled_text_field.dart';
+import '../widgets/empty_state.dart';
 
 class InvoicesScreen extends StatefulWidget {
   const InvoicesScreen({super.key});
@@ -120,11 +121,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
         // Invoice list
         if (invoices.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            child: Text('No invoices yet', textAlign: TextAlign.center,
-                style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg3)),
-          ),
+          const EmptyStateWidget('No invoices yet'),
         ...invoices.map((inv) => _InvoiceCard(
               invoice: inv,
               fmtDate: _fmtDateShort,
@@ -182,11 +179,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         const SizedBox(height: 8),
 
         if (uninvoiced.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Text('No uninvoiced entries', textAlign: TextAlign.center,
-                style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg3)),
-          ),
+          const EmptyStateWidget('No uninvoiced entries', verticalPadding: 24),
 
         ...uninvoiced.map((e) {
           final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;

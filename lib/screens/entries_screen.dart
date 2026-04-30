@@ -6,6 +6,7 @@ import '../models/time_entry.dart';
 import '../theme/app_theme.dart';
 import '../widgets/segmented_toggle_bar.dart';
 import '../widgets/metric_item.dart';
+import '../widgets/empty_state.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -114,11 +115,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
 
   Widget _buildByDateTab(AppProvider provider, List<TimeEntry> entries) {
     if (entries.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32),
-        child: Text('No entries for this period', textAlign: TextAlign.center,
-            style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg3)),
-      );
+      return const EmptyStateWidget('No entries for this period');
     }
 
     final byDate = <String, List<TimeEntry>>{};
