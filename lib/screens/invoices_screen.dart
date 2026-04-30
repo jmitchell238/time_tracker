@@ -48,7 +48,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Widget _buildList(AppProvider provider) {
-    final uninvoiced = provider.uninvoicedEntries;
+    final uninvoiced = provider.invoiceableEntries;
     final invoices = [...provider.invoices].reversed.toList();
 
     return ListView(
@@ -126,12 +126,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Widget _buildCreateFlow(AppProvider provider) {
-    final uninvoiced = provider.uninvoicedEntries;
+    final uninvoiced = provider.invoiceableEntries;
     final selectedEntries = uninvoiced.where((e) => _selected[e.id] == true).toList();
     final totalHours = selectedEntries.fold(0.0, (a, e) => a + e.hours);
     final totalAmount = selectedEntries.fold(0.0, (a, e) {
-      final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
-      return a + e.hours * provider.getRate(job);
+      return a + e.hours * provider.getEntryRate(e);
     });
 
     return ListView(
@@ -163,7 +162,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
         ...uninvoiced.map((e) {
           final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
-          final rate = provider.getRate(job);
+          final rate = provider.getEntryRate(e);
           final isSelected = _selected[e.id] == true;
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -337,7 +336,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('TOTAL HOURS', style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.fg2, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                    Text('${inv.totalHours.toStringAsFixed(1)}', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                    Text(inv.totalHours.toStringAsFixed(1), style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
                   ],
                 ),
               ),
@@ -373,7 +372,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         const SizedBox(height: 8),
         ...invEntries.map((e) {
           final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
-          final rate = provider.getRate(job);
+          final rate = provider.getEntryRate(e);
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Container(

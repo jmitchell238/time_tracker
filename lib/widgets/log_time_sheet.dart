@@ -6,14 +6,15 @@ import '../theme/app_theme.dart';
 
 class LogTimeSheet extends StatefulWidget {
   final String? preJobId;
-  const LogTimeSheet({super.key, this.preJobId});
+  final double? preHours;
+  const LogTimeSheet({super.key, this.preJobId, this.preHours});
 
-  static Future<void> show(BuildContext context, {String? preJobId}) {
+  static Future<void> show(BuildContext context, {String? preJobId, double? preHours}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => LogTimeSheet(preJobId: preJobId),
+      builder: (_) => LogTimeSheet(preJobId: preJobId, preHours: preHours),
     );
   }
 
@@ -41,6 +42,11 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
     final provider = context.read<AppProvider>();
     final activeJobs = provider.jobs.where((j) => !j.isArchived).toList();
     _jobId = widget.preJobId ?? (activeJobs.isNotEmpty ? activeJobs.first.id : '');
+    if (widget.preHours != null && widget.preHours! > 0) {
+      _useManual = true;
+      _manualHours = widget.preHours!;
+      _manualController.text = widget.preHours!.toStringAsFixed(2);
+    }
   }
 
   @override
@@ -265,31 +271,51 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                           ),
                           const Divider(height: 1, color: AppColors.border),
                           ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 150),
+                            constraints: const BoxConstraints(maxHeight: 200),
                             child: ListView(
                               shrinkWrap: true,
-                              children: filtered.map((j) {
-                                final isSelected = j.id == _jobId;
-                                return InkWell(
-                                  onTap: () => setState(() {
-                                    _jobId = j.id;
-                                    _showJobPicker = false;
-                                    _jobSearch = '';
-                                  }),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                    color: isSelected ? AppColors.primary.withAlpha(38) : Colors.transparent,
-                                    child: Text(
-                                      j.name,
-                                      style: GoogleFonts.dmSans(
-                                        fontSize: 13,
-                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                                        color: isSelected ? AppColors.primary : AppColors.fg,
+                              children: [
+                                ...filtered.map((j) {
+                                  final isSelected = j.id == _jobId;
+                                  return InkWell(
+                                    onTap: () => setState(() {
+                                      _jobId = j.id;
+                                      _showJobPicker = false;
+                                      _jobSearch = '';
+                                    }),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      color: isSelected ? AppColors.primary.withAlpha(38) : Colors.transparent,
+                                      child: Text(
+                                        j.name,
+                                        style: GoogleFonts.dmSans(
+                                          fontSize: 13,
+                                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                                          color: isSelected ? AppColors.primary : AppColors.fg,
+                                        ),
                                       ),
                                     ),
+                                  );
+                                }),
+                                if (filtered.isNotEmpty)
+                                  const Divider(height: 1, color: AppColors.border),
+                                InkWell(
+                                  onTap: () => _addJobInline(context.read<AppProvider>()),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.add, size: 16, color: AppColors.accent),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Add new job…',
+                                          style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.accent),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                );
-                              }).toList(),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -409,6 +435,68 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
         ),
       ),
     );
+  }
+
+  Future<void> _addJobInline(AppProvider provider) async {
+    // Use a ValueNotifier so we can read the name after the dialog closes
+    // without holding a TextEditingController reference past its widget's life.
+    String pendingName = '';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) {
+        final ctrl = TextEditingController();
+        return AlertDialog(
+          backgroundColor: AppColors.bgBase,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('New Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.fg)),
+          content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+            onChanged: (v) => pendingName = v,
+            decoration: InputDecoration(
+              hintText: 'Job name',
+              hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+              filled: true,
+              fillColor: AppColors.bgElevated,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.fg2))),
+            ElevatedButton(
+              onPressed: () {
+                if (ctrl.text.trim().isEmpty) return;
+                pendingName = ctrl.text.trim();
+                Navigator.pop(context, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text('Add', style: GoogleFonts.dmSans(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        );
+        // ctrl is owned by the AlertDialog's State and disposed when that State disposes
+      },
+    );
+
+    final name = pendingName.trim();
+    if (confirmed == true && name.isNotEmpty) {
+      provider.addJob(name, '', null);
+      final newJob = provider.jobs.lastWhere((j) => j.name == name);
+      setState(() {
+        _jobId = newJob.id;
+        _showJobPicker = false;
+        _jobSearch = '';
+      });
+    }
   }
 
   Widget _toggleBtn(String label, bool active, VoidCallback onTap) {

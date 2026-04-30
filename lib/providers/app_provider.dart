@@ -6,6 +6,7 @@ import '../models/job.dart';
 import '../models/time_entry.dart';
 import '../models/invoice.dart';
 import '../models/app_settings.dart';
+import '../models/active_timer.dart';
 
 const _uuid = Uuid();
 
@@ -14,6 +15,7 @@ class AppProvider extends ChangeNotifier {
   List<TimeEntry> entries = [];
   List<Invoice> invoices = [];
   AppSettings settings = const AppSettings();
+  List<ActiveTimer> activeTimers = [];
   bool _loaded = false;
 
   bool get isLoaded => _loaded;
@@ -53,6 +55,13 @@ class AppProvider extends ChangeNotifier {
       settings = AppSettings.fromJson(jsonDecode(settingsJson) as Map<String, dynamic>);
     }
 
+    final timersJson = prefs.getString('active_timers');
+    if (timersJson != null) {
+      activeTimers = (jsonDecode(timersJson) as List)
+          .map((e) => ActiveTimer.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
     _loaded = true;
     notifyListeners();
   }
@@ -63,6 +72,7 @@ class AppProvider extends ChangeNotifier {
     await prefs.setString('entries', jsonEncode(entries.map((e) => e.toJson()).toList()));
     await prefs.setString('invoices', jsonEncode(invoices.map((e) => e.toJson()).toList()));
     await prefs.setString('settings', jsonEncode(settings.toJson()));
+    await prefs.setString('active_timers', jsonEncode(activeTimers.map((e) => e.toJson()).toList()));
   }
 
   // ── Jobs ──────────────────────────────────────────────────────────────────
@@ -127,6 +137,30 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateEntry(
+    String id, {
+    String? jobId,
+    bool clearJobId = false,
+    String? description,
+    double? hours,
+    double? rateOverride,
+    bool clearRateOverride = false,
+  }) {
+    entries = entries.map((e) {
+      if (e.id != id) return e;
+      return e.copyWith(
+        jobId: jobId,
+        clearJobId: clearJobId,
+        description: description,
+        hours: hours,
+        rateOverride: rateOverride,
+        clearRateOverride: clearRateOverride,
+      );
+    }).toList();
+    _save();
+    notifyListeners();
+  }
+
   void deleteEntry(String id) {
     entries = entries.where((e) => e.id != id).toList();
     _save();
@@ -169,11 +203,89 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Timers / Clock In-Out ─────────────────────────────────────────────────
+
+  void clockIn({String? jobId, double? rateOverride}) {
+    final timer = ActiveTimer(
+      id: _uuid.v4(),
+      jobId: jobId,
+      rateOverride: rateOverride,
+      startedAt: DateTime.now(),
+    );
+    activeTimers = [...activeTimers, timer];
+    _save();
+    notifyListeners();
+  }
+
+  void clockOut(String timerId) {
+    final timer = activeTimers.where((t) => t.id == timerId).firstOrNull;
+    if (timer == null) return;
+
+    final now = DateTime.now();
+    final elapsed = now.difference(timer.startedAt).inSeconds / 3600.0;
+    final today = now.toIso8601String().substring(0, 10);
+    final startStr = '${_p2(timer.startedAt.hour)}:${_p2(timer.startedAt.minute)}';
+    final endStr = '${_p2(now.hour)}:${_p2(now.minute)}';
+
+    entries = [
+      TimeEntry(
+        id: _uuid.v4(),
+        jobId: timer.jobId,
+        date: today,
+        startTime: startStr,
+        endTime: endStr,
+        hours: elapsed,
+        description: '',
+        rateOverride: timer.rateOverride,
+      ),
+      ...entries,
+    ];
+
+    activeTimers = activeTimers.where((t) => t.id != timerId).toList();
+    _save();
+    notifyListeners();
+  }
+
+  void discardTimer(String timerId) {
+    activeTimers = activeTimers.where((t) => t.id != timerId).toList();
+    _save();
+    notifyListeners();
+  }
+
+  // Convenience wrappers used by JobDetailScreen (which always has a specific jobId)
+  void startTimer(String jobId) {
+    if (activeTimers.any((t) => t.jobId == jobId)) return;
+    clockIn(jobId: jobId);
+  }
+
+  void stopTimer(String jobId) {
+    final timer = activeTimers.where((t) => t.jobId == jobId).firstOrNull;
+    if (timer != null) discardTimer(timer.id);
+  }
+
+  bool isTimerRunning(String jobId) => activeTimers.any((t) => t.jobId == jobId);
+
+  ActiveTimer? getTimer(String jobId) => activeTimers.where((t) => t.jobId == jobId).firstOrNull;
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   double getRate(Job? job) => job?.rate ?? settings.defaultRate;
 
+  double getEntryRate(TimeEntry entry) {
+    if (entry.rateOverride != null) return entry.rateOverride!;
+    final job = jobs.where((j) => j.id == entry.jobId).firstOrNull;
+    return job?.rate ?? settings.defaultRate;
+  }
+
   List<TimeEntry> get uninvoicedEntries => entries.where((e) => e.invoiceId == null).toList();
+
+  List<TimeEntry> get invoiceableEntries =>
+      entries.where((e) => e.invoiceId == null && e.jobId != null).toList();
+
+  List<TimeEntry> get incompleteEntries =>
+      entries.where((e) => e.jobId == null && e.invoiceId == null).toList();
+
+  static String _p2(int n) => n.toString().padLeft(2, '0');
 
   // ── Default data ──────────────────────────────────────────────────────────
 

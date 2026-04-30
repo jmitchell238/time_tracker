@@ -198,48 +198,56 @@ class _JobCard extends StatelessWidget {
           MaterialPageRoute(builder: (_) => JobDetailScreen(jobId: job.id)),
         ),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: AppColors.bgCard,
-            border: Border(
-              left: const BorderSide(color: AppColors.primary, width: 4),
-              top: const BorderSide(color: AppColors.border),
-              right: const BorderSide(color: AppColors.border),
-              bottom: const BorderSide(color: AppColors.border),
-            ),
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(job.name, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                    if (job.description.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(job.description, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
-                    ],
-                    if (job.rate != null) ...[
-                      const SizedBox(height: 4),
-                      Text('\$${job.rate!.toStringAsFixed(0)}/hr override',
-                          style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.accent, fontWeight: FontWeight.w600)),
-                    ],
-                  ],
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(width: 4, color: AppColors.primary),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 14, 10, 14),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(job.name, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                              if (job.description.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(job.description, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                              ],
+                              if (job.rate != null) ...[
+                                const SizedBox(height: 4),
+                                Text('\$${job.rate!.toStringAsFixed(0)}/hr override',
+                                    style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.accent, fontWeight: FontWeight.w600)),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('${hours.toStringAsFixed(1)}h',
+                                style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                            Text('\$${amount.toStringAsFixed(2)}',
+                                style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.accent, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.chevron_right, color: AppColors.fg3, size: 18),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('${hours.toStringAsFixed(1)}h',
-                      style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                  Text('\$${amount.toStringAsFixed(2)}',
-                      style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.accent, fontWeight: FontWeight.w600)),
-                ],
-              ),
-              const SizedBox(width: 6),
-              const Icon(Icons.chevron_right, color: AppColors.fg3, size: 18),
-            ],
+              ],
+            ),
           ),
         ),
       ),
