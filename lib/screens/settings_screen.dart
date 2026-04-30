@@ -5,6 +5,7 @@ import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/labeled_text_field.dart';
+import '../widgets/section_container.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -77,48 +78,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 20),
 
         // Default hourly rate
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        SectionContainer(
+          title: 'Default Hourly Rate',
+          subtitle: 'Applied to all jobs unless overridden per-job',
+          child: Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Default Hourly Rate',
-                        style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                    const SizedBox(height: 2),
-                    Text('Applied to all jobs unless overridden per-job',
-                        style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
-                  ],
+              Text('\$', style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.fg)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _rateCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+                  decoration: _inputDec(),
                 ),
               ),
-              Container(height: 1, color: AppColors.border),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                child: Row(
-                  children: [
-                    Text('\$', style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: _rateCtrl,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
-                        decoration: _inputDec(),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text('/ hr', style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg2)),
-                  ],
-                ),
-              ),
+              const SizedBox(width: 10),
+              Text('/ hr', style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg2)),
             ],
           ),
         ),
@@ -150,41 +126,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 20),
 
         // Billing profile
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(12),
-          ),
+        SectionContainer(
+          title: 'Your Billing Info',
+          subtitle: 'Appears on PDF invoices as the service provider',
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Your Billing Info',
-                        style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                    const SizedBox(height: 2),
-                    Text('Appears on PDF invoices as the service provider',
-                        style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
-                  ],
-                ),
-              ),
-              Container(height: 1, color: AppColors.border),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                child: Column(
-                  children: [
-                    LabeledTextField(label: 'Name', controller: _billingNameCtrl, keyboardType: TextInputType.name),
-                    const SizedBox(height: 10),
-                    LabeledTextField(label: 'Address', controller: _billingAddressCtrl, keyboardType: TextInputType.streetAddress),
-                    const SizedBox(height: 10),
-                    LabeledTextField(label: 'Phone', controller: _billingPhoneCtrl, keyboardType: TextInputType.phone),
-                  ],
-                ),
-              ),
+              LabeledTextField(label: 'Name', controller: _billingNameCtrl, keyboardType: TextInputType.name),
+              const SizedBox(height: 10),
+              LabeledTextField(label: 'Address', controller: _billingAddressCtrl, keyboardType: TextInputType.streetAddress),
+              const SizedBox(height: 10),
+              LabeledTextField(label: 'Phone', controller: _billingPhoneCtrl, keyboardType: TextInputType.phone),
             ],
           ),
         ),
