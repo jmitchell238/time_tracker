@@ -5,6 +5,7 @@ import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import 'field_label.dart';
 import 'segmented_toggle_bar.dart';
+import 'date_picker_button.dart';
 
 class LogTimeSheet extends StatefulWidget {
   final String? preJobId;
@@ -319,24 +320,9 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
 
                   // Date
                   _label('Date'),
-                  GestureDetector(
+                  DatePickerButton(
+                    label: _formatDateDisplay(_date),
                     onTap: _pickDate,
-                    child: Container(
-                      height: 44,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgElevated,
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(_formatDateDisplay(_date), style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg)),
-                          const Spacer(),
-                          const Icon(Icons.calendar_today_outlined, color: AppColors.fg2, size: 16),
-                        ],
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 16),
 
