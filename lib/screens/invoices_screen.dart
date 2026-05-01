@@ -22,6 +22,8 @@ class InvoicesScreen extends StatefulWidget {
 class _InvoicesScreenState extends State<InvoicesScreen> {
   bool _creating = false;
   String? _detailId;
+  // 'all', 'unpaid', 'paid'
+  String _filter = 'all';
   final Map<String, bool> _selectedEntries = {};
   final Map<String, bool> _selectedExpenses = {};
   String _billedBy = 'James';
@@ -74,7 +76,12 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   Widget _buildList(AppProvider provider) {
     final uninvoiced = provider.invoiceableEntries;
     final pendingExpenses = provider.uninvoicedExpenses;
-    final invoices = [...provider.invoices].reversed.toList();
+    final allInvoices = [...provider.invoices].reversed.toList();
+    final invoices = allInvoices.where((inv) {
+      if (_filter == 'paid') return inv.isPaid;
+      if (_filter == 'unpaid') return !inv.isPaid;
+      return true;
+    }).toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
@@ -95,6 +102,33 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Filter bar
+        Row(
+          children: [
+            for (final f in [('all', 'All'), ('unpaid', 'Unpaid'), ('paid', 'Paid')]) ...[
+              GestureDetector(
+                onTap: () => setState(() => _filter = f.$1),
+                child: Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _filter == f.$1 ? AppColors.accent : AppColors.bgCard,
+                    border: Border.all(color: _filter == f.$1 ? AppColors.accent : AppColors.border),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(f.$2,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _filter == f.$1 ? Colors.white : AppColors.fg2,
+                      )),
+                ),
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 16),
@@ -140,6 +174,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
         if (invoices.isEmpty)
           const EmptyStateWidget('No invoices yet'),
+        if (invoices.isEmpty && allInvoices.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: EmptyStateWidget('No ${_filter} invoices'),
+          ),
         ...invoices.map((inv) => _InvoiceCard(
               invoice: inv,
               fmtDate: _fmtDateShort,
@@ -218,6 +257,39 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         Text('CLIENT INFO (OPTIONAL)',
             style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
+        if (provider.savedClients.isNotEmpty) ...[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ...provider.savedClients.map((c) => GestureDetector(
+                onTap: () => setState(() {
+                  _clientNameCtrl.text = c.name ?? '';
+                  _clientCompanyCtrl.text = c.company ?? '';
+                  _clientPhoneCtrl.text = c.phone ?? '';
+                }),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCard,
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.person_outline, size: 13, color: AppColors.fg2),
+                      const SizedBox(width: 4),
+                      Text(c.displayName,
+                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.fg)),
+                    ],
+                  ),
+                ),
+              )),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
         LabeledTextField(label: 'Client Name', controller: _clientNameCtrl, keyboardType: TextInputType.name),
         const SizedBox(height: 8),
         LabeledTextField(label: 'Company', controller: _clientCompanyCtrl),
@@ -428,6 +500,156 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     );
   }
 
+  // ── Mark as Paid sheet ────────────────────────────────────────────────────
+
+  Future<void> _showMarkPaidSheet(BuildContext context, AppProvider provider, Invoice inv) async {
+    String selectedDate = DateTime.now().toIso8601String().substring(0, 10);
+    String? selectedMethod;
+    final newMethodCtrl = TextEditingController();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.bgBase,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setModal) {
+          final methods = provider.settings.paymentMethods;
+          return Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Mark as Paid', style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                const SizedBox(height: 16),
+                Text('DATE PAID', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2030),
+                      builder: (ctx, child) => Theme(
+                        data: ThemeData.dark().copyWith(
+                          colorScheme: const ColorScheme.dark(primary: AppColors.accent),
+                        ),
+                        child: child!,
+                      ),
+                    );
+                    if (picked != null) {
+                      setModal(() => selectedDate = picked.toIso8601String().substring(0, 10));
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.bgCard,
+                      border: Border.all(color: AppColors.border),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.fg2),
+                        const SizedBox(width: 8),
+                        Text(selectedDate, style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text('PAYMENT METHOD', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ...methods.map((m) => GestureDetector(
+                      onTap: () => setModal(() => selectedMethod = m),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: selectedMethod == m ? AppColors.accent : AppColors.bgCard,
+                          border: Border.all(color: selectedMethod == m ? AppColors.accent : AppColors.border),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(m, style: GoogleFonts.dmSans(
+                          fontSize: 12, fontWeight: FontWeight.w700,
+                          color: selectedMethod == m ? Colors.white : AppColors.fg2,
+                        )),
+                      ),
+                    )),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: newMethodCtrl,
+                        style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: 'Add new method…',
+                          hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+                          filled: true,
+                          fillColor: AppColors.bgCard,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        final v = newMethodCtrl.text.trim();
+                        if (v.isEmpty) return;
+                        provider.addPaymentMethod(v);
+                        setModal(() { selectedMethod = v; newMethodCtrl.clear(); });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 0,
+                      ),
+                      child: Text('Add', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 48,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: selectedMethod == null ? null : () {
+                      provider.markInvoicePaid(inv.id, paidAt: selectedDate, paymentMethod: selectedMethod!);
+                      Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: selectedMethod != null ? const Color(0xFF16A34A) : AppColors.fg3,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: Text('Confirm Payment', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        });
+      },
+    );
+    newMethodCtrl.dispose();
+  }
+
   // ── Detail ────────────────────────────────────────────────────────────────
 
   Widget _buildDetail(AppProvider provider) {
@@ -509,6 +731,57 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         if (inv.notes.isNotEmpty) ...[
           const SizedBox(height: 10),
           Text('Note: ${inv.notes}', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2, fontStyle: FontStyle.italic)),
+        ],
+
+        // Payment status
+        const SizedBox(height: 14),
+        if (inv.isPaid) ...[
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF16A34A).withAlpha(20),
+              border: Border.all(color: const Color(0xFF16A34A).withAlpha(76)),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Color(0xFF16A34A), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Paid on ${_fmtDateShort(inv.paidAt!)}',
+                          style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF16A34A))),
+                      if (inv.paymentMethod != null)
+                        Text(inv.paymentMethod!,
+                            style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => provider.unmarkInvoicePaid(inv.id),
+                  child: Text('Undo', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg3)),
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          SizedBox(
+            height: 44,
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _showMarkPaidSheet(context, provider, inv),
+              icon: const Icon(Icons.payments_outlined, size: 16),
+              label: Text('Mark as Paid', style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF16A34A),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+              ),
+            ),
+          ),
         ],
 
         // Client info
@@ -672,12 +945,14 @@ class _PdfButtonState extends State<_PdfButton> {
     try {
       final p = widget.provider;
       final entries = p.entries.where((e) => widget.invoice.entryIds.contains(e.id)).toList();
+      final expenses = p.expenses.where((e) => widget.invoice.expenseIds.contains(e.id)).toList();
       final bytes = await PdfService.buildInvoicePdf(
         invoice: widget.invoice,
         entries: entries,
         jobs: p.jobs,
         settings: p.settings,
         getRate: p.getEntryRate,
+        expenses: expenses,
       );
       await Printing.layoutPdf(onLayout: (_) async => bytes, name: '${widget.invoice.number}.pdf');
     } finally {
@@ -749,8 +1024,24 @@ class _InvoiceCard extends StatelessWidget {
                       children: [
                         Text('${fmtDate(invoice.createdAt)} · ${invoice.entryIds.length} entries',
                             style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: invoice.isPaid
+                                ? const Color(0xFF16A34A).withAlpha(30)
+                                : AppColors.danger.withAlpha(30),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(invoice.isPaid ? 'PAID' : 'UNPAID',
+                              style: GoogleFonts.dmSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: invoice.isPaid ? const Color(0xFF16A34A) : AppColors.danger,
+                              )),
+                        ),
                         if (invoice.billedBy != null) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                             decoration: BoxDecoration(

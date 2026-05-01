@@ -8,6 +8,7 @@ import '../models/invoice.dart';
 import '../models/expense_item.dart';
 import '../models/app_settings.dart';
 import '../models/active_timer.dart';
+import '../models/saved_client.dart';
 
 const _uuid = Uuid();
 
@@ -18,6 +19,7 @@ class AppProvider extends ChangeNotifier {
   List<ExpenseItem> expenses = [];
   AppSettings settings = const AppSettings();
   List<ActiveTimer> activeTimers = [];
+  List<SavedClient> savedClients = [];
   bool _loaded = false;
 
   bool get isLoaded => _loaded;
@@ -71,6 +73,13 @@ class AppProvider extends ChangeNotifier {
           .toList();
     }
 
+    final savedClientsJson = prefs.getString('saved_clients');
+    if (savedClientsJson != null) {
+      savedClients = (jsonDecode(savedClientsJson) as List)
+          .map((e) => SavedClient.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
     _loaded = true;
     notifyListeners();
   }
@@ -83,6 +92,7 @@ class AppProvider extends ChangeNotifier {
     await prefs.setString('settings', jsonEncode(settings.toJson()));
     await prefs.setString('active_timers', jsonEncode(activeTimers.map((e) => e.toJson()).toList()));
     await prefs.setString('expenses', jsonEncode(expenses.map((e) => e.toJson()).toList()));
+    await prefs.setString('saved_clients', jsonEncode(savedClients.map((e) => e.toJson()).toList()));
   }
 
   // ── Jobs ──────────────────────────────────────────────────────────────────
@@ -209,6 +219,23 @@ class AppProvider extends ChangeNotifier {
       billedBy: billedBy,
     );
     invoices = [...invoices, inv];
+    // Auto-save client if any info was provided and it doesn't already exist
+    if (clientCompany != null || clientName != null) {
+      final alreadySaved = savedClients.any((c) =>
+          c.company == (clientCompany?.isEmpty == true ? null : clientCompany) &&
+          c.name == (clientName?.isEmpty == true ? null : clientName));
+      if (!alreadySaved) {
+        savedClients = [
+          ...savedClients,
+          SavedClient(
+            id: _uuid.v4(),
+            name: clientName?.isEmpty == true ? null : clientName,
+            company: clientCompany?.isEmpty == true ? null : clientCompany,
+            phone: clientPhone?.isEmpty == true ? null : clientPhone,
+          ),
+        ];
+      }
+    }
     entries = entries.map((e) {
       if (!entryIds.contains(e.id)) return e;
       return e.copyWith(invoiceId: inv.id);
@@ -216,6 +243,24 @@ class AppProvider extends ChangeNotifier {
     expenses = expenses.map((e) {
       if (!expenseIds.contains(e.id)) return e;
       return e.copyWith(invoiceId: inv.id);
+    }).toList();
+    _save();
+    notifyListeners();
+  }
+
+  void markInvoicePaid(String id, {required String paidAt, required String paymentMethod}) {
+    invoices = invoices.map((inv) {
+      if (inv.id != id) return inv;
+      return inv.copyWith(paidAt: paidAt, paymentMethod: paymentMethod);
+    }).toList();
+    _save();
+    notifyListeners();
+  }
+
+  void unmarkInvoicePaid(String id) {
+    invoices = invoices.map((inv) {
+      if (inv.id != id) return inv;
+      return inv.copyWith(clearPaidAt: true, clearPaymentMethod: true);
     }).toList();
     _save();
     notifyListeners();
@@ -233,6 +278,32 @@ class AppProvider extends ChangeNotifier {
       return e.copyWith(clearInvoiceId: true);
     }).toList();
     invoices = invoices.where((i) => i.id != id).toList();
+    _save();
+    notifyListeners();
+  }
+
+  // ── Saved Clients ─────────────────────────────────────────────────────────
+
+  void addSavedClient({String? name, String? company, String? phone}) {
+    savedClients = [
+      ...savedClients,
+      SavedClient(id: _uuid.v4(), name: name, company: company, phone: phone),
+    ];
+    _save();
+    notifyListeners();
+  }
+
+  void deleteSavedClient(String id) {
+    savedClients = savedClients.where((c) => c.id != id).toList();
+    _save();
+    notifyListeners();
+  }
+
+  void addPaymentMethod(String method) {
+    if (settings.paymentMethods.contains(method)) return;
+    settings = settings.copyWith(
+      paymentMethods: [...settings.paymentMethods, method],
+    );
     _save();
     notifyListeners();
   }

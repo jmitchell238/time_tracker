@@ -12,7 +12,9 @@ class Invoice {
   final String? clientName;
   final String? clientCompany;
   final String? clientPhone;
-  final String? billedBy; // 'James', 'Whitney', or 'Combined'
+  final String? billedBy;
+  final String? paidAt;        // 'YYYY-MM-DD' — null means unpaid
+  final String? paymentMethod; // 'Cash', 'Check', etc.
 
   const Invoice({
     required this.id,
@@ -29,7 +31,37 @@ class Invoice {
     this.clientCompany,
     this.clientPhone,
     this.billedBy,
+    this.paidAt,
+    this.paymentMethod,
   });
+
+  bool get isPaid => paidAt != null;
+
+  Invoice copyWith({
+    String? paidAt,
+    bool clearPaidAt = false,
+    String? paymentMethod,
+    bool clearPaymentMethod = false,
+  }) {
+    return Invoice(
+      id: id,
+      number: number,
+      createdAt: createdAt,
+      sentAt: sentAt,
+      entryIds: entryIds,
+      expenseIds: expenseIds,
+      totalHours: totalHours,
+      totalAmount: totalAmount,
+      expensesTotal: expensesTotal,
+      notes: notes,
+      clientName: clientName,
+      clientCompany: clientCompany,
+      clientPhone: clientPhone,
+      billedBy: billedBy,
+      paidAt: clearPaidAt ? null : (paidAt ?? this.paidAt),
+      paymentMethod: clearPaymentMethod ? null : (paymentMethod ?? this.paymentMethod),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -46,6 +78,8 @@ class Invoice {
         'clientCompany': clientCompany,
         'clientPhone': clientPhone,
         'billedBy': billedBy,
+        'paidAt': paidAt,
+        'paymentMethod': paymentMethod,
       };
 
   factory Invoice.fromJson(Map<String, dynamic> j) => Invoice(
@@ -65,5 +99,7 @@ class Invoice {
         clientCompany: j['clientCompany'] as String?,
         clientPhone: j['clientPhone'] as String?,
         billedBy: j['billedBy'] as String?,
+        paidAt: j['paidAt'] as String?,
+        paymentMethod: j['paymentMethod'] as String?,
       );
 }
