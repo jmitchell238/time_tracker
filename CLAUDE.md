@@ -22,8 +22,8 @@ When the user says "release", "deploy", or "push to production", run these two c
 # Step 1 — build the web release bundle
 cmd.exe /c "cd /d C:\Users\jmitc\workspace\time_tracker && flutter build web --release"
 
-# Step 2 — deploy to Firebase Hosting
-cmd.exe /c "cd /d C:\Users\jmitc\workspace\time_tracker && firebase deploy --only hosting"
+# Step 2 — deploy to Firebase Hosting (firebase is at AppData\Roaming\npm\firebase.cmd)
+cmd.exe /c "cd /d C:\Users\jmitc\workspace\time_tracker && C:\Users\jmitc\AppData\Roaming\npm\firebase.cmd deploy --only hosting"
 ```
 
 Both commands must run via `cmd.exe /c` from WSL because the Windows Flutter SDK is used (WSL dart-sdk is broken). Always run `flutter test` first to confirm all tests pass before deploying.

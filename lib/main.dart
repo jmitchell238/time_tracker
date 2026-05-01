@@ -151,8 +151,8 @@ class _AppShellState extends State<AppShell> {
                         children: [
                           Icon(
                             _icons[i],
-                            size: 19,
-                            color: active ? AppColors.primary : AppColors.fg3,
+                            size: 20,
+                            color: active ? AppColors.accent : AppColors.fg2,
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -160,7 +160,7 @@ class _AppShellState extends State<AppShell> {
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                              color: active ? AppColors.primary : AppColors.fg3,
+                              color: active ? AppColors.accent : AppColors.fg2,
                             ),
                           ),
                         ],

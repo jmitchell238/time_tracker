@@ -8,7 +8,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo === Deploying to Firebase Hosting ===
-call firebase deploy --only hosting
+call "%APPDATA%\npm\firebase.cmd" deploy --only hosting
 if %errorlevel% neq 0 (
     echo Deploy FAILED.
     exit /b %errorlevel%
