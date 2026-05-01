@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
+import 'firebase_platform_init_stub.dart'
+    if (dart.library.html) 'firebase_platform_init_web.dart';
 import 'providers/app_provider.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
@@ -12,6 +14,7 @@ import 'screens/dashboard_screen.dart';
 import 'screens/jobs_screen.dart';
 import 'screens/entries_screen.dart';
 import 'screens/invoices_screen.dart';
+import 'screens/expenses_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/insights_screen.dart';
 
@@ -19,6 +22,7 @@ final _authService = AuthService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  initFirebasePlatform();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
@@ -32,27 +36,37 @@ class TimeTrackerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Time Tracker',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      home: StreamBuilder<User?>(
-        stream: _authService.authStateChanges,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const _SplashScreen();
-          }
-          if (snapshot.data != null) {
-            // AppProvider is scoped inside the authenticated tree so it is
-            // re-created (and load() re-runs) on every fresh login.
-            return ChangeNotifierProvider(
-              create: (_) => AppProvider()..load(),
-              child: const AppShell(),
-            );
-          }
-          return const LoginScreen();
-        },
-      ),
+    return StreamBuilder<User?>(
+      stream: _authService.authStateChanges,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return MaterialApp(
+            title: 'Time Tracker',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.dark,
+            home: const _SplashScreen(),
+          );
+        }
+        if (snapshot.data != null) {
+          // ChangeNotifierProvider wraps MaterialApp so AppProvider is
+          // accessible from any pushed route or modal sheet (above the navigator).
+          return ChangeNotifierProvider(
+            create: (_) => AppProvider()..load(),
+            child: MaterialApp(
+              title: 'Time Tracker',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.dark,
+              home: const AppShell(),
+            ),
+          );
+        }
+        return MaterialApp(
+          title: 'Time Tracker',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.dark,
+          home: const LoginScreen(),
+        );
+      },
     );
   }
 }
@@ -81,12 +95,13 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _index = 0;
 
-  static const _labels = ['Home', 'Jobs', 'Entries', 'Invoices', 'Insights', 'Settings'];
+  static const _labels = ['Home', 'Jobs', 'Entries', 'Invoices', 'Expenses', 'Insights', 'Settings'];
   static const _icons = [
     Icons.dashboard_outlined,
     Icons.work_outline,
     Icons.list_alt_outlined,
     Icons.receipt_long_outlined,
+    Icons.shopping_bag_outlined,
     Icons.bar_chart_outlined,
     Icons.settings_outlined,
   ];
@@ -110,6 +125,7 @@ class _AppShellState extends State<AppShell> {
           JobsScreen(),
           EntriesScreen(),
           InvoicesScreen(),
+          ExpensesScreen(),
           InsightsScreen(),
           SettingsScreen(),
         ],
@@ -123,7 +139,7 @@ class _AppShellState extends State<AppShell> {
           child: SizedBox(
             height: 62,
             child: Row(
-              children: List.generate(6, (i) {
+              children: List.generate(7, (i) {
                 final active = _index == i;
                 return Expanded(
                   child: GestureDetector(

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../models/job.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/log_time_sheet.dart';
@@ -80,15 +81,30 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.arrow_back, size: 18, color: Colors.white70),
-                        const SizedBox(width: 4),
-                        Text('Back', style: GoogleFonts.dmSans(fontSize: 13, color: Colors.white70)),
-                      ],
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.arrow_back, size: 18, color: Colors.white70),
+                            const SizedBox(width: 4),
+                            Text('Back', style: GoogleFonts.dmSans(fontSize: 13, color: Colors.white70)),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => _showEditSheet(context, provider, job),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.edit_outlined, size: 16, color: Colors.white70),
+                            const SizedBox(width: 4),
+                            Text('Edit', style: GoogleFonts.dmSans(fontSize: 13, color: Colors.white70)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   Text(job.name, style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
@@ -280,6 +296,108 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showEditSheet(BuildContext context, AppProvider provider, Job job) {
+    final nameCtrl = TextEditingController(text: job.name);
+    final descCtrl = TextEditingController(text: job.description);
+    final rateCtrl = TextEditingController(
+      text: job.rate != null ? job.rate.toString() : '',
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.bgBase,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            16, 20, 16,
+            MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Edit Job',
+                  style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.fg)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameCtrl,
+                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.fg),
+                decoration: _inputDecoration('Job Name'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descCtrl,
+                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.fg),
+                decoration: _inputDecoration('Description'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: rateCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.fg),
+                decoration: _inputDecoration('Hourly Rate (\$) — leave blank to use default'),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final name = nameCtrl.text.trim();
+                    if (name.isEmpty) return;
+                    final rateText = rateCtrl.text.trim();
+                    final rate = rateText.isNotEmpty ? double.tryParse(rateText) : null;
+                    provider.updateJob(
+                      job.id,
+                      name: name,
+                      description: descCtrl.text.trim(),
+                      rate: rate,
+                      clearRate: rateText.isEmpty,
+                    );
+                    Navigator.pop(ctx);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  child: Text('Save', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2),
+      filled: true,
+      fillColor: AppColors.bgDeep,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.primary),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
   }
 

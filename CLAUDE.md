@@ -14,6 +14,20 @@ flutter build apk                  # release Android build
 flutter build windows              # release Windows build
 ```
 
+## Release / Deploy (PWA → Firebase Hosting)
+
+When the user says "release", "deploy", or "push to production", run these two commands in order from the project root (`/mnt/c/Users/jmitc/workspace/time_tracker`):
+
+```bash
+# Step 1 — build the web release bundle
+cmd.exe /c "cd /d C:\Users\jmitc\workspace\time_tracker && flutter build web --release"
+
+# Step 2 — deploy to Firebase Hosting
+cmd.exe /c "cd /d C:\Users\jmitc\workspace\time_tracker && firebase deploy --only hosting"
+```
+
+Both commands must run via `cmd.exe /c` from WSL because the Windows Flutter SDK is used (WSL dart-sdk is broken). Always run `flutter test` first to confirm all tests pass before deploying.
+
 ## Architecture
 
 **State management:** single `ChangeNotifier` — `lib/providers/app_provider.dart`. Every screen reads from and writes to this one provider via `context.watch<AppProvider>()` / `context.read<AppProvider>()`. There is no other state layer.

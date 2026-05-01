@@ -4,6 +4,7 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/invoice.dart';
+import '../models/expense_item.dart';
 import '../services/pdf_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/metric_item.dart';
@@ -21,7 +22,9 @@ class InvoicesScreen extends StatefulWidget {
 class _InvoicesScreenState extends State<InvoicesScreen> {
   bool _creating = false;
   String? _detailId;
-  final Map<String, bool> _selected = {};
+  final Map<String, bool> _selectedEntries = {};
+  final Map<String, bool> _selectedExpenses = {};
+  String _billedBy = 'James';
   final _notesCtrl = TextEditingController();
   final _clientNameCtrl = TextEditingController();
   final _clientCompanyCtrl = TextEditingController();
@@ -34,6 +37,17 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     _clientCompanyCtrl.dispose();
     _clientPhoneCtrl.dispose();
     super.dispose();
+  }
+
+  void _resetCreate() {
+    _creating = false;
+    _selectedEntries.clear();
+    _selectedExpenses.clear();
+    _billedBy = 'James';
+    _clientNameCtrl.clear();
+    _clientCompanyCtrl.clear();
+    _clientPhoneCtrl.clear();
+    _notesCtrl.clear();
   }
 
   String _fmtDateShort(String d) {
@@ -50,17 +64,16 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
-    if (_detailId != null) {
-      return _buildDetail(provider);
-    }
-    if (_creating) {
-      return _buildCreateFlow(provider);
-    }
+    if (_detailId != null) return _buildDetail(provider);
+    if (_creating) return _buildCreateFlow(provider);
     return _buildList(provider);
   }
 
+  // ── List ──────────────────────────────────────────────────────────────────
+
   Widget _buildList(AppProvider provider) {
     final uninvoiced = provider.invoiceableEntries;
+    final pendingExpenses = provider.uninvoicedExpenses;
     final invoices = [...provider.invoices].reversed.toList();
 
     return ListView(
@@ -87,7 +100,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         const SizedBox(height: 16),
 
         // Uninvoiced banner
-        if (uninvoiced.isNotEmpty) ...[
+        if (uninvoiced.isNotEmpty || pendingExpenses.isNotEmpty) ...[
           GestureDetector(
             onTap: () => setState(() => _creating = true),
             child: Container(
@@ -105,8 +118,13 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${uninvoiced.length} uninvoiced entries',
-                            style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                        Text(
+                          [
+                            if (uninvoiced.isNotEmpty) '${uninvoiced.length} uninvoiced ${uninvoiced.length == 1 ? 'entry' : 'entries'}',
+                            if (pendingExpenses.isNotEmpty) '${pendingExpenses.length} pending ${pendingExpenses.length == 1 ? 'expense' : 'expenses'}',
+                          ].join(' · '),
+                          style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg),
+                        ),
                         Text('Tap to create a new invoice',
                             style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
                       ],
@@ -120,7 +138,6 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           const SizedBox(height: 16),
         ],
 
-        // Invoice list
         if (invoices.isEmpty)
           const EmptyStateWidget('No invoices yet'),
         ...invoices.map((inv) => _InvoiceCard(
@@ -133,25 +150,25 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     );
   }
 
+  // ── Create flow ───────────────────────────────────────────────────────────
+
   Widget _buildCreateFlow(AppProvider provider) {
     final uninvoiced = provider.invoiceableEntries;
-    final selectedEntries = uninvoiced.where((e) => _selected[e.id] == true).toList();
+    final uninvoicedExpenses = provider.uninvoicedExpenses;
+
+    final selectedEntries = uninvoiced.where((e) => _selectedEntries[e.id] == true).toList();
+    final selectedExpenses = uninvoicedExpenses.where((e) => _selectedExpenses[e.id] == true).toList();
+
     final totalHours = selectedEntries.fold(0.0, (a, e) => a + e.hours);
-    final totalAmount = selectedEntries.fold(0.0, (a, e) {
-      return a + e.hours * provider.getEntryRate(e);
-    });
+    final totalAmount = selectedEntries.fold(0.0, (a, e) => a + e.hours * provider.getEntryRate(e));
+    final expensesTotal = selectedExpenses.fold(0.0, (a, e) => a + e.amount);
+    final grandTotal = totalAmount + expensesTotal;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
         GestureDetector(
-          onTap: () => setState(() {
-            _creating = false;
-            _selected.clear();
-            _clientNameCtrl.clear();
-            _clientCompanyCtrl.clear();
-            _clientPhoneCtrl.clear();
-          }),
+          onTap: () => setState(_resetCreate),
           child: Row(
             children: [
               const Icon(Icons.arrow_back, size: 18, color: AppColors.fg2),
@@ -164,7 +181,40 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         Text('New Invoice', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
         const SizedBox(height: 16),
 
-        // Client info
+        // ── Billed by ──
+        Text('BILLED BY',
+            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+        const SizedBox(height: 8),
+        Row(
+          children: ['James', 'Whitney', 'Combined'].map((name) {
+            final active = _billedBy == name;
+            final isLast = name == 'Combined';
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _billedBy = name),
+                child: Container(
+                  margin: EdgeInsets.only(right: isLast ? 0 : 8),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: active ? AppColors.primary : AppColors.bgCard,
+                    border: Border.all(color: active ? AppColors.primary : AppColors.border),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(name,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12, fontWeight: FontWeight.w700,
+                          color: active ? Colors.white : AppColors.fg2,
+                        )),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 20),
+
+        // ── Client info ──
         Text('CLIENT INFO (OPTIONAL)',
             style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
@@ -173,23 +223,27 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         LabeledTextField(label: 'Company', controller: _clientCompanyCtrl),
         const SizedBox(height: 8),
         LabeledTextField(label: 'Phone', controller: _clientPhoneCtrl, keyboardType: TextInputType.phone),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
+        // ── Select entries ──
         Text('SELECT ENTRIES',
             style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
 
         if (uninvoiced.isEmpty)
-          const EmptyStateWidget('No uninvoiced entries', verticalPadding: 24),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: const EmptyStateWidget('No uninvoiced entries', verticalPadding: 16),
+          ),
 
         ...uninvoiced.map((e) {
           final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
           final rate = provider.getEntryRate(e);
-          final isSelected = _selected[e.id] == true;
+          final isSelected = _selectedEntries[e.id] == true;
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: GestureDetector(
-              onTap: () => setState(() => _selected[e.id] = !isSelected),
+              onTap: () => setState(() => _selectedEntries[e.id] = !isSelected),
               child: Container(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 decoration: BoxDecoration(
@@ -199,17 +253,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 20, height: 20,
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : Colors.transparent,
-                        border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: 2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: isSelected
-                          ? const Icon(Icons.check, size: 14, color: Colors.white)
-                          : null,
-                    ),
+                    _checkbox(isSelected),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -237,7 +281,58 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           );
         }),
 
-        if (selectedEntries.isNotEmpty) ...[
+        // ── Select expenses ──
+        const SizedBox(height: 8),
+        Text('SELECT EXPENSES (OPTIONAL)',
+            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+        const SizedBox(height: 8),
+
+        if (uninvoicedExpenses.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: const EmptyStateWidget('No pending expenses', verticalPadding: 16),
+          ),
+
+        ...uninvoicedExpenses.map((e) {
+          final isSelected = _selectedExpenses[e.id] == true;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedExpenses[e.id] = !isSelected),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary.withAlpha(38) : AppColors.bgCard,
+                  border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    _checkbox(isSelected),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(e.description,
+                              style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text('${e.purchasedBy} · ${_fmtDateShort(e.date)}',
+                              style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                        ],
+                      ),
+                    ),
+                    Text(_fmtMoney(e.amount),
+                        style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.accent)),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+
+        // ── Totals summary ──
+        if (selectedEntries.isNotEmpty || selectedExpenses.isNotEmpty) ...[
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -254,19 +349,32 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                 Row(
                   children: [
                     MetricItem(label: 'Hours', value: totalHours.toStringAsFixed(1)),
-                    const SizedBox(width: 20),
-                    MetricItem(label: 'Amount', value: _fmtMoney(totalAmount), color: AppColors.accent),
-                    const SizedBox(width: 20),
-                    MetricItem(label: 'Entries', value: '${selectedEntries.length}'),
+                    const SizedBox(width: 16),
+                    MetricItem(label: 'Labour', value: _fmtMoney(totalAmount), color: AppColors.accent),
+                    const SizedBox(width: 16),
+                    if (expensesTotal > 0)
+                      MetricItem(label: 'Parts', value: _fmtMoney(expensesTotal), color: AppColors.accent),
                   ],
                 ),
+                if (expensesTotal > 0) ...[
+                  const SizedBox(height: 8),
+                  Container(height: 1, color: AppColors.accent.withAlpha(64)),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Grand Total', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                      Text(_fmtMoney(grandTotal), style: GoogleFonts.lora(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.accent)),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
         ],
         const SizedBox(height: 14),
 
-        // Notes
+        // ── Notes ──
         Text('NOTES (OPTIONAL)',
             style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
         const SizedBox(height: 6),
@@ -290,25 +398,25 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         SizedBox(
           height: 48,
           child: ElevatedButton(
-            onPressed: selectedEntries.isEmpty ? null : () {
-              provider.createInvoice(
-                entryIds: selectedEntries.map((e) => e.id).toList(),
-                totalHours: totalHours,
-                totalAmount: totalAmount,
-                notes: _notesCtrl.text.trim(),
-                clientName: _clientNameCtrl.text.trim(),
-                clientCompany: _clientCompanyCtrl.text.trim(),
-                clientPhone: _clientPhoneCtrl.text.trim(),
-              );
-              _selected.clear();
-              _notesCtrl.clear();
-              _clientNameCtrl.clear();
-              _clientCompanyCtrl.clear();
-              _clientPhoneCtrl.clear();
-              setState(() => _creating = false);
-            },
+            onPressed: selectedEntries.isEmpty && selectedExpenses.isEmpty
+                ? null
+                : () {
+                    provider.createInvoice(
+                      entryIds: selectedEntries.map((e) => e.id).toList(),
+                      expenseIds: selectedExpenses.map((e) => e.id).toList(),
+                      totalHours: totalHours,
+                      totalAmount: totalAmount,
+                      expensesTotal: expensesTotal,
+                      notes: _notesCtrl.text.trim(),
+                      clientName: _clientNameCtrl.text.trim(),
+                      clientCompany: _clientCompanyCtrl.text.trim(),
+                      clientPhone: _clientPhoneCtrl.text.trim(),
+                      billedBy: _billedBy,
+                    );
+                    setState(_resetCreate);
+                  },
             style: ElevatedButton.styleFrom(
-              backgroundColor: selectedEntries.isNotEmpty ? AppColors.accent : AppColors.fg3,
+              backgroundColor: (selectedEntries.isNotEmpty || selectedExpenses.isNotEmpty) ? AppColors.accent : AppColors.fg3,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 0,
@@ -320,6 +428,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     );
   }
 
+  // ── Detail ────────────────────────────────────────────────────────────────
+
   Widget _buildDetail(AppProvider provider) {
     final inv = provider.invoices.where((i) => i.id == _detailId).firstOrNull;
     if (inv == null) {
@@ -327,6 +437,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       return const SizedBox();
     }
     final invEntries = provider.entries.where((e) => inv.entryIds.contains(e.id)).toList();
+    final invExpenses = provider.expenses.where((e) => inv.expenseIds.contains(e.id)).toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
@@ -349,8 +460,25 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(inv.number, style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                  Text('Created ${_fmtDateShort(inv.createdAt)}',
-                      style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text('Created ${_fmtDateShort(inv.createdAt)}',
+                          style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
+                      if (inv.billedBy != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(40),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(inv.billedBy!,
+                              style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -359,45 +487,24 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         ),
         const SizedBox(height: 14),
 
+        // Totals cards
         Row(
           children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                decoration: BoxDecoration(
-                  color: AppColors.bgCard,
-                  border: Border.all(color: AppColors.border),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('TOTAL HOURS', style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.fg2, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                    Text(inv.totalHours.toStringAsFixed(1), style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                  ],
-                ),
-              ),
-            ),
+            Expanded(child: _totalCard('TOTAL HOURS', inv.totalHours.toStringAsFixed(1), AppColors.fg)),
             const SizedBox(width: 12),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withAlpha(25),
-                  border: Border.all(color: AppColors.accent.withAlpha(76)),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('TOTAL AMOUNT', style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.accent, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                    Text(_fmtMoney(inv.totalAmount), style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.accent)),
-                  ],
-                ),
-              ),
-            ),
+            Expanded(child: _totalCard('LABOUR', _fmtMoney(inv.totalAmount), AppColors.accent, highlight: true)),
           ],
         ),
+        if (inv.expensesTotal > 0) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _totalCard('PARTS / EXPENSES', _fmtMoney(inv.expensesTotal), AppColors.accent, highlight: true)),
+              const SizedBox(width: 12),
+              Expanded(child: _totalCard('GRAND TOTAL', _fmtMoney(inv.totalAmount + inv.expensesTotal), AppColors.accent, highlight: true)),
+            ],
+          ),
+        ],
 
         if (inv.notes.isNotEmpty) ...[
           const SizedBox(height: 10),
@@ -411,26 +518,21 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-            decoration: BoxDecoration(
-              color: AppColors.bgCard,
-              border: Border.all(color: AppColors.border),
-              borderRadius: BorderRadius.circular(10),
-            ),
+            decoration: BoxDecoration(color: AppColors.bgCard, border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(10)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (inv.clientName != null)
-                  Text(inv.clientName!, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                if (inv.clientCompany != null)
-                  Text(inv.clientCompany!, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
-                if (inv.clientPhone != null)
-                  Text(inv.clientPhone!, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
+                if (inv.clientName != null) Text(inv.clientName!, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                if (inv.clientCompany != null) Text(inv.clientCompany!, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
+                if (inv.clientPhone != null) Text(inv.clientPhone!, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
               ],
             ),
           ),
         ],
+
+        // Entries section
         const SizedBox(height: 16),
-        Text('ENTRIES (${invEntries.length})',
+        Text('LABOUR ENTRIES (${invEntries.length})',
             style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
         ...invEntries.map((e) {
@@ -438,51 +540,124 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           final rate = provider.getEntryRate(e);
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              decoration: BoxDecoration(
-                color: AppColors.bgCard,
-                border: Border(
-                  left: const BorderSide(color: AppColors.fg3, width: 4),
-                  top: const BorderSide(color: AppColors.border),
-                  right: const BorderSide(color: AppColors.border),
-                  bottom: const BorderSide(color: AppColors.border),
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(job?.name ?? 'Unknown',
-                            style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                        Text('${_fmtDateShort(e.date)} · ${e.description}',
-                            style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
-                      ],
-                    ),
-                  ),
-                  AmountDisplayPair(
-                    hoursText: '${e.hours.toStringAsFixed(1)}h',
-                    amountText: _fmtMoney(e.hours * rate),
-                    hoursSize: 12,
-                  ),
-                ],
-              ),
+            child: _detailRow(
+              left: job?.name ?? 'Unknown',
+              sub: '${_fmtDateShort(e.date)} · ${e.description}',
+              right: _fmtMoney(e.hours * rate),
+              rightSub: '${e.hours.toStringAsFixed(1)}h',
             ),
           );
         }),
+
+        // Expenses section
+        if (invExpenses.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text('PARTS & EXPENSES (${invExpenses.length})',
+              style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+          const SizedBox(height: 8),
+          ...invExpenses.map((e) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _detailRow(
+                  left: e.description,
+                  sub: '${e.purchasedBy} · ${_fmtDateShort(e.date)}',
+                  right: _fmtMoney(e.amount),
+                  rightSub: '',
+                ),
+              )),
+        ],
+
+        const SizedBox(height: 24),
+        OutlinedButton.icon(
+          onPressed: () {
+            provider.deleteInvoice(inv.id);
+            setState(() => _detailId = null);
+          },
+          icon: const Icon(Icons.delete_outline, size: 15, color: AppColors.danger),
+          label: Text('Delete Invoice',
+              style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.danger)),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.danger, width: 0.5),
+            backgroundColor: AppColors.danger.withAlpha(25),
+            minimumSize: const Size(double.infinity, 44),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
       ],
     );
   }
 
+  Widget _totalCard(String label, String value, Color valueColor, {bool highlight = false}) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: highlight ? AppColors.accent.withAlpha(25) : AppColors.bgCard,
+        border: Border.all(color: highlight ? AppColors.accent.withAlpha(76) : AppColors.border),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: GoogleFonts.dmSans(fontSize: 10, color: highlight ? AppColors.accent : AppColors.fg2, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+          Text(value, style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: valueColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow({required String left, required String sub, required String right, required String rightSub}) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        border: Border(
+          left: const BorderSide(color: AppColors.fg3, width: 4),
+          top: const BorderSide(color: AppColors.border),
+          right: const BorderSide(color: AppColors.border),
+          bottom: const BorderSide(color: AppColors.border),
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(left, style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                if (sub.isNotEmpty)
+                  Text(sub, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(right, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+              if (rightSub.isNotEmpty)
+                Text(rightSub, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _checkbox(bool active) => Container(
+        width: 20, height: 20,
+        decoration: BoxDecoration(
+          color: active ? AppColors.primary : Colors.transparent,
+          border: Border.all(color: active ? AppColors.primary : AppColors.border, width: 2),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: active ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
+      );
 }
+
+// ── PDF Button ────────────────────────────────────────────────────────────────
 
 class _PdfButton extends StatefulWidget {
   final Invoice invoice;
   final AppProvider provider;
-
   const _PdfButton({required this.invoice, required this.provider});
 
   @override
@@ -496,9 +671,7 @@ class _PdfButtonState extends State<_PdfButton> {
     setState(() => _generating = true);
     try {
       final p = widget.provider;
-      final entries = p.entries
-          .where((e) => widget.invoice.entryIds.contains(e.id))
-          .toList();
+      final entries = p.entries.where((e) => widget.invoice.entryIds.contains(e.id)).toList();
       final bytes = await PdfService.buildInvoicePdf(
         invoice: widget.invoice,
         entries: entries,
@@ -506,10 +679,7 @@ class _PdfButtonState extends State<_PdfButton> {
         settings: p.settings,
         getRate: p.getEntryRate,
       );
-      await Printing.layoutPdf(
-        onLayout: (_) async => bytes,
-        name: '${widget.invoice.number}.pdf',
-      );
+      await Printing.layoutPdf(onLayout: (_) async => bytes, name: '${widget.invoice.number}.pdf');
     } finally {
       if (mounted) setState(() => _generating = false);
     }
@@ -522,11 +692,7 @@ class _PdfButtonState extends State<_PdfButton> {
       child: ElevatedButton.icon(
         onPressed: _generating ? null : _generate,
         icon: _generating
-            ? const SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              )
+            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
             : const Icon(Icons.picture_as_pdf_outlined, size: 16),
         label: Text(_generating ? 'Building…' : 'PDF',
             style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700)),
@@ -542,6 +708,8 @@ class _PdfButtonState extends State<_PdfButton> {
   }
 }
 
+// ── Invoice Card ──────────────────────────────────────────────────────────────
+
 class _InvoiceCard extends StatelessWidget {
   final Invoice invoice;
   final String Function(String) fmtDate;
@@ -552,6 +720,7 @@ class _InvoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final grandTotal = invoice.totalAmount + invoice.expensesTotal;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: GestureDetector(
@@ -567,10 +736,7 @@ class _InvoiceCard extends StatelessWidget {
             children: [
               Container(
                 width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withAlpha(25),
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                decoration: BoxDecoration(color: AppColors.accent.withAlpha(25), borderRadius: BorderRadius.circular(10)),
                 child: const Icon(Icons.receipt_outlined, size: 20, color: AppColors.accent),
               ),
               const SizedBox(width: 12),
@@ -579,15 +745,31 @@ class _InvoiceCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(invoice.number, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                    Text('${fmtDate(invoice.createdAt)} · ${invoice.entryIds.length} entries',
-                        style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                    Row(
+                      children: [
+                        Text('${fmtDate(invoice.createdAt)} · ${invoice.entryIds.length} entries',
+                            style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                        if (invoice.billedBy != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(40),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(invoice.billedBy!,
+                                style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(fmtMoney(invoice.totalAmount),
+                  Text(fmtMoney(grandTotal),
                       style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.accent)),
                   Text('${invoice.totalHours.toStringAsFixed(1)}h',
                       style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),

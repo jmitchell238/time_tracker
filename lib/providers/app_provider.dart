@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../models/job.dart';
 import '../models/time_entry.dart';
 import '../models/invoice.dart';
+import '../models/expense_item.dart';
 import '../models/app_settings.dart';
 import '../models/active_timer.dart';
 
@@ -14,6 +15,7 @@ class AppProvider extends ChangeNotifier {
   List<Job> jobs = [];
   List<TimeEntry> entries = [];
   List<Invoice> invoices = [];
+  List<ExpenseItem> expenses = [];
   AppSettings settings = const AppSettings();
   List<ActiveTimer> activeTimers = [];
   bool _loaded = false;
@@ -62,6 +64,13 @@ class AppProvider extends ChangeNotifier {
           .toList();
     }
 
+    final expensesJson = prefs.getString('expenses');
+    if (expensesJson != null) {
+      expenses = (jsonDecode(expensesJson) as List)
+          .map((e) => ExpenseItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
     _loaded = true;
     notifyListeners();
   }
@@ -73,6 +82,7 @@ class AppProvider extends ChangeNotifier {
     await prefs.setString('invoices', jsonEncode(invoices.map((e) => e.toJson()).toList()));
     await prefs.setString('settings', jsonEncode(settings.toJson()));
     await prefs.setString('active_timers', jsonEncode(activeTimers.map((e) => e.toJson()).toList()));
+    await prefs.setString('expenses', jsonEncode(expenses.map((e) => e.toJson()).toList()));
   }
 
   // ── Jobs ──────────────────────────────────────────────────────────────────
@@ -171,9 +181,15 @@ class AppProvider extends ChangeNotifier {
 
   void createInvoice({
     required List<String> entryIds,
+    List<String> expenseIds = const [],
     required double totalHours,
     required double totalAmount,
+    double expensesTotal = 0,
     required String notes,
+    String? clientName,
+    String? clientCompany,
+    String? clientPhone,
+    String? billedBy,
   }) {
     final num = 'INV-${(invoices.length + 1).toString().padLeft(3, '0')}';
     final today = DateTime.now().toIso8601String().substring(0, 10);
@@ -182,18 +198,75 @@ class AppProvider extends ChangeNotifier {
       number: num,
       createdAt: today,
       entryIds: entryIds,
+      expenseIds: expenseIds,
       totalHours: totalHours,
       totalAmount: totalAmount,
+      expensesTotal: expensesTotal,
       notes: notes,
+      clientName: clientName?.isEmpty == true ? null : clientName,
+      clientCompany: clientCompany?.isEmpty == true ? null : clientCompany,
+      clientPhone: clientPhone?.isEmpty == true ? null : clientPhone,
+      billedBy: billedBy,
     );
     invoices = [...invoices, inv];
     entries = entries.map((e) {
       if (!entryIds.contains(e.id)) return e;
       return e.copyWith(invoiceId: inv.id);
     }).toList();
+    expenses = expenses.map((e) {
+      if (!expenseIds.contains(e.id)) return e;
+      return e.copyWith(invoiceId: inv.id);
+    }).toList();
     _save();
     notifyListeners();
   }
+
+  void deleteInvoice(String id) {
+    final inv = invoices.where((i) => i.id == id).firstOrNull;
+    if (inv == null) return;
+    entries = entries.map((e) {
+      if (e.invoiceId != id) return e;
+      return e.copyWith(invoiceId: null);
+    }).toList();
+    expenses = expenses.map((e) {
+      if (e.invoiceId != id) return e;
+      return e.copyWith(clearInvoiceId: true);
+    }).toList();
+    invoices = invoices.where((i) => i.id != id).toList();
+    _save();
+    notifyListeners();
+  }
+
+  // ── Expenses ──────────────────────────────────────────────────────────────
+
+  void addExpense({
+    required String description,
+    required double amount,
+    required String date,
+    required String purchasedBy,
+  }) {
+    expenses = [
+      ExpenseItem(
+        id: _uuid.v4(),
+        description: description,
+        amount: amount,
+        date: date,
+        purchasedBy: purchasedBy,
+      ),
+      ...expenses,
+    ];
+    _save();
+    notifyListeners();
+  }
+
+  void deleteExpense(String id) {
+    expenses = expenses.where((e) => e.id != id).toList();
+    _save();
+    notifyListeners();
+  }
+
+  List<ExpenseItem> get uninvoicedExpenses =>
+      expenses.where((e) => e.invoiceId == null).toList();
 
   // ── Settings ──────────────────────────────────────────────────────────────
 

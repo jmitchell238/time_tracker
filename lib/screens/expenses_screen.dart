@@ -1,0 +1,374 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../models/expense_item.dart';
+import '../providers/app_provider.dart';
+import '../theme/app_theme.dart';
+import '../widgets/segmented_toggle_bar.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/left_accent_card.dart';
+
+class ExpensesScreen extends StatefulWidget {
+  const ExpensesScreen({super.key});
+
+  @override
+  State<ExpensesScreen> createState() => _ExpensesScreenState();
+}
+
+class _ExpensesScreenState extends State<ExpensesScreen> {
+  String _filter = 'All';
+  String? _expandedId;
+
+  String _fmtDateLong(String d) {
+    final dt = DateTime.parse('${d}T12:00:00');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    return '${days[dt.weekday - 1]}, ${months[dt.month - 1]} ${dt.day}';
+  }
+
+  String _fmtMoney(double n) =>
+      '\$${n.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+\.)'), (m) => '${m[1]},')}';
+
+  List<ExpenseItem> _filtered(List<ExpenseItem> all) {
+    switch (_filter) {
+      case 'Pending':
+        return all.where((e) => e.invoiceId == null).toList();
+      case 'Reimbursed':
+        return all.where((e) => e.invoiceId != null).toList();
+      default:
+        return all;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final allSorted = [...provider.expenses]..sort((a, b) => b.date.compareTo(a.date));
+    final visible = _filtered(allSorted);
+
+    final totalSpent = allSorted.fold(0.0, (a, e) => a + e.amount);
+    final totalPending = allSorted.where((e) => e.invoiceId == null).fold(0.0, (a, e) => a + e.amount);
+    final totalReimbursed = allSorted.where((e) => e.invoiceId != null).fold(0.0, (a, e) => a + e.amount);
+    final jamesTotal = allSorted.where((e) => e.purchasedBy == 'James').fold(0.0, (a, e) => a + e.amount);
+    final whitneyTotal = allSorted.where((e) => e.purchasedBy == 'Whitney').fold(0.0, (a, e) => a + e.amount);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+      children: [
+        Row(
+          children: [
+            Text('Expenses', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+            const Spacer(),
+            ElevatedButton.icon(
+              onPressed: () => _showAddSheet(context, provider),
+              icon: const Icon(Icons.add, size: 16),
+              label: Text('Add', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 36),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        // Insights summary
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.bgBase,
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('SUMMARY', style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  _summaryCell('Total Spent', _fmtMoney(totalSpent), AppColors.fg),
+                  _divider(),
+                  _summaryCell('Pending', _fmtMoney(totalPending), AppColors.accent),
+                  _divider(),
+                  _summaryCell('Reimbursed', _fmtMoney(totalReimbursed), AppColors.success),
+                ],
+              ),
+              if (allSorted.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Container(height: 1, color: AppColors.border),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    _summaryCell('James', _fmtMoney(jamesTotal), AppColors.primary),
+                    _divider(),
+                    _summaryCell('Whitney', _fmtMoney(whitneyTotal), AppColors.primary),
+                    _divider(),
+                    _summaryCell('Items', '${allSorted.length}', AppColors.fg),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Filter
+        SegmentedToggleBar(
+          labels: const ['All', 'Pending', 'Reimbursed'],
+          selected: _filter,
+          onChanged: (v) => setState(() => _filter = v),
+        ),
+        const SizedBox(height: 14),
+
+        // List grouped by date
+        if (visible.isEmpty)
+          const EmptyStateWidget('No expenses yet')
+        else
+          _buildList(visible),
+      ],
+    );
+  }
+
+  Widget _buildList(List<ExpenseItem> items) {
+    final byDate = <String, List<ExpenseItem>>{};
+    for (final e in items) {
+      byDate.putIfAbsent(e.date, () => []).add(e);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: byDate.entries.map((group) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_fmtDateLong(group.key),
+                  style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2)),
+              const SizedBox(height: 6),
+              ...group.value.map((e) => _ExpenseRow(
+                    expense: e,
+                    fmtMoney: _fmtMoney,
+                    expanded: _expandedId == e.id,
+                    onToggle: () => setState(() => _expandedId = _expandedId == e.id ? null : e.id),
+                    onDelete: () => context.read<AppProvider>().deleteExpense(e.id),
+                  )),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _summaryCell(String label, String value, Color valueColor) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.fg2, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(value, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: valueColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _divider() => Container(width: 1, height: 30, color: AppColors.border, margin: const EdgeInsets.symmetric(horizontal: 8));
+
+  void _showAddSheet(BuildContext context, AppProvider provider) {
+    final descCtrl = TextEditingController();
+    final amountCtrl = TextEditingController();
+    final dateCtrl = TextEditingController(text: DateTime.now().toIso8601String().substring(0, 10));
+    String purchasedBy = 'James';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.bgBase,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheet) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(16, 20, 16, MediaQuery.of(ctx).viewInsets.bottom + 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Add Expense', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                  const SizedBox(height: 16),
+                  _field(descCtrl, 'Description (e.g. Hydraulic fluid)'),
+                  const SizedBox(height: 12),
+                  _field(amountCtrl, 'Amount (\$)', keyboard: const TextInputType.numberWithOptions(decimal: true)),
+                  const SizedBox(height: 12),
+                  _field(dateCtrl, 'Date (YYYY-MM-DD)'),
+                  const SizedBox(height: 14),
+                  Text('PURCHASED BY', style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: ['James', 'Whitney'].map((name) {
+                      final active = purchasedBy == name;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () => setSheet(() => purchasedBy = name),
+                          child: Container(
+                            margin: EdgeInsets.only(right: name == 'James' ? 8 : 0),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: active ? AppColors.primary : AppColors.bgDeep,
+                              border: Border.all(color: active ? AppColors.primary : AppColors.border),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(name, style: GoogleFonts.dmSans(
+                                fontSize: 13, fontWeight: FontWeight.w700,
+                                color: active ? Colors.white : AppColors.fg2,
+                              )),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final desc = descCtrl.text.trim();
+                        final amount = double.tryParse(amountCtrl.text.trim());
+                        final date = dateCtrl.text.trim();
+                        if (desc.isEmpty || amount == null || date.isEmpty) return;
+                        provider.addExpense(
+                          description: desc,
+                          amount: amount,
+                          date: date,
+                          purchasedBy: purchasedBy,
+                        );
+                        Navigator.pop(ctx);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 0,
+                      ),
+                      child: Text('Save', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _field(TextEditingController ctrl, String label, {TextInputType? keyboard}) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: keyboard,
+      style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.fg),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2),
+        filled: true,
+        fillColor: AppColors.bgDeep,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.primary)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
+    );
+  }
+}
+
+class _ExpenseRow extends StatelessWidget {
+  final ExpenseItem expense;
+  final String Function(double) fmtMoney;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final VoidCallback onDelete;
+
+  const _ExpenseRow({
+    required this.expense,
+    required this.fmtMoney,
+    required this.expanded,
+    required this.onToggle,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isPending = expense.invoiceId == null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: GestureDetector(
+        onTap: onToggle,
+        child: LeftAccentCard(
+          accentColor: isPending ? AppColors.accent : AppColors.fg3,
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(expense.description,
+                            style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${expense.purchasedBy} · ${isPending ? '● Pending' : 'Reimbursed'}',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 10, fontWeight: FontWeight.w600,
+                            color: isPending ? AppColors.accent : AppColors.fg3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(fmtMoney(expense.amount),
+                      style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                ],
+              ),
+              if (expanded) ...[
+                const SizedBox(height: 10),
+                Container(height: 1, color: AppColors.border),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: isPending ? onDelete : null,
+                        icon: const Icon(Icons.delete_outline, size: 15, color: AppColors.danger),
+                        label: Text(
+                          isPending ? 'Delete' : 'Cannot delete — on invoice',
+                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: isPending ? AppColors.danger : AppColors.fg3),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: isPending ? AppColors.danger : AppColors.border, width: 0.5),
+                          backgroundColor: isPending ? AppColors.danger.withAlpha(25) : Colors.transparent,
+                          minimumSize: const Size(0, 34),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
