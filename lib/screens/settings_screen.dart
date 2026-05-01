@@ -8,7 +8,8 @@ import '../widgets/labeled_text_field.dart';
 import '../widgets/section_container.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final AuthService? authService;
+  const SettingsScreen({super.key, this.authService});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -20,11 +21,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _billingAddressCtrl;
   late TextEditingController _billingPhoneCtrl;
   bool _saved = false;
-  final _authService = AuthService();
+  late final AuthService _authService;
 
   @override
   void initState() {
     super.initState();
+    _authService = widget.authService ?? AuthService();
     final s = context.read<AppProvider>().settings;
     _rateCtrl = TextEditingController(text: s.defaultRate.toStringAsFixed(2));
     _billingNameCtrl = TextEditingController(text: s.billingName ?? '');
