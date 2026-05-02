@@ -5,6 +5,8 @@ class ExpenseItem {
   final String date;
   final String purchasedBy; // 'James' or 'Whitney'
   final String? invoiceId;
+  final String? businessId;
+  final String? jobId;
 
   const ExpenseItem({
     required this.id,
@@ -13,6 +15,8 @@ class ExpenseItem {
     required this.date,
     required this.purchasedBy,
     this.invoiceId,
+    this.businessId,
+    this.jobId,
   });
 
   ExpenseItem copyWith({
@@ -22,6 +26,10 @@ class ExpenseItem {
     String? purchasedBy,
     String? invoiceId,
     bool clearInvoiceId = false,
+    String? businessId,
+    bool clearBusinessId = false,
+    String? jobId,
+    bool clearJobId = false,
   }) {
     return ExpenseItem(
       id: id,
@@ -30,6 +38,8 @@ class ExpenseItem {
       date: date ?? this.date,
       purchasedBy: purchasedBy ?? this.purchasedBy,
       invoiceId: clearInvoiceId ? null : (invoiceId ?? this.invoiceId),
+      businessId: clearBusinessId ? null : (businessId ?? this.businessId),
+      jobId: clearJobId ? null : (jobId ?? this.jobId),
     );
   }
 
@@ -40,6 +50,8 @@ class ExpenseItem {
         'date': date,
         'purchasedBy': purchasedBy,
         'invoiceId': invoiceId,
+        'businessId': businessId,
+        'jobId': jobId,
       };
 
   factory ExpenseItem.fromJson(Map<String, dynamic> j) => ExpenseItem(
@@ -49,5 +61,7 @@ class ExpenseItem {
         date: j['date'] as String,
         purchasedBy: j['purchasedBy'] as String? ?? 'James',
         invoiceId: j['invoiceId'] as String?,
+        businessId: j['businessId'] as String?,
+        jobId: j['jobId'] as String?,
       );
 }

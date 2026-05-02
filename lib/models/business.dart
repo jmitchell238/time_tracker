@@ -1,10 +1,10 @@
-class SavedClient {
+class Business {
   final String id;
   final String? name;
   final String? company;
   final String? phone;
 
-  const SavedClient({
+  const Business({
     required this.id,
     this.name,
     this.company,
@@ -20,7 +20,7 @@ class SavedClient {
         'phone': phone,
       };
 
-  factory SavedClient.fromJson(Map<String, dynamic> j) => SavedClient(
+  factory Business.fromJson(Map<String, dynamic> j) => Business(
         id: j['id'] as String,
         name: j['name'] as String?,
         company: j['company'] as String?,

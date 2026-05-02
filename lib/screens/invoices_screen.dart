@@ -257,12 +257,12 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         Text('CLIENT INFO (OPTIONAL)',
             style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
-        if (provider.savedClients.isNotEmpty) ...[
+        if (provider.businesses.isNotEmpty) ...[
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              ...provider.savedClients.map((c) => GestureDetector(
+              ...provider.businesses.map((c) => GestureDetector(
                 onTap: () => setState(() {
                   _clientNameCtrl.text = c.name ?? '';
                   _clientCompanyCtrl.text = c.company ?? '';

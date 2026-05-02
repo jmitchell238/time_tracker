@@ -9,7 +9,7 @@ import '../models/app_settings.dart';
 import '../models/expense_item.dart';
 import '../models/invoice.dart';
 import '../models/job.dart';
-import '../models/saved_client.dart';
+import '../models/business.dart';
 import '../models/time_entry.dart';
 import '../services/csv_import_service.dart';
 
@@ -29,7 +29,7 @@ class AppProvider extends ChangeNotifier {
   List<ExpenseItem> expenses = [];
   AppSettings settings = const AppSettings();
   List<ActiveTimer> activeTimers = [];
-  List<SavedClient> savedClients = [];
+  List<Business> businesses = [];
   bool _loaded = false;
 
   bool get isLoaded => _loaded;
@@ -67,7 +67,7 @@ class AppProvider extends ChangeNotifier {
         _col('invoices').get(),
         _col('expenses').get(),
         _col('timers').get(),
-        _col('savedClients').get(),
+        _col('businesses').get(),
         _settingsDoc.get(),
       ]);
 
@@ -88,7 +88,7 @@ class AppProvider extends ChangeNotifier {
         invoices    = invDocs.map((d)     => Invoice.fromJson(d.data())).toList();
         expenses    = expDocs.map((d)     => ExpenseItem.fromJson(d.data())).toList();
         activeTimers = timerDocs.map((d)  => ActiveTimer.fromJson(d.data())).toList();
-        savedClients = clientDocs.map((d) => SavedClient.fromJson(d.data())).toList();
+        businesses = clientDocs.map((d) => Business.fromJson(d.data())).toList();
         if (settingsSnap.exists && settingsSnap.data() != null) {
           settings = AppSettings.fromJson(settingsSnap.data()!);
         }
@@ -155,8 +155,8 @@ class AppProvider extends ChangeNotifier {
 
     final clientsJson = prefs.getString('saved_clients');
     if (clientsJson != null) {
-      savedClients = (jsonDecode(clientsJson) as List)
-          .map((e) => SavedClient.fromJson(e as Map<String, dynamic>))
+      businesses = (jsonDecode(clientsJson) as List)
+          .map((e) => Business.fromJson(e as Map<String, dynamic>))
           .toList();
     }
 
@@ -166,14 +166,14 @@ class AppProvider extends ChangeNotifier {
     for (final i in invoices) batch.set(_col('invoices').doc(i.id), i.toJson());
     for (final e in expenses) batch.set(_col('expenses').doc(e.id), e.toJson());
     for (final t in activeTimers) batch.set(_col('timers').doc(t.id), t.toJson());
-    for (final c in savedClients) batch.set(_col('savedClients').doc(c.id), c.toJson());
+    for (final c in businesses) batch.set(_col('businesses').doc(c.id), c.toJson());
     batch.set(_settingsDoc, settings.toJson());
     await batch.commit();
   }
 
   // ── Jobs ──────────────────────────────────────────────────────────────────
 
-  void addJob(String name, String description, double? rate) {
+  void addJob(String name, String description, double? rate, {String? businessId}) {
     final job = Job(
       id: _uuid.v4(),
       name: name,
@@ -181,6 +181,7 @@ class AppProvider extends ChangeNotifier {
       rate: rate,
       isArchived: false,
       createdAt: DateTime.now(),
+      businessId: businessId,
     );
     jobs = [...jobs, job];
     if (_workspaceId != null) {
@@ -385,19 +386,19 @@ class AppProvider extends ChangeNotifier {
     );
     invoices = [...invoices, inv];
 
-    SavedClient? newClient;
+    Business? newBusiness;
     if (clientCompany != null || clientName != null) {
-      final alreadySaved = savedClients.any((c) =>
+      final alreadySaved = businesses.any((c) =>
           c.company == (clientCompany?.isEmpty == true ? null : clientCompany) &&
           c.name == (clientName?.isEmpty == true ? null : clientName));
       if (!alreadySaved) {
-        newClient = SavedClient(
+        newBusiness = Business(
           id: _uuid.v4(),
           name: clientName?.isEmpty == true ? null : clientName,
           company: clientCompany?.isEmpty == true ? null : clientCompany,
           phone: clientPhone?.isEmpty == true ? null : clientPhone,
         );
-        savedClients = [...savedClients, newClient];
+        businesses = [...businesses, newBusiness];
       }
     }
 
@@ -419,8 +420,8 @@ class AppProvider extends ChangeNotifier {
       for (final e in expenses.where((e) => expenseIds.contains(e.id))) {
         batch.set(_col('expenses').doc(e.id), e.toJson());
       }
-      if (newClient != null) {
-        batch.set(_col('savedClients').doc(newClient.id), newClient.toJson());
+      if (newBusiness != null) {
+        batch.set(_col('businesses').doc(newBusiness.id), newBusiness.toJson());
       }
       batch.commit();
     }
@@ -479,22 +480,22 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Saved Clients ─────────────────────────────────────────────────────────
+  // ── Businesses ────────────────────────────────────────────────────────────
 
-  void addSavedClient({String? name, String? company, String? phone}) {
-    final client = SavedClient(
+  void addBusiness({String? name, String? company, String? phone}) {
+    final business = Business(
         id: _uuid.v4(), name: name, company: company, phone: phone);
-    savedClients = [...savedClients, client];
+    businesses = [...businesses, business];
     if (_workspaceId != null) {
-      _col('savedClients').doc(client.id).set(client.toJson());
+      _col('businesses').doc(business.id).set(business.toJson());
     }
     notifyListeners();
   }
 
-  void deleteSavedClient(String id) {
-    savedClients = savedClients.where((c) => c.id != id).toList();
+  void deleteBusiness(String id) {
+    businesses = businesses.where((c) => c.id != id).toList();
     if (_workspaceId != null) {
-      _col('savedClients').doc(id).delete();
+      _col('businesses').doc(id).delete();
     }
     notifyListeners();
   }
@@ -517,6 +518,8 @@ class AppProvider extends ChangeNotifier {
     required double amount,
     required String date,
     required String purchasedBy,
+    String? businessId,
+    String? jobId,
   }) {
     final expense = ExpenseItem(
       id: _uuid.v4(),
@@ -524,6 +527,8 @@ class AppProvider extends ChangeNotifier {
       amount: amount,
       date: date,
       purchasedBy: purchasedBy,
+      businessId: businessId,
+      jobId: jobId,
     );
     expenses = [expense, ...expenses];
     if (_workspaceId != null) {
