@@ -67,12 +67,20 @@ void main() {
     });
 
     testWidgets('Save Changes button is present', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final p = await _provider();
       await tester.pumpWidget(_wrap(p));
       expect(find.text('Save Changes', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('Log Out button is present', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final p = await _provider();
       await tester.pumpWidget(_wrap(p));
       expect(find.text('Log Out', skipOffstage: false), findsOneWidget);

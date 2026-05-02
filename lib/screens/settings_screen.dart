@@ -1,8 +1,11 @@
+import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
+import '../services/csv_import_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/labeled_text_field.dart';
 import '../widgets/section_container.dart';
@@ -21,6 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _billingAddressCtrl;
   late TextEditingController _billingPhoneCtrl;
   bool _saved = false;
+  bool _importing = false;
   late final AuthService _authService;
 
   @override
@@ -162,6 +166,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
+        // Import CSV
+        SectionContainer(
+          title: 'Data',
+          subtitle: 'Import historical time entries from a CSV export',
+          child: SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _importing ? null : _importCsv,
+              icon: _importing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                    )
+                  : const Icon(Icons.upload_file, size: 18),
+              label: Text(
+                _importing ? 'Importing…' : 'Import CSV',
+                style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+
         // Save button
         SizedBox(
           height: 48,
@@ -195,6 +229,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _importCsv() async {
+    setState(() => _importing = true);
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+        withData: true,
+      );
+      if (!mounted) return;
+      if (result == null || result.files.isEmpty) {
+        setState(() => _importing = false);
+        return;
+      }
+
+      final bytes = result.files.first.bytes;
+      if (bytes == null) {
+        setState(() => _importing = false);
+        _showSnack('Could not read file.');
+        return;
+      }
+
+      final rows = CsvImportService.parse(utf8.decode(bytes));
+      if (rows.isEmpty) {
+        setState(() => _importing = false);
+        _showSnack('No valid rows found in CSV.');
+        return;
+      }
+
+      final r = await context.read<AppProvider>().importCsvEntries(rows);
+      if (!mounted) return;
+      setState(() => _importing = false);
+
+      final msg = StringBuffer('Imported ${r.imported} entr${r.imported == 1 ? 'y' : 'ies'}');
+      if (r.skipped > 0) msg.write(', skipped ${r.skipped} duplicate${r.skipped == 1 ? '' : 's'}');
+      if (r.jobsCreated > 0) msg.write(', created ${r.jobsCreated} new job${r.jobsCreated == 1 ? '' : 's'}');
+      _showSnack(msg.toString());
+    } catch (e) {
+      if (mounted) {
+        setState(() => _importing = false);
+        _showSnack('Import failed: $e');
+      }
+    }
+  }
+
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg, style: GoogleFonts.dmSans())),
     );
   }
 

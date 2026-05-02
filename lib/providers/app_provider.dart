@@ -11,6 +11,7 @@ import '../models/invoice.dart';
 import '../models/job.dart';
 import '../models/saved_client.dart';
 import '../models/time_entry.dart';
+import '../services/csv_import_service.dart';
 
 const _uuid = Uuid();
 
@@ -263,6 +264,84 @@ class AppProvider extends ChangeNotifier {
       _col('entries').doc(id).set(updated.toJson());
     }
     notifyListeners();
+  }
+
+  Future<({int imported, int skipped, int jobsCreated})> importCsvEntries(
+      List<CsvRow> rows) async {
+    int imported = 0, skipped = 0, jobsCreated = 0;
+
+    final newJobs    = <Job>[];
+    final newEntries = <TimeEntry>[];
+
+    for (final row in rows) {
+      Job? job = jobs.where((j) => j.name.toLowerCase() == row.jobName.toLowerCase()).firstOrNull;
+      job ??= newJobs.where((j) => j.name.toLowerCase() == row.jobName.toLowerCase()).firstOrNull;
+
+      if (job == null) {
+        job = Job(
+          id: _uuid.v4(),
+          name: row.jobName,
+          description: '',
+          isArchived: false,
+          createdAt: DateTime.now(),
+        );
+        newJobs.add(job);
+        jobsCreated++;
+      }
+
+      final isDup = entries.any((e) =>
+              e.jobId == job!.id &&
+              e.date == row.date &&
+              e.startTime == row.startTime &&
+              e.endTime == row.endTime &&
+              e.description == row.description) ||
+          newEntries.any((e) =>
+              e.jobId == job!.id &&
+              e.date == row.date &&
+              e.startTime == row.startTime &&
+              e.endTime == row.endTime &&
+              e.description == row.description);
+
+      if (isDup) {
+        skipped++;
+        continue;
+      }
+
+      newEntries.add(TimeEntry(
+        id: _uuid.v4(),
+        jobId: job.id,
+        date: row.date,
+        startTime: row.startTime,
+        endTime: row.endTime,
+        hours: row.hours,
+        description: row.description,
+        rateOverride: row.rate,
+      ));
+      imported++;
+    }
+
+    if (_workspaceId != null && (newJobs.isNotEmpty || newEntries.isNotEmpty)) {
+      final ops = <void Function(WriteBatch)>[
+        for (final j in newJobs) (b) => b.set(_col('jobs').doc(j.id), j.toJson()),
+        for (final e in newEntries) (b) => b.set(_col('entries').doc(e.id), e.toJson()),
+      ];
+      for (int start = 0; start < ops.length; start += 499) {
+        final end = start + 499 < ops.length ? start + 499 : ops.length;
+        final batch = _db!.batch();
+        for (final op in ops.sublist(start, end)) op(batch);
+        await batch.commit();
+      }
+    }
+
+    jobs = [...jobs, ...newJobs];
+    entries = ([...entries, ...newEntries]
+          ..sort((a, b) {
+            final d = b.date.compareTo(a.date);
+            return d != 0 ? d : b.startTime.compareTo(a.startTime);
+          }));
+    notifyListeners();
+
+    return (imported: imported, skipped: skipped, jobsCreated: jobsCreated);
   }
 
   void deleteEntry(String id) {
