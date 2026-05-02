@@ -55,6 +55,9 @@ class AppProvider extends ChangeNotifier {
   DocumentReference<Map<String, dynamic>> get _settingsDoc =>
       _db!.collection('users').doc(_workspaceId!).collection('config').doc('settings');
 
+  DocumentReference<Map<String, dynamic>> get _migrationSentinel =>
+      _db!.collection('users').doc(_workspaceId!).collection('config').doc('migrated');
+
   // ── Load ──────────────────────────────────────────────────────────────────
 
   Future<void> load() async {
@@ -78,6 +81,7 @@ class AppProvider extends ChangeNotifier {
         _col('timers').get(),
         _col('businesses').get(),
         _settingsDoc.get(),
+        _migrationSentinel.get(),
       ]);
 
       final jobsDocs    = (results[0] as QuerySnapshot<Map<String, dynamic>>).docs;
@@ -86,10 +90,14 @@ class AppProvider extends ChangeNotifier {
       final expDocs     = (results[3] as QuerySnapshot<Map<String, dynamic>>).docs;
       final timerDocs   = (results[4] as QuerySnapshot<Map<String, dynamic>>).docs;
       final clientDocs  = (results[5] as QuerySnapshot<Map<String, dynamic>>).docs;
-      final settingsSnap = results[6] as DocumentSnapshot<Map<String, dynamic>>;
+      final settingsSnap   = results[6] as DocumentSnapshot<Map<String, dynamic>>;
+      final sentinelSnap   = results[7] as DocumentSnapshot<Map<String, dynamic>>;
+      final alreadyMigrated = sentinelSnap.exists;
 
-      // First load ever for this user → migrate from SharedPreferences
-      if (jobsDocs.isEmpty && entriesDocs.isEmpty && invDocs.isEmpty) {
+      // Only migrate on genuinely first launch (sentinel absent + no data).
+      // The sentinel prevents migration from re-running if Firestore reads
+      // temporarily return empty (e.g., a cache miss on offline reopens).
+      if (!alreadyMigrated && jobsDocs.isEmpty && entriesDocs.isEmpty && invDocs.isEmpty) {
         await _migrateFromSharedPreferences();
       } else {
         jobs        = jobsDocs.map((d)    => Job.fromJson(d.data())).toList();
@@ -177,6 +185,7 @@ class AppProvider extends ChangeNotifier {
     for (final t in activeTimers) batch.set(_col('timers').doc(t.id), t.toJson());
     for (final c in businesses) batch.set(_col('businesses').doc(c.id), c.toJson());
     batch.set(_settingsDoc, settings.toJson());
+    batch.set(_migrationSentinel, {'migratedAt': DateTime.now().toIso8601String()});
     await batch.commit();
   }
 
