@@ -588,7 +588,15 @@ class AppProvider extends ChangeNotifier {
     if (timer == null) return;
 
     final now = DateTime.now();
-    final elapsed = now.difference(timer.startedAt).inSeconds / 3600.0;
+    final totalElapsedSeconds = now.difference(timer.startedAt).inSeconds;
+    // Count any active break in progress as additional break time
+    final activeBreakSeconds = timer.breakStartedAt != null
+        ? now.difference(timer.breakStartedAt!).inSeconds
+        : 0;
+    final breakSeconds = timer.totalBreakSeconds + activeBreakSeconds;
+    final billableSeconds = (totalElapsedSeconds - breakSeconds).clamp(0, totalElapsedSeconds);
+    final hours = billableSeconds / 3600.0;
+
     final today = now.toIso8601String().substring(0, 10);
     final startStr = '${_p2(timer.startedAt.hour)}:${_p2(timer.startedAt.minute)}';
     final endStr = '${_p2(now.hour)}:${_p2(now.minute)}';
@@ -599,7 +607,7 @@ class AppProvider extends ChangeNotifier {
       date: today,
       startTime: startStr,
       endTime: endStr,
-      hours: elapsed,
+      hours: hours,
       description: '',
       rateOverride: timer.rateOverride,
     );
@@ -619,6 +627,35 @@ class AppProvider extends ChangeNotifier {
     activeTimers = activeTimers.where((t) => t.id != timerId).toList();
     if (_workspaceId != null) {
       _col('timers').doc(timerId).delete();
+    }
+    notifyListeners();
+  }
+
+  void startBreak(String timerId) {
+    final timer = activeTimers.where((t) => t.id == timerId).firstOrNull;
+    if (timer == null || timer.isOnBreak) return;
+    final updated = timer.copyWith(breakStartedAt: DateTime.now());
+    activeTimers = activeTimers.map((t) => t.id == timerId ? updated : t).toList();
+    if (_workspaceId != null) {
+      _col('timers').doc(timerId).update({'breakStartedAt': updated.breakStartedAt!.toIso8601String()});
+    }
+    notifyListeners();
+  }
+
+  void endBreak(String timerId) {
+    final timer = activeTimers.where((t) => t.id == timerId).firstOrNull;
+    if (timer == null || !timer.isOnBreak) return;
+    final breakSeconds = DateTime.now().difference(timer.breakStartedAt!).inSeconds;
+    final updated = timer.copyWith(
+      clearBreakStartedAt: true,
+      totalBreakSeconds: timer.totalBreakSeconds + breakSeconds,
+    );
+    activeTimers = activeTimers.map((t) => t.id == timerId ? updated : t).toList();
+    if (_workspaceId != null) {
+      _col('timers').doc(timerId).update({
+        'breakStartedAt': null,
+        'totalBreakSeconds': updated.totalBreakSeconds,
+      });
     }
     notifyListeners();
   }

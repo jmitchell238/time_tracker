@@ -151,5 +151,98 @@ void main() {
       // 'Little Motorcycle' has rate: 40
       expect(find.text('\$40/hr override'), findsOneWidget);
     });
+
+    // Active timer card
+    testWidgets('active timer card is not shown when no timers are running',
+        (tester) async {
+      final p = await _emptyProvider();
+      await tester.pumpWidget(_wrap(p));
+      expect(find.text('CLOCKED IN'), findsNothing);
+    });
+
+    testWidgets('active timer card is shown when a timer is running',
+        (tester) async {
+      final p = await _emptyProvider();
+      p.clockIn();
+      await tester.pumpWidget(_wrap(p));
+      await tester.pump();
+      expect(find.text('CLOCKED IN'), findsOneWidget);
+    });
+
+    testWidgets('active timer card shows job name when timer has a job',
+        (tester) async {
+      final p = await _emptyProvider();
+      p.addJob('Test Job', '', null);
+      final jobId = p.jobs.first.id;
+      p.clockIn(jobId: jobId);
+      await tester.pumpWidget(_wrap(p));
+      await tester.pump();
+      expect(find.text('Test Job'), findsWidgets);
+    });
+
+    testWidgets('active timer card shows Clock Out button', (tester) async {
+      final p = await _emptyProvider();
+      p.clockIn();
+      await tester.pumpWidget(_wrap(p));
+      await tester.pump();
+      expect(find.text('Clock Out'), findsOneWidget);
+    });
+
+    testWidgets('active timer card shows Start Break button when not on break',
+        (tester) async {
+      final p = await _emptyProvider();
+      p.clockIn();
+      await tester.pumpWidget(_wrap(p));
+      await tester.pump();
+      expect(find.text('Start Break'), findsOneWidget);
+    });
+
+    testWidgets(
+        'active timer card shows ON BREAK and End Break when on break',
+        (tester) async {
+      final p = await _emptyProvider();
+      p.clockIn();
+      await tester.pump();
+      final timerId = p.activeTimers.first.id;
+      p.startBreak(timerId);
+      await tester.pumpWidget(_wrap(p));
+      await tester.pump();
+      expect(find.text('ON BREAK'), findsOneWidget);
+      expect(find.text('End Break'), findsOneWidget);
+    });
+
+    testWidgets('tapping Start Break calls startBreak on provider',
+        (tester) async {
+      final p = await _emptyProvider();
+      p.clockIn();
+      await tester.pumpWidget(_wrap(p));
+      await tester.pump();
+      await tester.tap(find.text('Start Break'));
+      await tester.pump();
+      expect(p.activeTimers.first.isOnBreak, true);
+    });
+
+    testWidgets('tapping End Break calls endBreak on provider', (tester) async {
+      final p = await _emptyProvider();
+      p.clockIn();
+      await tester.pump();
+      final timerId = p.activeTimers.first.id;
+      p.startBreak(timerId);
+      await tester.pumpWidget(_wrap(p));
+      await tester.pump();
+      await tester.tap(find.text('End Break'));
+      await tester.pump();
+      expect(p.activeTimers.first.isOnBreak, false);
+    });
+
+    testWidgets('tapping Clock Out removes the active timer', (tester) async {
+      final p = await _emptyProvider();
+      p.clockIn();
+      await tester.pumpWidget(_wrap(p));
+      await tester.pump();
+      await tester.tap(find.text('Clock Out'));
+      await tester.pump();
+      expect(p.activeTimers, isEmpty);
+    });
   });
 }

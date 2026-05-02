@@ -8,6 +8,7 @@ import '../widgets/segmented_toggle_bar.dart';
 import '../widgets/empty_state.dart';
 import 'job_detail_screen.dart';
 import '../widgets/left_accent_card.dart';
+import '../widgets/active_timer_card.dart';
 
 class JobsScreen extends StatefulWidget {
   const JobsScreen({super.key});
@@ -123,6 +124,15 @@ class _JobsScreenState extends State<JobsScreen> {
           ],
         ),
         const SizedBox(height: 16),
+
+        // Active timers pinned at top
+        if (provider.activeTimers.isNotEmpty) ...[
+          ...provider.activeTimers.map((t) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ActiveTimerCard(key: ValueKey(t.id), timer: t),
+              )),
+          const SizedBox(height: 8),
+        ],
 
         // Active/Archived toggle
         SegmentedToggleBar(

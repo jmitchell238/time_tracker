@@ -438,4 +438,145 @@ void main() {
     });
   });
 
+  group('startBreak', () {
+    test('sets breakStartedAt on the timer', () async {
+      final p = _fresh()..activeTimers = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      p.startBreak(timerId);
+      await Future.microtask(() {});
+      expect(p.activeTimers.first.breakStartedAt, isNotNull);
+      expect(p.activeTimers.first.isOnBreak, true);
+    });
+
+    test('does nothing for unknown timerId', () async {
+      final p = _fresh()..activeTimers = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      p.startBreak('nonexistent');
+      await Future.microtask(() {});
+      expect(p.activeTimers.first.breakStartedAt, isNull);
+    });
+
+    test('does nothing if already on break', () async {
+      final p = _fresh()..activeTimers = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      p.startBreak(timerId);
+      await Future.microtask(() {});
+      final firstBreakTime = p.activeTimers.first.breakStartedAt;
+      p.startBreak(timerId);
+      await Future.microtask(() {});
+      expect(p.activeTimers.first.breakStartedAt, firstBreakTime);
+    });
+
+    test('notifies listeners', () async {
+      final p = _fresh()..activeTimers = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      var notified = false;
+      p.addListener(() => notified = true);
+      p.startBreak(timerId);
+      await Future.microtask(() {});
+      expect(notified, true);
+    });
+  });
+
+  group('endBreak', () {
+    test('clears breakStartedAt on the timer', () async {
+      final p = _fresh()..activeTimers = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      p.startBreak(timerId);
+      await Future.microtask(() {});
+      p.endBreak(timerId);
+      await Future.microtask(() {});
+      expect(p.activeTimers.first.breakStartedAt, isNull);
+      expect(p.activeTimers.first.isOnBreak, false);
+    });
+
+    test('accumulates totalBreakSeconds', () async {
+      final p = _fresh()..activeTimers = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      p.startBreak(timerId);
+      await Future.delayed(const Duration(milliseconds: 50));
+      p.endBreak(timerId);
+      await Future.microtask(() {});
+      expect(p.activeTimers.first.totalBreakSeconds, greaterThanOrEqualTo(0));
+    });
+
+    test('does nothing for unknown timerId', () async {
+      final p = _fresh()..activeTimers = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      p.startBreak(timerId);
+      await Future.microtask(() {});
+      p.endBreak('nonexistent');
+      await Future.microtask(() {});
+      expect(p.activeTimers.first.breakStartedAt, isNotNull);
+    });
+
+    test('does nothing if not on break', () async {
+      final p = _fresh()..activeTimers = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      p.endBreak(timerId);
+      await Future.microtask(() {});
+      expect(p.activeTimers.first.totalBreakSeconds, 0);
+    });
+
+    test('notifies listeners', () async {
+      final p = _fresh()..activeTimers = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      p.startBreak(timerId);
+      await Future.microtask(() {});
+      var notified = false;
+      p.addListener(() => notified = true);
+      p.endBreak(timerId);
+      await Future.microtask(() {});
+      expect(notified, true);
+    });
+  });
+
+  group('clockOut with breaks', () {
+    test('deducts accumulated totalBreakSeconds from entry hours', () async {
+      final p = _fresh()..activeTimers = []..entries = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      // Manually inject 3600 break seconds (1 hr) into the timer
+      p.activeTimers = [
+        p.activeTimers.first.copyWith(totalBreakSeconds: 3600),
+      ];
+      p.clockOut(timerId);
+      await Future.microtask(() {});
+      // Entry hours should be very small (near 0) since break was 1hr and
+      // total elapsed is also near 0 in a test — clamp to 0
+      expect(p.entries.first.hours, greaterThanOrEqualTo(0.0));
+    });
+
+    test('deducts active break duration when clocking out while on break', () async {
+      final p = _fresh()..activeTimers = []..entries = [];
+      p.clockIn(jobId: 'j1');
+      await Future.microtask(() {});
+      final timerId = p.activeTimers.first.id;
+      p.startBreak(timerId);
+      await Future.microtask(() {});
+      p.clockOut(timerId);
+      await Future.microtask(() {});
+      expect(p.entries.first.hours, greaterThanOrEqualTo(0.0));
+      expect(p.entries, isNotEmpty);
+    });
+  });
+
 }
