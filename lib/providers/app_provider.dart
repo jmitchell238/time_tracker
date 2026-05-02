@@ -59,40 +59,41 @@ class AppProvider extends ChangeNotifier {
     }
     _workspaceId = user.uid;
 
-    final results = await Future.wait([
-      _col('jobs').get(),
-      _col('entries').get(),
-      _col('invoices').get(),
-      _col('expenses').get(),
-      _col('timers').get(),
-      _col('savedClients').get(),
-      _settingsDoc.get(),
-    ]);
+    try {
+      final results = await Future.wait([
+        _col('jobs').get(),
+        _col('entries').get(),
+        _col('invoices').get(),
+        _col('expenses').get(),
+        _col('timers').get(),
+        _col('savedClients').get(),
+        _settingsDoc.get(),
+      ]);
 
-    final jobsDocs    = (results[0] as QuerySnapshot<Map<String, dynamic>>).docs;
-    final entriesDocs = (results[1] as QuerySnapshot<Map<String, dynamic>>).docs;
-    final invDocs     = (results[2] as QuerySnapshot<Map<String, dynamic>>).docs;
-    final expDocs     = (results[3] as QuerySnapshot<Map<String, dynamic>>).docs;
-    final timerDocs   = (results[4] as QuerySnapshot<Map<String, dynamic>>).docs;
-    final clientDocs  = (results[5] as QuerySnapshot<Map<String, dynamic>>).docs;
-    final settingsSnap = results[6] as DocumentSnapshot<Map<String, dynamic>>;
+      final jobsDocs    = (results[0] as QuerySnapshot<Map<String, dynamic>>).docs;
+      final entriesDocs = (results[1] as QuerySnapshot<Map<String, dynamic>>).docs;
+      final invDocs     = (results[2] as QuerySnapshot<Map<String, dynamic>>).docs;
+      final expDocs     = (results[3] as QuerySnapshot<Map<String, dynamic>>).docs;
+      final timerDocs   = (results[4] as QuerySnapshot<Map<String, dynamic>>).docs;
+      final clientDocs  = (results[5] as QuerySnapshot<Map<String, dynamic>>).docs;
+      final settingsSnap = results[6] as DocumentSnapshot<Map<String, dynamic>>;
 
-    // First load ever for this user → migrate from SharedPreferences
-    if (jobsDocs.isEmpty && entriesDocs.isEmpty && invDocs.isEmpty) {
-      await _migrateFromSharedPreferences();
-      _loaded = true;
-      notifyListeners();
-      return;
-    }
-
-    jobs        = jobsDocs.map((d)    => Job.fromJson(d.data())).toList();
-    entries     = entriesDocs.map((d) => TimeEntry.fromJson(d.data())).toList();
-    invoices    = invDocs.map((d)     => Invoice.fromJson(d.data())).toList();
-    expenses    = expDocs.map((d)     => ExpenseItem.fromJson(d.data())).toList();
-    activeTimers = timerDocs.map((d)  => ActiveTimer.fromJson(d.data())).toList();
-    savedClients = clientDocs.map((d) => SavedClient.fromJson(d.data())).toList();
-    if (settingsSnap.exists && settingsSnap.data() != null) {
-      settings = AppSettings.fromJson(settingsSnap.data()!);
+      // First load ever for this user → migrate from SharedPreferences
+      if (jobsDocs.isEmpty && entriesDocs.isEmpty && invDocs.isEmpty) {
+        await _migrateFromSharedPreferences();
+      } else {
+        jobs        = jobsDocs.map((d)    => Job.fromJson(d.data())).toList();
+        entries     = entriesDocs.map((d) => TimeEntry.fromJson(d.data())).toList();
+        invoices    = invDocs.map((d)     => Invoice.fromJson(d.data())).toList();
+        expenses    = expDocs.map((d)     => ExpenseItem.fromJson(d.data())).toList();
+        activeTimers = timerDocs.map((d)  => ActiveTimer.fromJson(d.data())).toList();
+        savedClients = clientDocs.map((d) => SavedClient.fromJson(d.data())).toList();
+        if (settingsSnap.exists && settingsSnap.data() != null) {
+          settings = AppSettings.fromJson(settingsSnap.data()!);
+        }
+      }
+    } catch (e) {
+      debugPrint('AppProvider.load error: $e');
     }
 
     _loaded = true;
