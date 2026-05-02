@@ -99,7 +99,15 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
       );
       if (mounted) Navigator.pop(context);
     } catch (_) {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Save failed — check your connection and try again'),
+            backgroundColor: Color(0xFFE53935),
+          ),
+        );
+      }
     }
   }
 

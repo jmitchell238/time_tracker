@@ -491,7 +491,15 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                       );
                       if (mounted) setState(_resetCreate);
                     } catch (_) {
-                      if (mounted) setState(() => _savingInvoice = false);
+                      if (mounted) {
+                        setState(() => _savingInvoice = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Save failed — check your connection and try again'),
+                            backgroundColor: Color(0xFFE53935),
+                          ),
+                        );
+                      }
                     }
                   },
             style: ElevatedButton.styleFrom(

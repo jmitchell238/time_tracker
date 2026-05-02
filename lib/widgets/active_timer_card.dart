@@ -140,7 +140,15 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
                           try {
                             await context.read<AppProvider>().clockOut(t.id);
                           } catch (_) {
-                            if (mounted) setState(() => _clockingOut = false);
+                            if (mounted) {
+                              setState(() => _clockingOut = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Clock out failed — check your connection and try again'),
+                                  backgroundColor: Color(0xFFE53935),
+                                ),
+                              );
+                            }
                           }
                         },
                   style: ElevatedButton.styleFrom(

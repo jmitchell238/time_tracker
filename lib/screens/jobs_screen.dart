@@ -65,6 +65,14 @@ class _JobsScreenState extends State<JobsScreen> {
                         if (context.mounted) Navigator.pop(context);
                       } catch (_) {
                         setDialogState(() => saving = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Save failed — check your connection and try again'),
+                              backgroundColor: Color(0xFFE53935),
+                            ),
+                          );
+                        }
                       }
                     },
               style: ElevatedButton.styleFrom(

@@ -202,7 +202,8 @@ class AppProvider extends ChangeNotifier {
       businessId: businessId,
     );
     if (_workspaceId != null) {
-      await _col('jobs').doc(job.id).set(job.toJson());
+      await _col('jobs').doc(job.id).set(job.toJson())
+          .timeout(const Duration(seconds: 15));
     }
     jobs = [...jobs, job];
     notifyListeners();
@@ -252,7 +253,8 @@ class AppProvider extends ChangeNotifier {
       description: description,
     );
     if (_workspaceId != null) {
-      await _col('entries').doc(entry.id).set(entry.toJson());
+      await _col('entries').doc(entry.id).set(entry.toJson())
+          .timeout(const Duration(seconds: 15));
     }
     entries = [entry, ...entries];
     notifyListeners();
@@ -439,7 +441,7 @@ class AppProvider extends ChangeNotifier {
       if (newBusiness != null) {
         batch.set(_col('businesses').doc(newBusiness.id), newBusiness.toJson());
       }
-      await batch.commit();
+      await batch.commit().timeout(const Duration(seconds: 15));
     }
 
     invoices = [...invoices, inv];
@@ -552,7 +554,8 @@ class AppProvider extends ChangeNotifier {
       jobId: jobId,
     );
     if (_workspaceId != null) {
-      await _col('expenses').doc(expense.id).set(expense.toJson());
+      await _col('expenses').doc(expense.id).set(expense.toJson())
+          .timeout(const Duration(seconds: 15));
     }
     expenses = [expense, ...expenses];
     notifyListeners();
@@ -628,7 +631,7 @@ class AppProvider extends ChangeNotifier {
       final batch = _db!.batch();
       batch.delete(_col('timers').doc(timerId));
       batch.set(_col('entries').doc(entry.id), entry.toJson());
-      await batch.commit();
+      await batch.commit().timeout(const Duration(seconds: 15));
     }
     entries = [entry, ...entries];
     activeTimers = activeTimers.where((t) => t.id != timerId).toList();

@@ -137,7 +137,15 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
       widget.onConfirmSave?.call();
       if (mounted) Navigator.pop(context);
     } catch (_) {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Save failed — check your connection and try again'),
+            backgroundColor: Color(0xFFE53935),
+          ),
+        );
+      }
     }
   }
 
