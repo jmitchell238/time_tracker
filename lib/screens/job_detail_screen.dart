@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/job.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/add_expense_sheet.dart';
 import '../widgets/log_time_sheet.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/amount_display_pair.dart';
@@ -215,6 +216,25 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                         style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Add Expense button
+                SizedBox(
+                  height: 40,
+                  child: OutlinedButton.icon(
+                    onPressed: () => AddExpenseSheet.show(
+                      context,
+                      preJobId: widget.jobId,
+                      preBusinessId: job.businessId,
+                    ),
+                    icon: const Icon(Icons.receipt_long_outlined, size: 16, color: AppColors.accent),
+                    label: Text('Add Expense',
+                        style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.accent)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.accent),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),

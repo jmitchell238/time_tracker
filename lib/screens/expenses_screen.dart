@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/expense_item.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/add_expense_sheet.dart';
 import '../widgets/segmented_toggle_bar.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/left_accent_card.dart';
@@ -60,7 +61,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             Text('Expenses', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
             const Spacer(),
             ElevatedButton.icon(
-              onPressed: () => _showAddSheet(context, provider),
+              onPressed: () => AddExpenseSheet.show(context),
               icon: const Icon(Icons.add, size: 16),
               label: Text('Add', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
@@ -128,12 +129,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         if (visible.isEmpty)
           const EmptyStateWidget('No expenses yet')
         else
-          _buildList(visible),
+          _buildList(visible, provider),
       ],
     );
   }
 
-  Widget _buildList(List<ExpenseItem> items) {
+  Widget _buildList(List<ExpenseItem> items, AppProvider provider) {
     final byDate = <String, List<ExpenseItem>>{};
     for (final e in items) {
       byDate.putIfAbsent(e.date, () => []).add(e);
@@ -150,13 +151,30 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               Text(_fmtDateLong(group.key),
                   style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2)),
               const SizedBox(height: 6),
-              ...group.value.map((e) => _ExpenseRow(
-                    expense: e,
-                    fmtMoney: _fmtMoney,
-                    expanded: _expandedId == e.id,
-                    onToggle: () => setState(() => _expandedId = _expandedId == e.id ? null : e.id),
-                    onDelete: () => context.read<AppProvider>().deleteExpense(e.id),
-                  )),
+              ...group.value.map((e) {
+                final businessName = e.businessId != null
+                    ? provider.businesses
+                        .where((b) => b.id == e.businessId)
+                        .firstOrNull
+                        ?.displayName
+                    : null;
+                final jobName = e.jobId != null
+                    ? provider.jobs
+                        .where((j) => j.id == e.jobId)
+                        .firstOrNull
+                        ?.name
+                    : null;
+                return _ExpenseRow(
+                  expense: e,
+                  fmtMoney: _fmtMoney,
+                  expanded: _expandedId == e.id,
+                  businessName: businessName,
+                  jobName: jobName,
+                  onToggle: () => setState(
+                      () => _expandedId = _expandedId == e.id ? null : e.id),
+                  onDelete: () => context.read<AppProvider>().deleteExpense(e.id),
+                );
+              }),
             ],
           ),
         );
@@ -179,120 +197,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   Widget _divider() => Container(width: 1, height: 30, color: AppColors.border, margin: const EdgeInsets.symmetric(horizontal: 8));
 
-  void _showAddSheet(BuildContext context, AppProvider provider) {
-    final descCtrl = TextEditingController();
-    final amountCtrl = TextEditingController();
-    final dateCtrl = TextEditingController(text: DateTime.now().toIso8601String().substring(0, 10));
-    String purchasedBy = 'James';
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.bgBase,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setSheet) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(16, 20, 16, MediaQuery.of(ctx).viewInsets.bottom + 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Add Expense', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                  const SizedBox(height: 16),
-                  _field(descCtrl, 'Description (e.g. Hydraulic fluid)'),
-                  const SizedBox(height: 12),
-                  _field(amountCtrl, 'Amount (\$)', keyboard: const TextInputType.numberWithOptions(decimal: true)),
-                  const SizedBox(height: 12),
-                  _field(dateCtrl, 'Date (YYYY-MM-DD)'),
-                  const SizedBox(height: 14),
-                  Text('PURCHASED BY', style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: ['James', 'Whitney'].map((name) {
-                      final active = purchasedBy == name;
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () => setSheet(() => purchasedBy = name),
-                          child: Container(
-                            margin: EdgeInsets.only(right: name == 'James' ? 8 : 0),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: active ? AppColors.primary : AppColors.bgDeep,
-                              border: Border.all(color: active ? AppColors.primary : AppColors.border),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(name, style: GoogleFonts.dmSans(
-                                fontSize: 13, fontWeight: FontWeight.w700,
-                                color: active ? Colors.white : AppColors.fg2,
-                              )),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final desc = descCtrl.text.trim();
-                        final amount = double.tryParse(amountCtrl.text.trim());
-                        final date = dateCtrl.text.trim();
-                        if (desc.isEmpty || amount == null || date.isEmpty) return;
-                        provider.addExpense(
-                          description: desc,
-                          amount: amount,
-                          date: date,
-                          purchasedBy: purchasedBy,
-                        );
-                        Navigator.pop(ctx);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        elevation: 0,
-                      ),
-                      child: Text('Save', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _field(TextEditingController ctrl, String label, {TextInputType? keyboard}) {
-    return TextField(
-      controller: ctrl,
-      keyboardType: keyboard,
-      style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.fg),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2),
-        filled: true,
-        fillColor: AppColors.bgDeep,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.primary)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      ),
-    );
-  }
 }
 
 class _ExpenseRow extends StatelessWidget {
   final ExpenseItem expense;
   final String Function(double) fmtMoney;
   final bool expanded;
+  final String? businessName;
+  final String? jobName;
   final VoidCallback onToggle;
   final VoidCallback onDelete;
 
@@ -300,9 +212,19 @@ class _ExpenseRow extends StatelessWidget {
     required this.expense,
     required this.fmtMoney,
     required this.expanded,
+    this.businessName,
+    this.jobName,
     required this.onToggle,
     required this.onDelete,
   });
+
+  String _subtitle(bool isPending) {
+    final parts = <String>[expense.purchasedBy];
+    if (businessName != null) parts.add(businessName!);
+    if (jobName != null) parts.add(jobName!);
+    parts.add(isPending ? '● Pending' : 'Reimbursed');
+    return parts.join(' · ');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -326,7 +248,7 @@ class _ExpenseRow extends StatelessWidget {
                             maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 3),
                         Text(
-                          '${expense.purchasedBy} · ${isPending ? '● Pending' : 'Reimbursed'}',
+                          _subtitle(isPending),
                           style: GoogleFonts.dmSans(
                             fontSize: 10, fontWeight: FontWeight.w600,
                             color: isPending ? AppColors.accent : AppColors.fg3,
