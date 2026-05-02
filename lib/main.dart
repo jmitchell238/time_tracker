@@ -10,13 +10,10 @@ import 'providers/app_provider.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
 import 'screens/login_screen.dart';
-import 'screens/dashboard_screen.dart';
 import 'screens/jobs_screen.dart';
-import 'screens/entries_screen.dart';
+import 'screens/log_screen.dart';
 import 'screens/invoices_screen.dart';
-import 'screens/expenses_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/insights_screen.dart';
+import 'screens/more_screen.dart';
 
 final _authService = AuthService();
 
@@ -95,15 +92,12 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _index = 0;
 
-  static const _labels = ['Home', 'Jobs', 'Entries', 'Invoices', 'Expenses', 'Insights', 'Settings'];
+  static const _labels = ['Jobs', 'Log', 'Invoices', 'More'];
   static const _icons = [
-    Icons.dashboard_outlined,
     Icons.work_outline,
     Icons.list_alt_outlined,
     Icons.receipt_long_outlined,
-    Icons.shopping_bag_outlined,
-    Icons.bar_chart_outlined,
-    Icons.settings_outlined,
+    Icons.more_horiz,
   ];
 
   @override
@@ -121,13 +115,10 @@ class _AppShellState extends State<AppShell> {
       body: IndexedStack(
         index: _index,
         children: const [
-          DashboardScreen(),
           JobsScreen(),
-          EntriesScreen(),
+          LogScreen(),
           InvoicesScreen(),
-          ExpensesScreen(),
-          InsightsScreen(),
-          SettingsScreen(),
+          MoreScreen(),
         ],
       ),
       bottomNavigationBar: Container(
@@ -139,7 +130,7 @@ class _AppShellState extends State<AppShell> {
           child: SizedBox(
             height: 62,
             child: Row(
-              children: List.generate(7, (i) {
+              children: List.generate(4, (i) {
                 final active = _index == i;
                 return Expanded(
                   child: GestureDetector(
