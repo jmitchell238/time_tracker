@@ -255,7 +255,23 @@ class _EntryRow extends StatelessWidget {
     final job = provider.jobs.where((j) => j.id == entry.jobId).firstOrNull;
     final rate = provider.getEntryRate(entry);
 
-    return Padding(
+    return Dismissible(
+      key: ValueKey(entry.id),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) => provider.deleteEntry(entry.id),
+      background: const SizedBox.shrink(),
+      secondaryBackground: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: 6),
+        decoration: BoxDecoration(
+          color: AppColors.danger,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text('DELETE',
+            style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+      ),
+      child: Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: GestureDetector(
         onTap: onToggle,
@@ -325,6 +341,7 @@ class _EntryRow extends StatelessWidget {
         ),
       ),
     ),
-  );
+      ),
+    );
   }
 }

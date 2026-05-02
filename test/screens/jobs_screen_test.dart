@@ -1,3 +1,5 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -9,14 +11,16 @@ import 'package:time_tracker/widgets/segmented_toggle_bar.dart';
 Future<AppProvider> _emptyProvider() async {
   SharedPreferences.setMockInitialValues(
       {'jobs': '[]', 'entries': '[]', 'invoices': '[]'});
-  final p = AppProvider();
+  final p = AppProvider(
+      db: FakeFirebaseFirestore(), auth: MockFirebaseAuth(signedIn: true));
   await p.load();
   return p;
 }
 
 Future<AppProvider> _defaultProvider() async {
   SharedPreferences.setMockInitialValues({});
-  final p = AppProvider();
+  final p = AppProvider(
+      db: FakeFirebaseFirestore(), auth: MockFirebaseAuth(signedIn: true));
   await p.load();
   return p;
 }

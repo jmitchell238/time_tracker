@@ -1,0 +1,42 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "time-tracker-jm",
+          "appId": "1:179997314991:android:0af4e7711c712e1f83295a",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "time-tracker-jm",
+          "configurations": {
+            "android": "1:179997314991:android:0af4e7711c712e1f83295a",
+            "ios": "1:179997314991:ios:2dff8fee6c97e5ec83295a",
+            "macos": "1:179997314991:ios:2dff8fee6c97e5ec83295a",
+            "web": "1:179997314991:web:c1ec70eefa8b2c5483295a",
+            "windows": "1:179997314991:web:54147da1282865d683295a"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

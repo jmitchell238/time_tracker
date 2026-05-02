@@ -1,3 +1,5 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +13,8 @@ Job _job({String id = 'j1', String name = 'Lawn', double? rate = 45.0}) =>
 
 Future<AppProvider> _provider(List<Job> jobs) async {
   SharedPreferences.setMockInitialValues({'jobs': '[]', 'entries': '[]', 'invoices': '[]'});
-  final p = AppProvider();
+  final p = AppProvider(
+      db: FakeFirebaseFirestore(), auth: MockFirebaseAuth(signedIn: true));
   await p.load();
   p.jobs = jobs;
   return p;

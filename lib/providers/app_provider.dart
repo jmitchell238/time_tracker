@@ -1,18 +1,27 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
-import '../models/job.dart';
-import '../models/time_entry.dart';
-import '../models/invoice.dart';
-import '../models/expense_item.dart';
-import '../models/app_settings.dart';
 import '../models/active_timer.dart';
+import '../models/app_settings.dart';
+import '../models/expense_item.dart';
+import '../models/invoice.dart';
+import '../models/job.dart';
 import '../models/saved_client.dart';
+import '../models/time_entry.dart';
 
 const _uuid = Uuid();
 
 class AppProvider extends ChangeNotifier {
+  final FirebaseFirestore? _dbOverride;
+  final FirebaseAuth? _authOverride;
+
+  FirebaseFirestore? _db;
+  FirebaseAuth? _auth;
+  String? _workspaceId;
+
   List<Job> jobs = [];
   List<TimeEntry> entries = [];
   List<Invoice> invoices = [];
@@ -24,7 +33,75 @@ class AppProvider extends ChangeNotifier {
 
   bool get isLoaded => _loaded;
 
+  AppProvider({FirebaseFirestore? db, FirebaseAuth? auth})
+      : _dbOverride = db,
+        _authOverride = auth;
+
+  // ── Firestore helpers ─────────────────────────────────────────────────────
+
+  CollectionReference<Map<String, dynamic>> _col(String name) =>
+      _db!.collection('users').doc(_workspaceId!).collection(name);
+
+  DocumentReference<Map<String, dynamic>> get _settingsDoc =>
+      _db!.collection('users').doc(_workspaceId!).collection('config').doc('settings');
+
+  // ── Load ──────────────────────────────────────────────────────────────────
+
   Future<void> load() async {
+    _db = _dbOverride ?? FirebaseFirestore.instance;
+    _auth = _authOverride ?? FirebaseAuth.instance;
+
+    final user = _auth!.currentUser;
+    if (user == null) {
+      _loaded = true;
+      notifyListeners();
+      return;
+    }
+    _workspaceId = user.uid;
+
+    final results = await Future.wait([
+      _col('jobs').get(),
+      _col('entries').get(),
+      _col('invoices').get(),
+      _col('expenses').get(),
+      _col('timers').get(),
+      _col('savedClients').get(),
+      _settingsDoc.get(),
+    ]);
+
+    final jobsDocs    = (results[0] as QuerySnapshot<Map<String, dynamic>>).docs;
+    final entriesDocs = (results[1] as QuerySnapshot<Map<String, dynamic>>).docs;
+    final invDocs     = (results[2] as QuerySnapshot<Map<String, dynamic>>).docs;
+    final expDocs     = (results[3] as QuerySnapshot<Map<String, dynamic>>).docs;
+    final timerDocs   = (results[4] as QuerySnapshot<Map<String, dynamic>>).docs;
+    final clientDocs  = (results[5] as QuerySnapshot<Map<String, dynamic>>).docs;
+    final settingsSnap = results[6] as DocumentSnapshot<Map<String, dynamic>>;
+
+    // First load ever for this user → migrate from SharedPreferences
+    if (jobsDocs.isEmpty && entriesDocs.isEmpty && invDocs.isEmpty) {
+      await _migrateFromSharedPreferences();
+      _loaded = true;
+      notifyListeners();
+      return;
+    }
+
+    jobs        = jobsDocs.map((d)    => Job.fromJson(d.data())).toList();
+    entries     = entriesDocs.map((d) => TimeEntry.fromJson(d.data())).toList();
+    invoices    = invDocs.map((d)     => Invoice.fromJson(d.data())).toList();
+    expenses    = expDocs.map((d)     => ExpenseItem.fromJson(d.data())).toList();
+    activeTimers = timerDocs.map((d)  => ActiveTimer.fromJson(d.data())).toList();
+    savedClients = clientDocs.map((d) => SavedClient.fromJson(d.data())).toList();
+    if (settingsSnap.exists && settingsSnap.data() != null) {
+      settings = AppSettings.fromJson(settingsSnap.data()!);
+    }
+
+    _loaded = true;
+    notifyListeners();
+  }
+
+  // ── Migration from SharedPreferences ──────────────────────────────────────
+
+  Future<void> _migrateFromSharedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
 
     final jobsJson = prefs.getString('jobs');
@@ -56,7 +133,8 @@ class AppProvider extends ChangeNotifier {
 
     final settingsJson = prefs.getString('settings');
     if (settingsJson != null) {
-      settings = AppSettings.fromJson(jsonDecode(settingsJson) as Map<String, dynamic>);
+      settings = AppSettings.fromJson(
+          jsonDecode(settingsJson) as Map<String, dynamic>);
     }
 
     final timersJson = prefs.getString('active_timers');
@@ -73,43 +151,39 @@ class AppProvider extends ChangeNotifier {
           .toList();
     }
 
-    final savedClientsJson = prefs.getString('saved_clients');
-    if (savedClientsJson != null) {
-      savedClients = (jsonDecode(savedClientsJson) as List)
+    final clientsJson = prefs.getString('saved_clients');
+    if (clientsJson != null) {
+      savedClients = (jsonDecode(clientsJson) as List)
           .map((e) => SavedClient.fromJson(e as Map<String, dynamic>))
           .toList();
     }
 
-    _loaded = true;
-    notifyListeners();
-  }
-
-  Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('jobs', jsonEncode(jobs.map((e) => e.toJson()).toList()));
-    await prefs.setString('entries', jsonEncode(entries.map((e) => e.toJson()).toList()));
-    await prefs.setString('invoices', jsonEncode(invoices.map((e) => e.toJson()).toList()));
-    await prefs.setString('settings', jsonEncode(settings.toJson()));
-    await prefs.setString('active_timers', jsonEncode(activeTimers.map((e) => e.toJson()).toList()));
-    await prefs.setString('expenses', jsonEncode(expenses.map((e) => e.toJson()).toList()));
-    await prefs.setString('saved_clients', jsonEncode(savedClients.map((e) => e.toJson()).toList()));
+    final batch = _db!.batch();
+    for (final j in jobs) batch.set(_col('jobs').doc(j.id), j.toJson());
+    for (final e in entries) batch.set(_col('entries').doc(e.id), e.toJson());
+    for (final i in invoices) batch.set(_col('invoices').doc(i.id), i.toJson());
+    for (final e in expenses) batch.set(_col('expenses').doc(e.id), e.toJson());
+    for (final t in activeTimers) batch.set(_col('timers').doc(t.id), t.toJson());
+    for (final c in savedClients) batch.set(_col('savedClients').doc(c.id), c.toJson());
+    batch.set(_settingsDoc, settings.toJson());
+    await batch.commit();
   }
 
   // ── Jobs ──────────────────────────────────────────────────────────────────
 
   void addJob(String name, String description, double? rate) {
-    jobs = [
-      ...jobs,
-      Job(
-        id: _uuid.v4(),
-        name: name,
-        description: description,
-        rate: rate,
-        isArchived: false,
-        createdAt: DateTime.now(),
-      ),
-    ];
-    _save();
+    final job = Job(
+      id: _uuid.v4(),
+      name: name,
+      description: description,
+      rate: rate,
+      isArchived: false,
+      createdAt: DateTime.now(),
+    );
+    jobs = [...jobs, job];
+    if (_workspaceId != null) {
+      _col('jobs').doc(job.id).set(job.toJson());
+    }
     notifyListeners();
   }
 
@@ -118,7 +192,10 @@ class AppProvider extends ChangeNotifier {
       if (j.id != id) return j;
       return j.copyWith(name: name, description: description, rate: rate, clearRate: clearRate);
     }).toList();
-    _save();
+    final updated = jobs.firstWhere((j) => j.id == id);
+    if (_workspaceId != null) {
+      _col('jobs').doc(id).set(updated.toJson());
+    }
     notifyListeners();
   }
 
@@ -127,7 +204,10 @@ class AppProvider extends ChangeNotifier {
       if (j.id != id) return j;
       return j.copyWith(isArchived: !j.isArchived);
     }).toList();
-    _save();
+    final updated = jobs.firstWhere((j) => j.id == id);
+    if (_workspaceId != null) {
+      _col('jobs').doc(id).set(updated.toJson());
+    }
     notifyListeners();
   }
 
@@ -141,19 +221,19 @@ class AppProvider extends ChangeNotifier {
     required double hours,
     required String description,
   }) {
-    entries = [
-      TimeEntry(
-        id: _uuid.v4(),
-        jobId: jobId,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        hours: hours,
-        description: description,
-      ),
-      ...entries,
-    ];
-    _save();
+    final entry = TimeEntry(
+      id: _uuid.v4(),
+      jobId: jobId,
+      date: date,
+      startTime: startTime,
+      endTime: endTime,
+      hours: hours,
+      description: description,
+    );
+    entries = [entry, ...entries];
+    if (_workspaceId != null) {
+      _col('entries').doc(entry.id).set(entry.toJson());
+    }
     notifyListeners();
   }
 
@@ -177,13 +257,18 @@ class AppProvider extends ChangeNotifier {
         clearRateOverride: clearRateOverride,
       );
     }).toList();
-    _save();
+    final updated = entries.firstWhere((e) => e.id == id);
+    if (_workspaceId != null) {
+      _col('entries').doc(id).set(updated.toJson());
+    }
     notifyListeners();
   }
 
   void deleteEntry(String id) {
     entries = entries.where((e) => e.id != id).toList();
-    _save();
+    if (_workspaceId != null) {
+      _col('entries').doc(id).delete();
+    }
     notifyListeners();
   }
 
@@ -219,23 +304,23 @@ class AppProvider extends ChangeNotifier {
       billedBy: billedBy,
     );
     invoices = [...invoices, inv];
-    // Auto-save client if any info was provided and it doesn't already exist
+
+    SavedClient? newClient;
     if (clientCompany != null || clientName != null) {
       final alreadySaved = savedClients.any((c) =>
           c.company == (clientCompany?.isEmpty == true ? null : clientCompany) &&
           c.name == (clientName?.isEmpty == true ? null : clientName));
       if (!alreadySaved) {
-        savedClients = [
-          ...savedClients,
-          SavedClient(
-            id: _uuid.v4(),
-            name: clientName?.isEmpty == true ? null : clientName,
-            company: clientCompany?.isEmpty == true ? null : clientCompany,
-            phone: clientPhone?.isEmpty == true ? null : clientPhone,
-          ),
-        ];
+        newClient = SavedClient(
+          id: _uuid.v4(),
+          name: clientName?.isEmpty == true ? null : clientName,
+          company: clientCompany?.isEmpty == true ? null : clientCompany,
+          phone: clientPhone?.isEmpty == true ? null : clientPhone,
+        );
+        savedClients = [...savedClients, newClient];
       }
     }
+
     entries = entries.map((e) {
       if (!entryIds.contains(e.id)) return e;
       return e.copyWith(invoiceId: inv.id);
@@ -244,16 +329,34 @@ class AppProvider extends ChangeNotifier {
       if (!expenseIds.contains(e.id)) return e;
       return e.copyWith(invoiceId: inv.id);
     }).toList();
-    _save();
+
+    if (_workspaceId != null) {
+      final batch = _db!.batch();
+      batch.set(_col('invoices').doc(inv.id), inv.toJson());
+      for (final e in entries.where((e) => entryIds.contains(e.id))) {
+        batch.set(_col('entries').doc(e.id), e.toJson());
+      }
+      for (final e in expenses.where((e) => expenseIds.contains(e.id))) {
+        batch.set(_col('expenses').doc(e.id), e.toJson());
+      }
+      if (newClient != null) {
+        batch.set(_col('savedClients').doc(newClient.id), newClient.toJson());
+      }
+      batch.commit();
+    }
     notifyListeners();
   }
 
-  void markInvoicePaid(String id, {required String paidAt, required String paymentMethod}) {
+  void markInvoicePaid(String id,
+      {required String paidAt, required String paymentMethod}) {
     invoices = invoices.map((inv) {
       if (inv.id != id) return inv;
       return inv.copyWith(paidAt: paidAt, paymentMethod: paymentMethod);
     }).toList();
-    _save();
+    final updated = invoices.firstWhere((i) => i.id == id);
+    if (_workspaceId != null) {
+      _col('invoices').doc(id).set(updated.toJson());
+    }
     notifyListeners();
   }
 
@@ -262,7 +365,10 @@ class AppProvider extends ChangeNotifier {
       if (inv.id != id) return inv;
       return inv.copyWith(clearPaidAt: true, clearPaymentMethod: true);
     }).toList();
-    _save();
+    final updated = invoices.firstWhere((i) => i.id == id);
+    if (_workspaceId != null) {
+      _col('invoices').doc(id).set(updated.toJson());
+    }
     notifyListeners();
   }
 
@@ -271,31 +377,45 @@ class AppProvider extends ChangeNotifier {
     if (inv == null) return;
     entries = entries.map((e) {
       if (e.invoiceId != id) return e;
-      return e.copyWith(invoiceId: null);
+      return e.copyWith(clearInvoice: true);
     }).toList();
     expenses = expenses.map((e) {
       if (e.invoiceId != id) return e;
       return e.copyWith(clearInvoiceId: true);
     }).toList();
     invoices = invoices.where((i) => i.id != id).toList();
-    _save();
+
+    if (_workspaceId != null) {
+      final batch = _db!.batch();
+      batch.delete(_col('invoices').doc(id));
+      for (final e in entries.where((e) => inv.entryIds.contains(e.id))) {
+        batch.set(_col('entries').doc(e.id), e.toJson());
+      }
+      for (final e in expenses.where((e) => inv.expenseIds.contains(e.id))) {
+        batch.set(_col('expenses').doc(e.id), e.toJson());
+      }
+      batch.commit();
+    }
     notifyListeners();
   }
 
   // ── Saved Clients ─────────────────────────────────────────────────────────
 
   void addSavedClient({String? name, String? company, String? phone}) {
-    savedClients = [
-      ...savedClients,
-      SavedClient(id: _uuid.v4(), name: name, company: company, phone: phone),
-    ];
-    _save();
+    final client = SavedClient(
+        id: _uuid.v4(), name: name, company: company, phone: phone);
+    savedClients = [...savedClients, client];
+    if (_workspaceId != null) {
+      _col('savedClients').doc(client.id).set(client.toJson());
+    }
     notifyListeners();
   }
 
   void deleteSavedClient(String id) {
     savedClients = savedClients.where((c) => c.id != id).toList();
-    _save();
+    if (_workspaceId != null) {
+      _col('savedClients').doc(id).delete();
+    }
     notifyListeners();
   }
 
@@ -304,7 +424,9 @@ class AppProvider extends ChangeNotifier {
     settings = settings.copyWith(
       paymentMethods: [...settings.paymentMethods, method],
     );
-    _save();
+    if (_workspaceId != null) {
+      _settingsDoc.set(settings.toJson());
+    }
     notifyListeners();
   }
 
@@ -316,23 +438,25 @@ class AppProvider extends ChangeNotifier {
     required String date,
     required String purchasedBy,
   }) {
-    expenses = [
-      ExpenseItem(
-        id: _uuid.v4(),
-        description: description,
-        amount: amount,
-        date: date,
-        purchasedBy: purchasedBy,
-      ),
-      ...expenses,
-    ];
-    _save();
+    final expense = ExpenseItem(
+      id: _uuid.v4(),
+      description: description,
+      amount: amount,
+      date: date,
+      purchasedBy: purchasedBy,
+    );
+    expenses = [expense, ...expenses];
+    if (_workspaceId != null) {
+      _col('expenses').doc(expense.id).set(expense.toJson());
+    }
     notifyListeners();
   }
 
   void deleteExpense(String id) {
     expenses = expenses.where((e) => e.id != id).toList();
-    _save();
+    if (_workspaceId != null) {
+      _col('expenses').doc(id).delete();
+    }
     notifyListeners();
   }
 
@@ -343,7 +467,9 @@ class AppProvider extends ChangeNotifier {
 
   void updateSettings(AppSettings s) {
     settings = s;
-    _save();
+    if (_workspaceId != null) {
+      _settingsDoc.set(s.toJson());
+    }
     notifyListeners();
   }
 
@@ -357,7 +483,9 @@ class AppProvider extends ChangeNotifier {
       startedAt: DateTime.now(),
     );
     activeTimers = [...activeTimers, timer];
-    _save();
+    if (_workspaceId != null) {
+      _col('timers').doc(timer.id).set(timer.toJson());
+    }
     notifyListeners();
   }
 
@@ -371,32 +499,36 @@ class AppProvider extends ChangeNotifier {
     final startStr = '${_p2(timer.startedAt.hour)}:${_p2(timer.startedAt.minute)}';
     final endStr = '${_p2(now.hour)}:${_p2(now.minute)}';
 
-    entries = [
-      TimeEntry(
-        id: _uuid.v4(),
-        jobId: timer.jobId,
-        date: today,
-        startTime: startStr,
-        endTime: endStr,
-        hours: elapsed,
-        description: '',
-        rateOverride: timer.rateOverride,
-      ),
-      ...entries,
-    ];
-
+    final entry = TimeEntry(
+      id: _uuid.v4(),
+      jobId: timer.jobId,
+      date: today,
+      startTime: startStr,
+      endTime: endStr,
+      hours: elapsed,
+      description: '',
+      rateOverride: timer.rateOverride,
+    );
+    entries = [entry, ...entries];
     activeTimers = activeTimers.where((t) => t.id != timerId).toList();
-    _save();
+
+    if (_workspaceId != null) {
+      final batch = _db!.batch();
+      batch.delete(_col('timers').doc(timerId));
+      batch.set(_col('entries').doc(entry.id), entry.toJson());
+      batch.commit();
+    }
     notifyListeners();
   }
 
   void discardTimer(String timerId) {
     activeTimers = activeTimers.where((t) => t.id != timerId).toList();
-    _save();
+    if (_workspaceId != null) {
+      _col('timers').doc(timerId).delete();
+    }
     notifyListeners();
   }
 
-  // Convenience wrappers used by JobDetailScreen (which always has a specific jobId)
   void startTimer(String jobId) {
     if (activeTimers.any((t) => t.jobId == jobId)) return;
     clockIn(jobId: jobId);
@@ -407,9 +539,11 @@ class AppProvider extends ChangeNotifier {
     if (timer != null) discardTimer(timer.id);
   }
 
-  bool isTimerRunning(String jobId) => activeTimers.any((t) => t.jobId == jobId);
+  bool isTimerRunning(String jobId) =>
+      activeTimers.any((t) => t.jobId == jobId);
 
-  ActiveTimer? getTimer(String jobId) => activeTimers.where((t) => t.jobId == jobId).firstOrNull;
+  ActiveTimer? getTimer(String jobId) =>
+      activeTimers.where((t) => t.jobId == jobId).firstOrNull;
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -421,7 +555,8 @@ class AppProvider extends ChangeNotifier {
     return job?.rate ?? settings.defaultRate;
   }
 
-  List<TimeEntry> get uninvoicedEntries => entries.where((e) => e.invoiceId == null).toList();
+  List<TimeEntry> get uninvoicedEntries =>
+      entries.where((e) => e.invoiceId == null).toList();
 
   List<TimeEntry> get invoiceableEntries =>
       entries.where((e) => e.invoiceId == null && e.jobId != null).toList();
@@ -431,7 +566,7 @@ class AppProvider extends ChangeNotifier {
 
   static String _p2(int n) => n.toString().padLeft(2, '0');
 
-  // ── Default data ──────────────────────────────────────────────────────────
+  // ── Default data (used during migration for brand-new accounts) ───────────
 
   static List<Job> _defaultJobs() {
     final now = DateTime.now();

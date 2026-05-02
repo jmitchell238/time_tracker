@@ -17,7 +17,9 @@ dependencies:
   intl: ^0.19.0
   uuid: ^4.5.1
   firebase_core: ^3.13.0
+  firebase_core_web: ^2.24.1
   firebase_auth: ^5.5.2
+  cloud_firestore: ^5.6.0
   pdf: ^3.11.1
   printing: ^5.13.2
 
@@ -26,6 +28,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   firebase_auth_mocks: ^0.14.2
+  fake_cloud_firestore: ^3.0.3
 
 flutter:
   uses-material-design: true

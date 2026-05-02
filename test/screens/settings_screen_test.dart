@@ -1,3 +1,4 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,7 +11,8 @@ import 'package:time_tracker/services/auth_service.dart';
 
 Future<AppProvider> _provider({double rate = 40.0, String? billingName}) async {
   SharedPreferences.setMockInitialValues({'jobs': '[]', 'entries': '[]', 'invoices': '[]'});
-  final p = AppProvider();
+  final p = AppProvider(
+      db: FakeFirebaseFirestore(), auth: MockFirebaseAuth(signedIn: true));
   await p.load();
   p.settings = AppSettings(defaultRate: rate, billingName: billingName);
   return p;

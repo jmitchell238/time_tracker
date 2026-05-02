@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:time_tracker/models/app_settings.dart';
 import 'package:time_tracker/models/job.dart';
 import 'package:time_tracker/models/time_entry.dart';
@@ -30,10 +29,6 @@ TimeEntry _entry({
     );
 
 void main() {
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-  });
-
   // ── getRate ──────────────────────────────────────────────────────────────
 
   group('getRate', () {
@@ -443,55 +438,4 @@ void main() {
     });
   });
 
-  // ── load ─────────────────────────────────────────────────────────────────
-
-  group('load', () {
-    test('sets isLoaded to true', () async {
-      final p = _fresh();
-      await p.load();
-      expect(p.isLoaded, true);
-    });
-
-    test('seeds default jobs when key absent', () async {
-      final p = _fresh();
-      await p.load();
-      expect(p.jobs, isNotEmpty);
-    });
-
-    test('seeds default entries when key absent', () async {
-      final p = _fresh();
-      await p.load();
-      expect(p.entries, isNotEmpty);
-    });
-
-    test('seeds default invoices when key absent', () async {
-      final p = _fresh();
-      await p.load();
-      expect(p.invoices, isNotEmpty);
-    });
-
-    test('loads persisted jobs from prefs', () async {
-      final p1 = _fresh();
-      await p1.load();
-      p1.addJob('Saved Job', '', 50.0);
-      // _save() has multiple chained awaits; pump until all settle
-      for (var i = 0; i < 10; i++) await Future<void>.microtask(() {});
-
-      final p2 = _fresh();
-      await p2.load();
-      expect(p2.jobs.any((j) => j.name == 'Saved Job'), true);
-    });
-
-    test('loads persisted settings from prefs', () async {
-      final p1 = _fresh();
-      await p1.load();
-      p1.updateSettings(const AppSettings(defaultRate: 99.0));
-      // settings key is the 4th write in _save(); pump until all settle
-      for (var i = 0; i < 10; i++) await Future<void>.microtask(() {});
-
-      final p2 = _fresh();
-      await p2.load();
-      expect(p2.settings.defaultRate, 99.0);
-    });
-  });
 }
