@@ -4,7 +4,7 @@ import 'package:time_tracker/theme/app_theme.dart';
 import 'package:time_tracker/widgets/empty_state.dart';
 
 Widget _wrap(Widget child) =>
-    MaterialApp(home: Scaffold(body: child));
+    MaterialApp(theme: AppTheme.dark, home: Scaffold(body: child));
 
 void main() {
   group('EmptyStateWidget', () {
@@ -19,10 +19,10 @@ void main() {
       expect(text.textAlign, TextAlign.center);
     });
 
-    testWidgets('text color is AppColors.fg3', (tester) async {
+    testWidgets('text color is const Color(0xFF64748B)', (tester) async {
       await tester.pumpWidget(_wrap(const EmptyStateWidget('No items found')));
       final text = tester.widget<Text>(find.text('No items found'));
-      expect(text.style!.color, AppColors.fg3);
+      expect(text.style!.color, const Color(0xFF64748B));
     });
 
     testWidgets('text font size is 13', (tester) async {

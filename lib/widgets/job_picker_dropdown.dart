@@ -49,9 +49,9 @@ class _JobPickerDropdownState extends State<JobPickerDropdown> {
             height: 44,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: AppColors.bgElevated,
+              color: AppColors.of(context).bgElevated,
               border: Border.all(
-                  color: _showPicker ? AppColors.primary : AppColors.border),
+                  color: _showPicker ? AppColors.primary : AppColors.of(context).border),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -62,7 +62,7 @@ class _JobPickerDropdownState extends State<JobPickerDropdown> {
                     style: GoogleFonts.dmSans(
                       fontSize: 13,
                       color:
-                          selectedJob != null ? AppColors.fg : AppColors.fg3,
+                          selectedJob != null ? AppColors.of(context).fg : AppColors.of(context).fg3,
                     ),
                   ),
                 ),
@@ -76,16 +76,16 @@ class _JobPickerDropdownState extends State<JobPickerDropdown> {
                         _search = '';
                       });
                     },
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.all(4),
                       child:
-                          Icon(Icons.clear, size: 16, color: AppColors.fg3),
+                          Icon(Icons.clear, size: 16, color: AppColors.of(context).fg3),
                     ),
                   )
                 else
                   Icon(
                     _showPicker ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.fg2,
+                    color: AppColors.of(context).fg2,
                     size: 18,
                   ),
               ],
@@ -96,8 +96,8 @@ class _JobPickerDropdownState extends State<JobPickerDropdown> {
           const SizedBox(height: 6),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.bgCard,
-              border: Border.all(color: AppColors.border),
+              color: AppColors.of(context).bgCard,
+              border: Border.all(color: AppColors.of(context).border),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
@@ -107,18 +107,18 @@ class _JobPickerDropdownState extends State<JobPickerDropdown> {
                   child: TextField(
                     onChanged: (v) => setState(() => _search = v),
                     style:
-                        GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+                        GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'Search jobs…',
                       hintStyle:
-                          GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+                          GoogleFonts.dmSans(color: AppColors.of(context).fg3, fontSize: 13),
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
                 ),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.of(context).border),
                 ConstrainedBox(
                   constraints:
                       BoxConstraints(maxHeight: widget.maxDropdownHeight),
@@ -149,7 +149,7 @@ class _JobPickerDropdownState extends State<JobPickerDropdown> {
                                     ? FontWeight.w700
                                     : FontWeight.w400,
                                 color:
-                                    isSel ? AppColors.primary : AppColors.fg,
+                                    isSel ? AppColors.primary : AppColors.of(context).fg,
                               ),
                             ),
                           ),
@@ -157,7 +157,7 @@ class _JobPickerDropdownState extends State<JobPickerDropdown> {
                       }),
                       if (widget.onAddJob != null) ...[
                         if (filtered.isNotEmpty)
-                          const Divider(height: 1, color: AppColors.border),
+                          Divider(height: 1, color: AppColors.of(context).border),
                         InkWell(
                           onTap: widget.onAddJob,
                           child: Padding(

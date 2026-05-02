@@ -14,7 +14,7 @@ class MoreScreen extends StatelessWidget {
       children: [
         Text('More',
             style: GoogleFonts.lora(
-                fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
         const SizedBox(height: 20),
         _NavTile(
           icon: Icons.bar_chart_outlined,
@@ -47,11 +47,11 @@ class _PushedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgDeep,
+      backgroundColor: AppColors.of(context).bgDeep,
       body: Column(
         children: [
           Container(
-            color: AppColors.bgBase,
+            color: AppColors.of(context).bgBase,
             padding: EdgeInsets.fromLTRB(
               16,
               MediaQuery.of(context).padding.top + 12,
@@ -95,20 +95,20 @@ class _NavTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.bgBase,
-          border: Border.all(color: AppColors.border),
+          color: AppColors.of(context).bgBase,
+          border: Border.all(color: AppColors.of(context).border),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.fg2),
+            Icon(icon, size: 20, color: AppColors.of(context).fg2),
             const SizedBox(width: 12),
             Expanded(
               child: Text(label,
                   style: GoogleFonts.dmSans(
-                      fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.fg)),
+                      fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.of(context).fg)),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: AppColors.fg3),
+            Icon(Icons.chevron_right, size: 18, color: AppColors.of(context).fg3),
           ],
         ),
       ),

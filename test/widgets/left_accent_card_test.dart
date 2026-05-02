@@ -4,7 +4,7 @@ import 'package:time_tracker/theme/app_theme.dart';
 import 'package:time_tracker/widgets/left_accent_card.dart';
 
 Widget _wrap(Widget child) =>
-    MaterialApp(home: Scaffold(body: child));
+    MaterialApp(theme: AppTheme.dark, home: Scaffold(body: child));
 
 void main() {
   group('LeftAccentCard', () {
@@ -40,7 +40,7 @@ void main() {
       final containers = tester.widgetList<Container>(find.byType(Container));
       final outer = containers.first;
       final decoration = outer.decoration as BoxDecoration?;
-      expect(decoration?.color, AppColors.bgCard);
+      expect(decoration?.color, const Color(0xFF334155));
     });
 
     testWidgets('outer container uses default border radius 10', (tester) async {

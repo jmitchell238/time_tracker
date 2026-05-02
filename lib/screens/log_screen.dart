@@ -19,7 +19,7 @@ class _LogScreenState extends State<LogScreen> {
     return Column(
       children: [
         Container(
-          color: AppColors.bgBase,
+          color: AppColors.of(context).bgBase,
           padding: EdgeInsets.fromLTRB(
             16,
             MediaQuery.of(context).padding.top + 8,

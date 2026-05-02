@@ -125,10 +125,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         // Greeting
         Text('$greeting, James',
-            style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+            style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
         const SizedBox(height: 2),
         Text(_fmtDate(_today()),
-            style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
+            style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2)),
         const SizedBox(height: 16),
 
         // CLOCK IN button
@@ -192,7 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 style: GoogleFonts.dmSans(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
-                                    color: job != null ? AppColors.fg : AppColors.fg2),
+                                    color: job != null ? AppColors.of(context).fg : AppColors.of(context).fg2),
                               ),
                               Text(
                                 _elapsed(t.startedAt),
@@ -252,12 +252,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Text(
                                 'No job assigned · ${_fmt12(e.startTime)} – ${_fmt12(e.endTime)}',
                                 style: GoogleFonts.dmSans(
-                                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
+                                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 _fmtDateShort(e.date),
-                                style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2),
+                                style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2),
                               ),
                             ],
                           ),
@@ -268,7 +268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Text('${e.hours.toStringAsFixed(1)}h',
                                 style: GoogleFonts.dmSans(
-                                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                             Text('Tap to complete',
                                 style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.accent)),
                           ],
@@ -305,7 +305,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Text(
           'RECENT ENTRIES',
           style: GoogleFonts.dmSans(
-              fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6),
+              fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6),
         ),
         const SizedBox(height: 10),
         ...recentFive.map((e) {
@@ -320,9 +320,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Container(
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                  color: AppColors.bgCard,
+                  color: AppColors.of(context).bgCard,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.of(context).border),
                 ),
                 child: IntrinsicHeight(
                   child: Row(
@@ -330,7 +330,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Container(
                           width: 4,
-                          color: e.invoiceId != null ? AppColors.fg3 : AppColors.accent),
+                          color: e.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent),
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(8, 10, 12, 10),
@@ -345,7 +345,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       style: GoogleFonts.dmSans(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w700,
-                                          color: AppColors.fg),
+                                          color: AppColors.of(context).fg),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -355,7 +355,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           ? e.description
                                           : (job == null ? 'Tap to complete' : ''),
                                       style: GoogleFonts.dmSans(
-                                          fontSize: 11, color: AppColors.fg2),
+                                          fontSize: 11, color: AppColors.of(context).fg2),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -370,10 +370,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       style: GoogleFonts.dmSans(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w700,
-                                          color: AppColors.fg)),
+                                          color: AppColors.of(context).fg)),
                                   Text(_fmtDateShort(e.date),
                                       style: GoogleFonts.dmSans(
-                                          fontSize: 11, color: AppColors.fg2)),
+                                          fontSize: 11, color: AppColors.of(context).fg2)),
                                 ],
                               ),
                             ],

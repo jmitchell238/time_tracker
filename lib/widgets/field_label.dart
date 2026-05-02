@@ -16,7 +16,7 @@ class FieldLabel extends StatelessWidget {
         style: GoogleFonts.dmSans(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: AppColors.fg2,
+          color: AppColors.of(context).fg2,
           letterSpacing: 0.6,
         ),
       ),

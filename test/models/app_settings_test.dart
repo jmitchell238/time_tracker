@@ -128,5 +128,54 @@ void main() {
       expect(updated.billingAddress, '123 Main');
       expect(updated.billingPhone, '555-1234');
     });
+
+    // themeMode
+    test('default themeMode is system', () {
+      const s = AppSettings();
+      expect(s.themeMode, 'system');
+    });
+
+    test('themeMode can be set to dark', () {
+      const s = AppSettings(themeMode: 'dark');
+      expect(s.themeMode, 'dark');
+    });
+
+    test('themeMode can be set to light', () {
+      const s = AppSettings(themeMode: 'light');
+      expect(s.themeMode, 'light');
+    });
+
+    test('copyWith updates themeMode', () {
+      const s = AppSettings(themeMode: 'dark');
+      final updated = s.copyWith(themeMode: 'light');
+      expect(updated.themeMode, 'light');
+    });
+
+    test('copyWith preserves themeMode when not specified', () {
+      const s = AppSettings(themeMode: 'dark');
+      final updated = s.copyWith(defaultRate: 50.0);
+      expect(updated.themeMode, 'dark');
+    });
+
+    test('toJson serializes themeMode', () {
+      const s = AppSettings(themeMode: 'light');
+      expect(s.toJson()['themeMode'], 'light');
+    });
+
+    test('fromJson deserializes themeMode', () {
+      final s = AppSettings.fromJson({'themeMode': 'light'});
+      expect(s.themeMode, 'light');
+    });
+
+    test('fromJson defaults themeMode to system when missing', () {
+      final s = AppSettings.fromJson({});
+      expect(s.themeMode, 'system');
+    });
+
+    test('round-trip preserves themeMode', () {
+      const s = AppSettings(themeMode: 'dark');
+      final copy = AppSettings.fromJson(s.toJson());
+      expect(copy.themeMode, 'dark');
+    });
   });
 }

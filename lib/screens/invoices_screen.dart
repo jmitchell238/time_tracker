@@ -88,7 +88,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       children: [
         Row(
           children: [
-            Text('Invoices', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+            Text('Invoices', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
             const Spacer(),
             ElevatedButton.icon(
               onPressed: () => setState(() => _creating = true),
@@ -116,15 +116,15 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   margin: const EdgeInsets.only(right: 8),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _filter == f.$1 ? AppColors.accent : AppColors.bgCard,
-                    border: Border.all(color: _filter == f.$1 ? AppColors.accent : AppColors.border),
+                    color: _filter == f.$1 ? AppColors.accent : AppColors.of(context).bgCard,
+                    border: Border.all(color: _filter == f.$1 ? AppColors.accent : AppColors.of(context).border),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(f.$2,
                       style: GoogleFonts.dmSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: _filter == f.$1 ? Colors.white : AppColors.fg2,
+                        color: _filter == f.$1 ? Colors.white : AppColors.of(context).fg2,
                       )),
                 ),
               ),
@@ -157,14 +157,14 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                             if (uninvoiced.isNotEmpty) '${uninvoiced.length} uninvoiced ${uninvoiced.length == 1 ? 'entry' : 'entries'}',
                             if (pendingExpenses.isNotEmpty) '${pendingExpenses.length} pending ${pendingExpenses.length == 1 ? 'expense' : 'expenses'}',
                           ].join(' · '),
-                          style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg),
+                          style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.of(context).fg),
                         ),
                         Text('Tap to create a new invoice',
-                            style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                            style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: AppColors.fg3, size: 18),
+                  Icon(Icons.chevron_right, color: AppColors.of(context).fg3, size: 18),
                 ],
               ),
             ),
@@ -210,19 +210,19 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           onTap: () => setState(_resetCreate),
           child: Row(
             children: [
-              const Icon(Icons.arrow_back, size: 18, color: AppColors.fg2),
+              Icon(Icons.arrow_back, size: 18, color: AppColors.of(context).fg2),
               const SizedBox(width: 4),
-              Text('Back', style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg2)),
+              Text('Back', style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg2)),
             ],
           ),
         ),
         const SizedBox(height: 16),
-        Text('New Invoice', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+        Text('New Invoice', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
         const SizedBox(height: 16),
 
         // ── Billed by ──
         Text('BILLED BY',
-            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
         Row(
           children: ['James', 'Whitney', 'Combined'].map((name) {
@@ -235,15 +235,15 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   margin: EdgeInsets.only(right: isLast ? 0 : 8),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: active ? AppColors.primary : AppColors.bgCard,
-                    border: Border.all(color: active ? AppColors.primary : AppColors.border),
+                    color: active ? AppColors.primary : AppColors.of(context).bgCard,
+                    border: Border.all(color: active ? AppColors.primary : AppColors.of(context).border),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(name,
                         style: GoogleFonts.dmSans(
                           fontSize: 12, fontWeight: FontWeight.w700,
-                          color: active ? Colors.white : AppColors.fg2,
+                          color: active ? Colors.white : AppColors.of(context).fg2,
                         )),
                   ),
                 ),
@@ -255,7 +255,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
         // ── Client info ──
         Text('CLIENT INFO (OPTIONAL)',
-            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
         if (provider.businesses.isNotEmpty) ...[
           Wrap(
@@ -271,17 +271,17 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.bgCard,
-                    border: Border.all(color: AppColors.border),
+                    color: AppColors.of(context).bgCard,
+                    border: Border.all(color: AppColors.of(context).border),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.person_outline, size: 13, color: AppColors.fg2),
+                      Icon(Icons.person_outline, size: 13, color: AppColors.of(context).fg2),
                       const SizedBox(width: 4),
                       Text(c.displayName,
-                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.fg)),
+                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.of(context).fg)),
                     ],
                   ),
                 ),
@@ -299,7 +299,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
         // ── Select entries ──
         Text('SELECT ENTRIES',
-            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
 
         if (uninvoiced.isEmpty)
@@ -319,8 +319,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               child: Container(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary.withAlpha(38) : AppColors.bgCard,
-                  border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+                  color: isSelected ? AppColors.primary.withAlpha(38) : AppColors.of(context).bgCard,
+                  border: Border.all(color: isSelected ? AppColors.primary : AppColors.of(context).border),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -332,10 +332,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(job?.name ?? 'Unknown',
-                              style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
+                              style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg),
                               maxLines: 1, overflow: TextOverflow.ellipsis),
                           Text('${_fmtDateShort(e.date)} · ${e.description}',
-                              style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2),
+                              style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2),
                               maxLines: 1, overflow: TextOverflow.ellipsis),
                         ],
                       ),
@@ -356,7 +356,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         // ── Select expenses ──
         const SizedBox(height: 8),
         Text('SELECT EXPENSES (OPTIONAL)',
-            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
 
         if (uninvoicedExpenses.isEmpty)
@@ -374,8 +374,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               child: Container(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary.withAlpha(38) : AppColors.bgCard,
-                  border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+                  color: isSelected ? AppColors.primary.withAlpha(38) : AppColors.of(context).bgCard,
+                  border: Border.all(color: isSelected ? AppColors.primary : AppColors.of(context).border),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -387,10 +387,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(e.description,
-                              style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
+                              style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg),
                               maxLines: 1, overflow: TextOverflow.ellipsis),
                           Text('${e.purchasedBy} · ${_fmtDateShort(e.date)}',
-                              style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                              style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
                         ],
                       ),
                     ),
@@ -416,7 +416,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Invoice Total', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.fg2)),
+                Text('Invoice Total', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.of(context).fg2)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -435,7 +435,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Grand Total', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                      Text('Grand Total', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                       Text(_fmtMoney(grandTotal), style: GoogleFonts.lora(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.accent)),
                     ],
                   ),
@@ -448,19 +448,19 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
         // ── Notes ──
         Text('NOTES (OPTIONAL)',
-            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+            style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
         const SizedBox(height: 6),
         TextField(
           controller: _notesCtrl,
           maxLines: 2,
-          style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+          style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
           decoration: InputDecoration(
             hintText: 'Add a note to this invoice…',
-            hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+            hintStyle: GoogleFonts.dmSans(color: AppColors.of(context).fg3, fontSize: 13),
             filled: true,
-            fillColor: AppColors.bgCard,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+            fillColor: AppColors.of(context).bgCard,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.of(context).border)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.of(context).border)),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
@@ -488,7 +488,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                     setState(_resetCreate);
                   },
             style: ElevatedButton.styleFrom(
-              backgroundColor: (selectedEntries.isNotEmpty || selectedExpenses.isNotEmpty) ? AppColors.accent : AppColors.fg3,
+              backgroundColor: (selectedEntries.isNotEmpty || selectedExpenses.isNotEmpty) ? AppColors.accent : AppColors.of(context).fg3,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 0,
@@ -510,7 +510,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: AppColors.of(context).bgBase,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) {
@@ -522,9 +522,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Mark as Paid', style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                Text('Mark as Paid', style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                 const SizedBox(height: 16),
-                Text('DATE PAID', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+                Text('DATE PAID', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
                 const SizedBox(height: 8),
                 GestureDetector(
                   onTap: () async {
@@ -547,21 +547,21 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.bgCard,
-                      border: Border.all(color: AppColors.border),
+                      color: AppColors.of(context).bgCard,
+                      border: Border.all(color: AppColors.of(context).border),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.fg2),
+                        Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.of(context).fg2),
                         const SizedBox(width: 8),
-                        Text(selectedDate, style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg)),
+                        Text(selectedDate, style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg)),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text('PAYMENT METHOD', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+                Text('PAYMENT METHOD', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -572,13 +572,13 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: selectedMethod == m ? AppColors.accent : AppColors.bgCard,
-                          border: Border.all(color: selectedMethod == m ? AppColors.accent : AppColors.border),
+                          color: selectedMethod == m ? AppColors.accent : AppColors.of(context).bgCard,
+                          border: Border.all(color: selectedMethod == m ? AppColors.accent : AppColors.of(context).border),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(m, style: GoogleFonts.dmSans(
                           fontSize: 12, fontWeight: FontWeight.w700,
-                          color: selectedMethod == m ? Colors.white : AppColors.fg2,
+                          color: selectedMethod == m ? Colors.white : AppColors.of(context).fg2,
                         )),
                       ),
                     )),
@@ -590,14 +590,14 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                     Expanded(
                       child: TextField(
                         controller: newMethodCtrl,
-                        style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+                        style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
                         decoration: InputDecoration(
                           hintText: 'Add new method…',
-                          hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+                          hintStyle: GoogleFonts.dmSans(color: AppColors.of(context).fg3, fontSize: 13),
                           filled: true,
-                          fillColor: AppColors.bgCard,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+                          fillColor: AppColors.of(context).bgCard,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.of(context).border)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.of(context).border)),
                           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         ),
@@ -633,7 +633,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                       Navigator.pop(ctx);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: selectedMethod != null ? const Color(0xFF16A34A) : AppColors.fg3,
+                      backgroundColor: selectedMethod != null ? const Color(0xFF16A34A) : AppColors.of(context).fg3,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
@@ -668,9 +668,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           onTap: () => setState(() => _detailId = null),
           child: Row(
             children: [
-              const Icon(Icons.arrow_back, size: 18, color: AppColors.fg2),
+              Icon(Icons.arrow_back, size: 18, color: AppColors.of(context).fg2),
               const SizedBox(width: 4),
-              Text('Back', style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg2)),
+              Text('Back', style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg2)),
             ],
           ),
         ),
@@ -681,12 +681,12 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(inv.number, style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                  Text(inv.number, style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       Text('Created ${_fmtDateShort(inv.createdAt)}',
-                          style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
+                          style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2)),
                       if (inv.billedBy != null) ...[
                         const SizedBox(width: 8),
                         Container(
@@ -712,7 +712,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         // Totals cards
         Row(
           children: [
-            Expanded(child: _totalCard('TOTAL HOURS', inv.totalHours.toStringAsFixed(1), AppColors.fg)),
+            Expanded(child: _totalCard('TOTAL HOURS', inv.totalHours.toStringAsFixed(1), AppColors.of(context).fg)),
             const SizedBox(width: 12),
             Expanded(child: _totalCard('LABOUR', _fmtMoney(inv.totalAmount), AppColors.accent, highlight: true)),
           ],
@@ -730,7 +730,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
         if (inv.notes.isNotEmpty) ...[
           const SizedBox(height: 10),
-          Text('Note: ${inv.notes}', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2, fontStyle: FontStyle.italic)),
+          Text('Note: ${inv.notes}', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2, fontStyle: FontStyle.italic)),
         ],
 
         // Payment status
@@ -755,13 +755,13 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                           style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF16A34A))),
                       if (inv.paymentMethod != null)
                         Text(inv.paymentMethod!,
-                            style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
+                            style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2)),
                     ],
                   ),
                 ),
                 GestureDetector(
                   onTap: () => provider.unmarkInvoicePaid(inv.id),
-                  child: Text('Undo', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg3)),
+                  child: Text('Undo', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg3)),
                 ),
               ],
             ),
@@ -787,17 +787,17 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         // Client info
         if (inv.clientName != null || inv.clientCompany != null || inv.clientPhone != null) ...[
           const SizedBox(height: 14),
-          Text('CLIENT', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+          Text('CLIENT', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-            decoration: BoxDecoration(color: AppColors.bgCard, border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(color: AppColors.of(context).bgCard, border: Border.all(color: AppColors.of(context).border), borderRadius: BorderRadius.circular(10)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (inv.clientName != null) Text(inv.clientName!, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-                if (inv.clientCompany != null) Text(inv.clientCompany!, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
-                if (inv.clientPhone != null) Text(inv.clientPhone!, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2)),
+                if (inv.clientName != null) Text(inv.clientName!, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+                if (inv.clientCompany != null) Text(inv.clientCompany!, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2)),
+                if (inv.clientPhone != null) Text(inv.clientPhone!, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2)),
               ],
             ),
           ),
@@ -806,7 +806,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         // Entries section
         const SizedBox(height: 16),
         Text('LABOUR ENTRIES (${invEntries.length})',
-            style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+            style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
         ...invEntries.map((e) {
           final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
@@ -826,7 +826,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         if (invExpenses.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text('PARTS & EXPENSES (${invExpenses.length})',
-              style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+              style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
           const SizedBox(height: 8),
           ...invExpenses.map((e) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -863,14 +863,14 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: highlight ? AppColors.accent.withAlpha(25) : AppColors.bgCard,
-        border: Border.all(color: highlight ? AppColors.accent.withAlpha(76) : AppColors.border),
+        color: highlight ? AppColors.accent.withAlpha(25) : AppColors.of(context).bgCard,
+        border: Border.all(color: highlight ? AppColors.accent.withAlpha(76) : AppColors.of(context).border),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.dmSans(fontSize: 10, color: highlight ? AppColors.accent : AppColors.fg2, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+          Text(label, style: GoogleFonts.dmSans(fontSize: 10, color: highlight ? AppColors.accent : AppColors.of(context).fg2, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
           Text(value, style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: valueColor)),
         ],
       ),
@@ -881,12 +881,12 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: AppColors.of(context).bgCard,
         border: Border(
-          left: const BorderSide(color: AppColors.fg3, width: 4),
-          top: const BorderSide(color: AppColors.border),
-          right: const BorderSide(color: AppColors.border),
-          bottom: const BorderSide(color: AppColors.border),
+          left: BorderSide(color: AppColors.of(context).fg3, width: 4),
+          top: BorderSide(color: AppColors.of(context).border),
+          right: BorderSide(color: AppColors.of(context).border),
+          bottom: BorderSide(color: AppColors.of(context).border),
         ),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -896,18 +896,18 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(left, style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                Text(left, style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                 if (sub.isNotEmpty)
-                  Text(sub, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                  Text(sub, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(right, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+              Text(right, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
               if (rightSub.isNotEmpty)
-                Text(rightSub, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                Text(rightSub, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
             ],
           ),
         ],
@@ -919,7 +919,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         width: 20, height: 20,
         decoration: BoxDecoration(
           color: active ? AppColors.primary : Colors.transparent,
-          border: Border.all(color: active ? AppColors.primary : AppColors.border, width: 2),
+          border: Border.all(color: active ? AppColors.primary : AppColors.of(context).border, width: 2),
           borderRadius: BorderRadius.circular(6),
         ),
         child: active ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
@@ -1003,8 +1003,8 @@ class _InvoiceCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border.all(color: AppColors.border),
+            color: AppColors.of(context).bgCard,
+            border: Border.all(color: AppColors.of(context).border),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -1019,11 +1019,11 @@ class _InvoiceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(invoice.number, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                    Text(invoice.number, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                     Row(
                       children: [
                         Text('${fmtDate(invoice.createdAt)} · ${invoice.entryIds.length} entries',
-                            style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                            style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
@@ -1063,11 +1063,11 @@ class _InvoiceCard extends StatelessWidget {
                   Text(fmtMoney(grandTotal),
                       style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.accent)),
                   Text('${invoice.totalHours.toStringAsFixed(1)}h',
-                      style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                      style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
                 ],
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, color: AppColors.fg3, size: 18),
+              Icon(Icons.chevron_right, color: AppColors.of(context).fg3, size: 18),
             ],
           ),
         ),

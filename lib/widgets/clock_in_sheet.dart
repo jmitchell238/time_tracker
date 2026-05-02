@@ -47,7 +47,7 @@ class _ClockInSheetState extends State<ClockInSheet> {
           style: GoogleFonts.dmSans(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: AppColors.fg2,
+              color: AppColors.of(context).fg2,
               letterSpacing: 0.6),
         ),
       );
@@ -63,8 +63,8 @@ class _ClockInSheetState extends State<ClockInSheet> {
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.bgBase,
+        decoration: BoxDecoration(
+          color: AppColors.of(context).bgBase,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -78,7 +78,7 @@ class _ClockInSheetState extends State<ClockInSheet> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: AppColors.of(context).border,
                       borderRadius: BorderRadius.circular(2)),
                 ),
               ),
@@ -94,11 +94,11 @@ class _ClockInSheetState extends State<ClockInSheet> {
                       style: GoogleFonts.lora(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.fg)),
+                          color: AppColors.of(context).fg)),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close,
-                        color: AppColors.fg2, size: 22),
+                    icon: Icon(Icons.close,
+                        color: AppColors.of(context).fg2, size: 22),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -170,7 +170,7 @@ class _ClockInSheetState extends State<ClockInSheet> {
                       child: Text(
                         'You can add job & rate details after clocking out',
                         style: GoogleFonts.dmSans(
-                            fontSize: 11, color: AppColors.fg3),
+                            fontSize: 11, color: AppColors.of(context).fg3),
                       ),
                     ),
                   ],

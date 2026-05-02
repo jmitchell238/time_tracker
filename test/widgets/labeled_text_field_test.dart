@@ -4,7 +4,7 @@ import 'package:time_tracker/widgets/labeled_text_field.dart';
 import 'package:time_tracker/theme/app_theme.dart';
 
 void main() {
-  Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+  Widget wrap(Widget child) => MaterialApp(theme: AppTheme.dark, home: Scaffold(body: child));
 
   group('LabeledTextField', () {
     testWidgets('renders a TextField', (tester) async {
@@ -28,7 +28,7 @@ void main() {
       expect(tf.decoration?.labelText, 'Client Name');
     });
 
-    testWidgets('fill color is AppColors.bgCard', (tester) async {
+    testWidgets('fill color is const Color(0xFF334155)', (tester) async {
       await tester.pumpWidget(wrap(
         LabeledTextField(
           label: 'Name',
@@ -36,7 +36,7 @@ void main() {
         ),
       ));
       final tf = tester.widget<TextField>(find.byType(TextField));
-      expect(tf.decoration?.fillColor, AppColors.bgCard);
+      expect(tf.decoration?.fillColor, const Color(0xFF334155));
       expect(tf.decoration?.filled, isTrue);
     });
 

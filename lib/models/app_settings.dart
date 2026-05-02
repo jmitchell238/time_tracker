@@ -6,6 +6,8 @@ class AppSettings {
   final String? billingAddress;
   final String? billingPhone;
   final List<String> paymentMethods;
+  /// One of 'dark', 'light', 'system'.
+  final String themeMode;
 
   const AppSettings({
     this.defaultRate = 35.0,
@@ -13,6 +15,7 @@ class AppSettings {
     this.billingAddress,
     this.billingPhone,
     this.paymentMethods = const ['Cash', 'Check', 'Direct Deposit', 'Venmo'],
+    this.themeMode = 'system',
   });
 
   AppSettings copyWith({
@@ -24,6 +27,7 @@ class AppSettings {
     String? billingPhone,
     bool clearBillingPhone = false,
     List<String>? paymentMethods,
+    String? themeMode,
   }) =>
       AppSettings(
         defaultRate: defaultRate ?? this.defaultRate,
@@ -31,6 +35,7 @@ class AppSettings {
         billingAddress: clearBillingAddress ? null : (billingAddress ?? this.billingAddress),
         billingPhone: clearBillingPhone ? null : (billingPhone ?? this.billingPhone),
         paymentMethods: paymentMethods ?? this.paymentMethods,
+        themeMode: themeMode ?? this.themeMode,
       );
 
   Map<String, dynamic> toJson() => {
@@ -39,6 +44,7 @@ class AppSettings {
         'billingAddress': billingAddress,
         'billingPhone': billingPhone,
         'paymentMethods': paymentMethods,
+        'themeMode': themeMode,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> j) => AppSettings(
@@ -49,5 +55,6 @@ class AppSettings {
         paymentMethods: j['paymentMethods'] != null
             ? List<String>.from(j['paymentMethods'] as List)
             : _kDefaultPaymentMethods,
+        themeMode: j['themeMode'] as String? ?? 'system',
       );
 }

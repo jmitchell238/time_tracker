@@ -19,8 +19,8 @@ class IconStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
-        border: Border.all(color: AppColors.border),
+        color: AppColors.of(context).bgCard,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -33,13 +33,13 @@ class IconStatCard extends StatelessWidget {
             style: GoogleFonts.lora(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: AppColors.fg,
+              color: AppColors.of(context).fg,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.fg3),
+            style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.of(context).fg3),
           ),
         ],
       ),

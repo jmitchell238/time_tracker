@@ -72,7 +72,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final activeTimer = provider.getTimer(widget.jobId);
 
     return Scaffold(
-      backgroundColor: AppColors.bgDeep,
+      backgroundColor: AppColors.of(context).bgDeep,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -251,17 +251,17 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     icon: Icon(
                       job.isArchived ? Icons.unarchive_outlined : Icons.archive_outlined,
                       size: 16,
-                      color: job.isArchived ? AppColors.success : AppColors.fg2,
+                      color: job.isArchived ? AppColors.success : AppColors.of(context).fg2,
                     ),
                     label: Text(
                       job.isArchived ? 'Unarchive Job' : 'Archive Job',
                       style: GoogleFonts.dmSans(
                         fontSize: 13, fontWeight: FontWeight.w600,
-                        color: job.isArchived ? AppColors.success : AppColors.fg2,
+                        color: job.isArchived ? AppColors.success : AppColors.of(context).fg2,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: job.isArchived ? AppColors.success : AppColors.border),
+                      side: BorderSide(color: job.isArchived ? AppColors.success : AppColors.of(context).border),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
@@ -269,7 +269,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'ALL ENTRIES (${jobEntries.length})',
-                  style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6),
+                  style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6),
                 ),
                 const SizedBox(height: 8),
                 if (jobEntries.isEmpty)
@@ -279,7 +279,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: LeftAccentCard(
-                      accentColor: e.invoiceId != null ? AppColors.fg3 : AppColors.accent,
+                      accentColor: e.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
                       child: Row(
                         children: [
                           Expanded(
@@ -287,16 +287,16 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(_fmtDateShort(e.date),
-                                    style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                                    style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                                 const SizedBox(height: 2),
                                 Text(e.description,
-                                    style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                                    style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
                                 const SizedBox(height: 4),
                                 Text(
                                   e.invoiceId != null ? 'Invoiced' : 'Uninvoiced',
                                   style: GoogleFonts.dmSans(
                                     fontSize: 10, fontWeight: FontWeight.w600,
-                                    color: e.invoiceId != null ? AppColors.fg3 : AppColors.accent,
+                                    color: e.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
                                   ),
                                 ),
                               ],
@@ -329,7 +329,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: AppColors.of(context).bgBase,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -344,24 +344,24 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Edit Job',
-                  style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                  style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
               const SizedBox(height: 16),
               TextField(
                 controller: nameCtrl,
-                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.fg),
+                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
                 decoration: _inputDecoration('Job Name'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: descCtrl,
-                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.fg),
+                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
                 decoration: _inputDecoration('Description'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: rateCtrl,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.fg),
+                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
                 decoration: _inputDecoration('Hourly Rate (\$) — leave blank to use default'),
               ),
               const SizedBox(height: 20),
@@ -402,16 +402,16 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2),
+      labelStyle: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2),
       filled: true,
-      fillColor: AppColors.bgDeep,
+      fillColor: AppColors.of(context).bgDeep,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide(color: AppColors.of(context).border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide(color: AppColors.of(context).border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),

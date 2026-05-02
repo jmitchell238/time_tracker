@@ -73,19 +73,19 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
   InputDecoration _inputDec(String hint) => InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: AppColors.bgElevated,
+        fillColor: AppColors.of(context).bgElevated,
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.border)),
+            borderSide: BorderSide(color: AppColors.of(context).border)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.border)),
+            borderSide: BorderSide(color: AppColors.of(context).border)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: AppColors.primary)),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+        hintStyle: GoogleFonts.dmSans(color: AppColors.of(context).fg3, fontSize: 13),
       );
 
   Widget _label(String text) => FieldLabel(text);
@@ -110,8 +110,8 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.bgBase,
+        decoration: BoxDecoration(
+          color: AppColors.of(context).bgBase,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -125,7 +125,7 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: AppColors.of(context).border,
                       borderRadius: BorderRadius.circular(2)),
                 ),
               ),
@@ -142,11 +142,11 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
                       style: GoogleFonts.lora(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.fg)),
+                          color: AppColors.of(context).fg)),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close,
-                        color: AppColors.fg2, size: 22),
+                    icon: Icon(Icons.close,
+                        color: AppColors.of(context).fg2, size: 22),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -159,19 +159,19 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.bgCard,
+                  color: AppColors.of(context).bgCard,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.of(context).border),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.schedule,
-                        size: 14, color: AppColors.fg2),
+                    Icon(Icons.schedule,
+                        size: 14, color: AppColors.of(context).fg2),
                     const SizedBox(width: 6),
                     Text(
                       '${widget.entry.date}  ${_fmt12(widget.entry.startTime)} – ${_fmt12(widget.entry.endTime)}',
                       style: GoogleFonts.dmSans(
-                          fontSize: 12, color: AppColors.fg2),
+                          fontSize: 12, color: AppColors.of(context).fg2),
                     ),
                   ],
                 ),
@@ -212,7 +212,7 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true),
                       style: GoogleFonts.dmSans(
-                          color: AppColors.fg, fontSize: 13),
+                          color: AppColors.of(context).fg, fontSize: 13),
                       decoration: _inputDec('0.00'),
                     ),
                     const SizedBox(height: 16),
@@ -231,7 +231,7 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
                       controller: _descCtrl,
                       maxLines: 3,
                       style: GoogleFonts.dmSans(
-                          color: AppColors.fg, fontSize: 13),
+                          color: AppColors.of(context).fg, fontSize: 13),
                       decoration: _inputDec('What did you work on?'),
                     ),
                     const SizedBox(height: 24),

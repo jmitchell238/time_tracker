@@ -19,21 +19,21 @@ class LabeledTextField extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+      style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: AppColors.bgCard,
+        fillColor: AppColors.of(context).bgCard,
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.border)),
+            borderSide: BorderSide(color: AppColors.of(context).border)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.border)),
+            borderSide: BorderSide(color: AppColors.of(context).border)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: AppColors.primary)),
-        labelStyle: GoogleFonts.dmSans(color: AppColors.fg2, fontSize: 13),
+        labelStyle: GoogleFonts.dmSans(color: AppColors.of(context).fg2, fontSize: 13),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),

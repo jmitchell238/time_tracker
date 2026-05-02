@@ -18,8 +18,8 @@ class SectionContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
-        border: Border.all(color: AppColors.border),
+        color: AppColors.of(context).bgCard,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -35,20 +35,20 @@ class SectionContainer extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.fg),
+                      color: AppColors.of(context).fg),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
                     style:
-                        GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2),
+                        GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2),
                   ),
                 ],
               ],
             ),
           ),
-          Container(height: 1, color: AppColors.border),
+          Container(height: 1, color: AppColors.of(context).border),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: child,

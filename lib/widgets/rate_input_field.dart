@@ -12,22 +12,22 @@ class RateInputField extends StatelessWidget {
     this.jobDefaultRate,
   });
 
-  InputDecoration _inputDec() => InputDecoration(
+  InputDecoration _inputDec(BuildContext context) => InputDecoration(
         hintText: '0.00',
         filled: true,
-        fillColor: AppColors.bgElevated,
+        fillColor: AppColors.of(context).bgElevated,
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.border)),
+            borderSide: BorderSide(color: AppColors.of(context).border)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.border)),
+            borderSide: BorderSide(color: AppColors.of(context).border)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: AppColors.primary)),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+        hintStyle: GoogleFonts.dmSans(color: AppColors.of(context).fg3, fontSize: 13),
       );
 
   @override
@@ -42,7 +42,7 @@ class RateInputField extends StatelessWidget {
               padding: const EdgeInsets.only(right: 6, bottom: 2),
               child: Text(
                 r'$',
-                style: GoogleFonts.dmSans(color: AppColors.fg2, fontSize: 16),
+                style: GoogleFonts.dmSans(color: AppColors.of(context).fg2, fontSize: 16),
               ),
             ),
             Expanded(
@@ -50,15 +50,15 @@ class RateInputField extends StatelessWidget {
                 controller: controller,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
-                decoration: _inputDec(),
+                style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
+                decoration: _inputDec(context),
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: Text(
                 '/hr',
-                style: GoogleFonts.dmSans(color: AppColors.fg2, fontSize: 13),
+                style: GoogleFonts.dmSans(color: AppColors.of(context).fg2, fontSize: 13),
               ),
             ),
           ],
@@ -68,7 +68,7 @@ class RateInputField extends StatelessWidget {
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               'Job default: \$${jobDefaultRate!.toStringAsFixed(2)}/hr',
-              style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg3),
+              style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg3),
             ),
           ),
       ],

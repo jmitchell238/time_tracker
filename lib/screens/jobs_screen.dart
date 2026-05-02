@@ -27,9 +27,9 @@ class _JobsScreenState extends State<JobsScreen> {
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.bgBase,
+        backgroundColor: AppColors.of(context).bgBase,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Add Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.fg)),
+        title: Text('Add Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -43,7 +43,7 @@ class _JobsScreenState extends State<JobsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.fg2)),
+            child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.of(context).fg2)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -72,19 +72,19 @@ class _JobsScreenState extends State<JobsScreen> {
     return TextField(
       controller: ctrl,
       keyboardType: numeric ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
-      style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+      style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+        hintStyle: GoogleFonts.dmSans(color: AppColors.of(context).fg3, fontSize: 13),
         filled: true,
-        fillColor: AppColors.bgElevated,
+        fillColor: AppColors.of(context).bgElevated,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.of(context).border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.of(context).border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -106,7 +106,7 @@ class _JobsScreenState extends State<JobsScreen> {
         // Header
         Row(
           children: [
-            Text('Jobs', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+            Text('Jobs', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
             const Spacer(),
             ElevatedButton.icon(
               onPressed: _showAddJobDialog,
@@ -170,10 +170,10 @@ class _JobCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(job.name, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                    Text(job.name, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                     if (job.description.isNotEmpty) ...[
                       const SizedBox(height: 2),
-                      Text(job.description, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                      Text(job.description, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
                     ],
                     if (job.rate != null) ...[
                       const SizedBox(height: 4),
@@ -187,13 +187,13 @@ class _JobCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text('${hours.toStringAsFixed(1)}h',
-                      style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                      style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                   Text('\$${amount.toStringAsFixed(2)}',
                       style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.accent, fontWeight: FontWeight.w600)),
                 ],
               ),
               const SizedBox(width: 6),
-              const Icon(Icons.chevron_right, color: AppColors.fg3, size: 18),
+              Icon(Icons.chevron_right, color: AppColors.of(context).fg3, size: 18),
             ],
           ),
         ),

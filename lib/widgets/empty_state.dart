@@ -14,7 +14,7 @@ class EmptyStateWidget extends StatelessWidget {
       child: Text(
         message,
         textAlign: TextAlign.center,
-        style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg3),
+        style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg3),
       ),
     );
   }

@@ -71,14 +71,14 @@ class _LoginScreenState extends State<LoginScreen> {
         labelText: label,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: AppColors.bgCard,
+        fillColor: AppColors.of(context).bgCard,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.of(context).border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.of(context).border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -92,14 +92,14 @@ class _LoginScreenState extends State<LoginScreen> {
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.danger),
         ),
-        labelStyle: GoogleFonts.dmSans(color: AppColors.fg2, fontSize: 13),
+        labelStyle: GoogleFonts.dmSans(color: AppColors.of(context).fg2, fontSize: 13),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgDeep,
+      backgroundColor: AppColors.of(context).bgDeep,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -115,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: GoogleFonts.lora(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.fg,
+                      color: AppColors.of(context).fg,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -124,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Property Work · James & Whitney',
                     style: GoogleFonts.dmSans(
                       fontSize: 13,
-                      color: AppColors.fg2,
+                      color: AppColors.of(context).fg2,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     autocorrect: false,
-                    style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+                    style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
                     decoration: _inputDec('Email'),
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Email is required' : null,
@@ -149,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _signIn(),
-                    style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+                    style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
                     decoration: _inputDec(
                       'Password',
                       suffixIcon: IconButton(
@@ -157,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _obscurePassword
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
-                          color: AppColors.fg3,
+                          color: AppColors.of(context).fg3,
                           size: 20,
                         ),
                         onPressed: () =>

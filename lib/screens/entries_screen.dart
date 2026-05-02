@@ -74,7 +74,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
-        Text('Entries', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+        Text('Entries', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
         const SizedBox(height: 14),
 
         // Tabs
@@ -134,7 +134,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_fmtDateLong(dateGroup.key),
-                  style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2)),
+                  style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2)),
               const SizedBox(height: 6),
               ...dateGroup.value.map((e) => _EntryRow(
                     entry: e,
@@ -172,7 +172,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                             fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.accent)),
                     Text('${unassigned.fold(0.0, (a, e) => a + e.hours).toStringAsFixed(1)}h',
                         style: GoogleFonts.dmSans(
-                            fontSize: 12, color: AppColors.fg2, fontWeight: FontWeight.w600)),
+                            fontSize: 12, color: AppColors.of(context).fg2, fontWeight: FontWeight.w600)),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -276,7 +276,7 @@ class _EntryRow extends StatelessWidget {
       child: GestureDetector(
         onTap: onToggle,
         child: LeftAccentCard(
-          accentColor: entry.invoiceId != null ? AppColors.fg3 : AppColors.accent,
+          accentColor: entry.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
           child: Column(
                       children: [
                         Row(
@@ -286,12 +286,12 @@ class _EntryRow extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   if (showDate) ...[
-                                    Text(_fmtDateShort(entry.date), style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+                                    Text(_fmtDateShort(entry.date), style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
                                     const SizedBox(height: 2),
                                   ],
                                   Text(
                                     entry.description.isNotEmpty ? entry.description : (job?.name ?? 'Unassigned'),
-                                    style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
+                                    style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -300,7 +300,7 @@ class _EntryRow extends StatelessWidget {
                                     entry.invoiceId != null ? 'Invoiced' : '● Uninvoiced',
                                     style: GoogleFonts.dmSans(
                                       fontSize: 10, fontWeight: FontWeight.w600,
-                                      color: entry.invoiceId != null ? AppColors.fg3 : AppColors.accent,
+                                      color: entry.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
                                     ),
                                   ),
                                 ],
@@ -315,7 +315,7 @@ class _EntryRow extends StatelessWidget {
                         ),
                         if (expanded) ...[
                           const SizedBox(height: 10),
-                          Container(height: 1, color: AppColors.border),
+                          Container(height: 1, color: AppColors.of(context).border),
                           const SizedBox(height: 10),
                           Row(
                             children: [

@@ -73,7 +73,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       children: [
         Text('Insights',
             style: GoogleFonts.lora(
-                fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
         const SizedBox(height: 16),
         _buildPeriodChips(),
         const SizedBox(height: 12),
@@ -103,10 +103,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: active ? AppColors.primary : AppColors.bgCard,
+                  color: active ? AppColors.primary : AppColors.of(context).bgCard,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: active ? AppColors.primary : AppColors.border),
+                      color: active ? AppColors.primary : AppColors.of(context).border),
                 ),
                 child: Text(
                   p.label,
@@ -114,7 +114,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                     fontSize: 12,
                     fontWeight:
                         active ? FontWeight.w700 : FontWeight.w500,
-                    color: active ? Colors.white : AppColors.fg2,
+                    color: active ? Colors.white : AppColors.of(context).fg2,
                   ),
                 ),
               ),
@@ -129,15 +129,15 @@ class _InsightsScreenState extends State<InsightsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
-        border: Border.all(color: AppColors.border),
+        color: AppColors.of(context).bgCard,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(10),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String?>(
           value: _selectedJobId,
-          dropdownColor: AppColors.bgBase,
-          style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg),
+          dropdownColor: AppColors.of(context).bgBase,
+          style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg),
           isExpanded: true,
           items: [
             DropdownMenuItem<String?>(
@@ -146,13 +146,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   style: GoogleFonts.dmSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.fg)),
+                      color: AppColors.of(context).fg)),
             ),
             ...jobs.map((j) => DropdownMenuItem<String?>(
                   value: j.id,
                   child: Text(j.name,
                       style: GoogleFonts.dmSans(
-                          fontSize: 13, color: AppColors.fg)),
+                          fontSize: 13, color: AppColors.of(context).fg)),
                 )),
           ],
           onChanged: (v) => setState(() => _selectedJobId = v),
@@ -206,8 +206,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border.all(color: AppColors.border),
+            color: AppColors.of(context).bgCard,
+            border: Border.all(color: AppColors.of(context).border),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -224,7 +224,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               return Column(
                 children: [
                   if (i > 0)
-                    Container(height: 1, color: AppColors.borderLight),
+                    Container(height: 1, color: AppColors.of(context).borderLight),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
@@ -238,12 +238,12 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                   style: GoogleFonts.dmSans(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.fg)),
+                                      color: AppColors.of(context).fg)),
                               Text(
                                   '${st.count} '
                                   'entr${st.count == 1 ? 'y' : 'ies'}',
                                   style: GoogleFonts.dmSans(
-                                      fontSize: 10, color: AppColors.fg3)),
+                                      fontSize: 10, color: AppColors.of(context).fg3)),
                             ],
                           ),
                         ),
@@ -254,7 +254,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                 style: GoogleFonts.dmSans(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.fg)),
+                                    color: AppColors.of(context).fg)),
                             Text('\$${st.earned.toStringAsFixed(2)}',
                                 style: GoogleFonts.dmSans(
                                     fontSize: 11, color: AppColors.accent)),
@@ -304,8 +304,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.bgCard,
-                border: Border.all(color: AppColors.border),
+                color: AppColors.of(context).bgCard,
+                border: Border.all(color: AppColors.of(context).border),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -320,14 +320,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
                             style: GoogleFonts.lora(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.fg)),
+                                color: AppColors.of(context).fg)),
                         Row(
                           children: [
                             Text('${mh.toStringAsFixed(1)} hrs',
                                 style: GoogleFonts.dmSans(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.fg)),
+                                    color: AppColors.of(context).fg)),
                             const SizedBox(width: 8),
                             Text('\$${me.toStringAsFixed(2)}',
                                 style: GoogleFonts.dmSans(
@@ -337,13 +337,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       ],
                     ),
                   ),
-                  Container(height: 1, color: AppColors.border),
+                  Container(height: 1, color: AppColors.of(context).border),
                   ...List.generate(mes.length, (i) {
                     final e = mes[i];
                     return Column(
                       children: [
                         if (i > 0)
-                          Container(height: 1, color: AppColors.borderLight),
+                          Container(height: 1, color: AppColors.of(context).borderLight),
                         Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 10),
@@ -354,7 +354,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                 child: Text(_fmtDateShort(e.date),
                                     style: GoogleFonts.dmSans(
                                         fontSize: 11,
-                                        color: AppColors.fg3,
+                                        color: AppColors.of(context).fg3,
                                         fontWeight: FontWeight.w600)),
                               ),
                               const SizedBox(width: 8),
@@ -364,7 +364,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                       ? '(no description)'
                                       : e.description,
                                   style: GoogleFonts.dmSans(
-                                      fontSize: 12, color: AppColors.fg2),
+                                      fontSize: 12, color: AppColors.of(context).fg2),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -374,7 +374,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                   style: GoogleFonts.dmSans(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.fg)),
+                                      color: AppColors.of(context).fg)),
                             ],
                           ),
                         ),
@@ -396,14 +396,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
       style: GoogleFonts.dmSans(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: AppColors.fg3,
+          color: AppColors.of(context).fg3,
           letterSpacing: 0.8));
 
   Widget _empty(String msg) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: Center(
           child: Text(msg,
-              style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg3),
+              style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg3),
               textAlign: TextAlign.center),
         ),
       );

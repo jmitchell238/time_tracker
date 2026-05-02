@@ -11,6 +11,7 @@ void main() {
     double height = 38,
   }) {
     return MaterialApp(
+      theme: AppTheme.dark,
       home: Scaffold(
         body: SegmentedToggleBar(
           labels: labels,
@@ -111,7 +112,7 @@ void main() {
         onChanged: (_) {},
       ));
       final inactiveText = tester.widget<Text>(find.text('Archived'));
-      expect(inactiveText.style?.color, AppColors.fg2);
+      expect(inactiveText.style?.color, const Color(0xFF94A3B8));
     });
 
     testWidgets('custom height is applied to outer container', (tester) async {
@@ -125,7 +126,7 @@ void main() {
         find.byWidgetPredicate((w) =>
             w is Container &&
             w.decoration is BoxDecoration &&
-            (w.decoration as BoxDecoration).color == AppColors.bgCard),
+            (w.decoration as BoxDecoration).color == const Color(0xFF334155)),
       );
       final sizedBox = outerContainer.constraints;
       expect(sizedBox?.maxHeight, 50);

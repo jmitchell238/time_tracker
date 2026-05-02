@@ -36,13 +36,13 @@ class StatCard extends StatelessWidget {
       bg = AppColors.accent.withAlpha(20);
       borderColor = AppColors.accent.withAlpha(76);
       labelColor = AppColors.accent;
-      hoursColor = AppColors.fg;
+      hoursColor = AppColors.of(context).fg;
       amountColor = AppColors.accent;
     } else {
-      bg = AppColors.bgCard;
-      borderColor = AppColors.border;
-      labelColor = AppColors.fg3;
-      hoursColor = AppColors.fg;
+      bg = AppColors.of(context).bgCard;
+      borderColor = AppColors.of(context).border;
+      labelColor = AppColors.of(context).fg3;
+      hoursColor = AppColors.of(context).fg;
       amountColor = AppColors.accent;
     }
 

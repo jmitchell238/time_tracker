@@ -22,9 +22,9 @@ class LeftAccentCard extends StatelessWidget {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: AppColors.of(context).bgCard,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: outerBorderColor ?? AppColors.border),
+        border: Border.all(color: outerBorderColor ?? AppColors.of(context).border),
       ),
       child: IntrinsicHeight(
         child: Row(

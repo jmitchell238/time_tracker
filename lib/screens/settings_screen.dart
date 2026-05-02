@@ -9,6 +9,7 @@ import '../services/csv_import_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/labeled_text_field.dart';
 import '../widgets/section_container.dart';
+import '../widgets/segmented_toggle_bar.dart';
 
 class SettingsScreen extends StatefulWidget {
   final AuthService? authService;
@@ -68,19 +69,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   InputDecoration _inputDec() => InputDecoration(
         filled: true,
-        fillColor: AppColors.bgCard,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+        fillColor: AppColors.of(context).bgCard,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.of(context).border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.of(context).border)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       );
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
-        Text('Settings', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+        Text('Settings', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
         const SizedBox(height: 20),
 
         // Default hourly rate
@@ -89,18 +91,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           subtitle: 'Applied to all jobs unless overridden per-job',
           child: Row(
             children: [
-              Text('\$', style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.fg)),
+              Text('\$', style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
                   controller: _rateCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+                  style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
                   decoration: _inputDec(),
                 ),
               ),
               const SizedBox(width: 10),
-              Text('/ hr', style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg2)),
+              Text('/ hr', style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg2)),
             ],
           ),
         ),
@@ -109,8 +111,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Users
         Container(
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border.all(color: AppColors.border),
+            color: AppColors.of(context).bgCard,
+            border: Border.all(color: AppColors.of(context).border),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -119,12 +121,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Users', style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                  child: Text('Users', style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                 ),
               ),
-              Container(height: 1, color: AppColors.border),
+              Container(height: 1, color: AppColors.of(context).border),
               _userRow('JM', 'James Mitchell', 'jmitchell238@gmail.com'),
-              Container(height: 1, color: AppColors.borderLight),
+              Container(height: 1, color: AppColors.of(context).borderLight),
               _userRow('WM', 'Whitney Mitchell', 'wlmitchell238@gmail.com'),
             ],
           ),
@@ -147,20 +149,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
+        // Theme
+        SectionContainer(
+          title: 'THEME',
+          child: SegmentedToggleBar(
+            labels: const ['Dark', 'Light', 'System'],
+            selected: () {
+              switch (provider.settings.themeMode) {
+                case 'dark': return 'Dark';
+                case 'light': return 'Light';
+                default: return 'System';
+              }
+            }(),
+            onChanged: (val) {
+              final mode = val == 'Dark' ? 'dark' : val == 'Light' ? 'light' : 'system';
+              context.read<AppProvider>().updateSettings(
+                    provider.settings.copyWith(themeMode: mode));
+            },
+          ),
+        ),
+        const SizedBox(height: 20),
+
         // App info
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border.all(color: AppColors.border),
+            color: AppColors.of(context).bgCard,
+            border: Border.all(color: AppColors.of(context).border),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             children: [
-              Text('Property Work Time Tracker', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2), textAlign: TextAlign.center),
+              Text('Property Work Time Tracker', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2), textAlign: TextAlign.center),
               const SizedBox(height: 4),
               Text('Version 1.0 · For James & Whitney Mitchell',
-                  style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg3), textAlign: TextAlign.center),
+                  style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg3), textAlign: TextAlign.center),
             ],
           ),
         ),
@@ -287,14 +310,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Log Out',
-            style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.fg)),
+            style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
         content: Text('Are you sure you want to log out?',
-            style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg2)),
+            style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg2)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text('Cancel',
-                style: GoogleFonts.dmSans(color: AppColors.fg2)),
+                style: GoogleFonts.dmSans(color: AppColors.of(context).fg2)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -327,8 +350,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.fg)),
-              Text(email, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.fg2)),
+              Text(name, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+              Text(email, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
             ],
           ),
         ],

@@ -13,7 +13,7 @@ class AddExpenseSheet {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: AppColors.of(context).bgBase,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => _AddExpenseSheetBody(
@@ -130,7 +130,7 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
                 style: GoogleFonts.lora(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.fg)),
+                    color: AppColors.of(context).fg)),
             const SizedBox(height: 20),
 
             // Business (required)
@@ -138,7 +138,7 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
             const SizedBox(height: 8),
             if (businesses.isEmpty)
               Text('No businesses saved yet — expense will be saved without one.',
-                  style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg3))
+                  style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg3))
             else
               Wrap(
                 spacing: 8,
@@ -165,7 +165,7 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
                 _selectedBusinessId != null
                     ? 'No active jobs for this business.'
                     : 'No active jobs.',
-                style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg3),
+                style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg3),
               )
             else
               Wrap(
@@ -209,9 +209,9 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
                       margin: EdgeInsets.only(right: name == 'James' ? 8 : 0),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: active ? AppColors.primary : AppColors.bgDeep,
+                        color: active ? AppColors.primary : AppColors.of(context).bgDeep,
                         border: Border.all(
-                            color: active ? AppColors.primary : AppColors.border),
+                            color: active ? AppColors.primary : AppColors.of(context).border),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Center(
@@ -219,7 +219,7 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
                             style: GoogleFonts.dmSans(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: active ? Colors.white : AppColors.fg2,
+                              color: active ? Colors.white : AppColors.of(context).fg2,
                             )),
                       ),
                     ),
@@ -239,7 +239,7 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accent,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.bgElevated,
+                    disabledBackgroundColor: AppColors.of(context).bgElevated,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                     elevation: 0,
@@ -260,7 +260,7 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
       style: GoogleFonts.dmSans(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: AppColors.fg2,
+          color: AppColors.of(context).fg2,
           letterSpacing: 0.6));
 
   Widget _chip(String label, bool active, {Color? activeColor}) {
@@ -268,15 +268,15 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: active ? color.withAlpha(30) : AppColors.bgDeep,
-        border: Border.all(color: active ? color : AppColors.border),
+        color: active ? color.withAlpha(30) : AppColors.of(context).bgDeep,
+        border: Border.all(color: active ? color : AppColors.of(context).border),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(label,
           style: GoogleFonts.dmSans(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: active ? color : AppColors.fg2)),
+              color: active ? color : AppColors.of(context).fg2)),
     );
   }
 
@@ -286,18 +286,18 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
       controller: ctrl,
       keyboardType: keyboard,
       onChanged: (_) => setState(() {}),
-      style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.fg),
+      style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.dmSans(fontSize: 12, color: AppColors.fg2),
+        labelStyle: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2),
         filled: true,
-        fillColor: AppColors.bgDeep,
+        fillColor: AppColors.of(context).bgDeep,
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border)),
+            borderSide: BorderSide(color: AppColors.of(context).border)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border)),
+            borderSide: BorderSide(color: AppColors.of(context).border)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppColors.primary)),

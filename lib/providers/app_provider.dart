@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/active_timer.dart';
@@ -33,6 +34,14 @@ class AppProvider extends ChangeNotifier {
   bool _loaded = false;
 
   bool get isLoaded => _loaded;
+
+  ThemeMode get resolvedThemeMode {
+    switch (settings.themeMode) {
+      case 'dark':   return ThemeMode.dark;
+      case 'light':  return ThemeMode.light;
+      default:       return ThemeMode.system;
+    }
+  }
 
   AppProvider({FirebaseFirestore? db, FirebaseAuth? auth})
       : _dbOverride = db,

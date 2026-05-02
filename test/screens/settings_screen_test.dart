@@ -9,12 +9,12 @@ import 'package:time_tracker/providers/app_provider.dart';
 import 'package:time_tracker/screens/settings_screen.dart';
 import 'package:time_tracker/services/auth_service.dart';
 
-Future<AppProvider> _provider({double rate = 40.0, String? billingName}) async {
+Future<AppProvider> _provider({double rate = 40.0, String? billingName, String themeMode = 'system'}) async {
   SharedPreferences.setMockInitialValues({'jobs': '[]', 'entries': '[]', 'invoices': '[]'});
   final p = AppProvider(
       db: FakeFirebaseFirestore(), auth: MockFirebaseAuth(signedIn: true));
   await p.load();
-  p.settings = AppSettings(defaultRate: rate, billingName: billingName);
+  p.settings = AppSettings(defaultRate: rate, billingName: billingName, themeMode: themeMode);
   return p;
 }
 
@@ -153,6 +153,56 @@ void main() {
       final p = await _provider(billingName: 'James Mitchell');
       await tester.pumpWidget(_wrap(p));
       expect(find.widgetWithText(TextField, 'James Mitchell', skipOffstage: false), findsOneWidget);
+    });
+
+    testWidgets('theme toggle section is present', (tester) async {
+      final p = await _provider();
+      await tester.pumpWidget(_wrap(p));
+      expect(find.text('THEME', skipOffstage: false), findsOneWidget);
+    });
+
+    testWidgets('theme toggle shows Dark, Light, System options', (tester) async {
+      final p = await _provider();
+      await tester.pumpWidget(_wrap(p));
+      expect(find.text('Dark', skipOffstage: false), findsOneWidget);
+      expect(find.text('Light', skipOffstage: false), findsOneWidget);
+      expect(find.text('System', skipOffstage: false), findsOneWidget);
+    });
+
+    testWidgets('tapping Light updates provider themeMode to light', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final p = await _provider();
+      await tester.pumpWidget(_wrap(p));
+      await tester.tap(find.text('Light'));
+      await tester.pump();
+      expect(p.settings.themeMode, 'light');
+    });
+
+    testWidgets('tapping Dark updates provider themeMode to dark', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final p = await _provider();
+      await tester.pumpWidget(_wrap(p));
+      await tester.tap(find.text('Dark'));
+      await tester.pump();
+      expect(p.settings.themeMode, 'dark');
+    });
+
+    testWidgets('tapping System updates provider themeMode to system', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final p = await _provider(themeMode: 'dark');
+      await tester.pumpWidget(_wrap(p));
+      await tester.tap(find.text('System'));
+      await tester.pump();
+      expect(p.settings.themeMode, 'system');
     });
   });
 }

@@ -22,9 +22,9 @@ class SegmentedToggleBar extends StatelessWidget {
       constraints: BoxConstraints(maxHeight: height),
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: AppColors.of(context).bgCard,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Row(
         children: labels.map((label) {
@@ -43,7 +43,7 @@ class SegmentedToggleBar extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isActive ? Colors.white : AppColors.fg2,
+                    color: isActive ? Colors.white : AppColors.of(context).fg2,
                   ),
                 ),
               ),

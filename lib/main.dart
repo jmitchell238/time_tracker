@@ -49,11 +49,15 @@ class TimeTrackerApp extends StatelessWidget {
           // accessible from any pushed route or modal sheet (above the navigator).
           return ChangeNotifierProvider(
             create: (_) => AppProvider()..load(),
-            child: MaterialApp(
-              title: 'Time Tracker',
-              debugShowCheckedModeBanner: false,
-              theme: AppTheme.dark,
-              home: const AppShell(),
+            child: Consumer<AppProvider>(
+              builder: (_, provider, __) => MaterialApp(
+                title: 'Time Tracker',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.light,
+                darkTheme: AppTheme.dark,
+                themeMode: provider.resolvedThemeMode,
+                home: const AppShell(),
+              ),
             ),
           );
         }
@@ -73,8 +77,8 @@ class _SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.bgDeep,
+    return Scaffold(
+      backgroundColor: AppColors.of(context).bgDeep,
       body: Center(
         child: CircularProgressIndicator(color: AppColors.accent),
       ),
@@ -104,14 +108,14 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final isLoaded = context.watch<AppProvider>().isLoaded;
     if (!isLoaded) {
-      return const Scaffold(
-        backgroundColor: AppColors.bgDeep,
+      return Scaffold(
+        backgroundColor: AppColors.of(context).bgDeep,
         body: Center(child: CircularProgressIndicator(color: AppColors.accent)),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.bgDeep,
+      backgroundColor: AppColors.of(context).bgDeep,
       body: IndexedStack(
         index: _index,
         children: const [
@@ -122,9 +126,9 @@ class _AppShellState extends State<AppShell> {
         ],
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.bgBase,
-          border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+        decoration: BoxDecoration(
+          color: AppColors.of(context).bgBase,
+          border: Border(top: BorderSide(color: AppColors.of(context).border, width: 1)),
         ),
         child: SafeArea(
           child: SizedBox(
@@ -143,7 +147,7 @@ class _AppShellState extends State<AppShell> {
                           Icon(
                             _icons[i],
                             size: 20,
-                            color: active ? AppColors.accent : AppColors.fg2,
+                            color: active ? AppColors.accent : AppColors.of(context).fg2,
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -151,7 +155,7 @@ class _AppShellState extends State<AppShell> {
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                              color: active ? AppColors.accent : AppColors.fg2,
+                              color: active ? AppColors.accent : AppColors.of(context).fg2,
                             ),
                           ),
                         ],

@@ -58,7 +58,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       children: [
         Row(
           children: [
-            Text('Expenses', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.fg)),
+            Text('Expenses', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
             const Spacer(),
             ElevatedButton.icon(
               onPressed: () => AddExpenseSheet.show(context),
@@ -80,18 +80,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.bgBase,
-            border: Border.all(color: AppColors.border),
+            color: AppColors.of(context).bgBase,
+            border: Border.all(color: AppColors.of(context).border),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('SUMMARY', style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.fg2, letterSpacing: 0.6)),
+              Text('SUMMARY', style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  _summaryCell('Total Spent', _fmtMoney(totalSpent), AppColors.fg),
+                  _summaryCell('Total Spent', _fmtMoney(totalSpent), AppColors.of(context).fg),
                   _divider(),
                   _summaryCell('Pending', _fmtMoney(totalPending), AppColors.accent),
                   _divider(),
@@ -100,7 +100,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               ),
               if (allSorted.isNotEmpty) ...[
                 const SizedBox(height: 10),
-                Container(height: 1, color: AppColors.border),
+                Container(height: 1, color: AppColors.of(context).border),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -108,7 +108,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     _divider(),
                     _summaryCell('Whitney', _fmtMoney(whitneyTotal), AppColors.primary),
                     _divider(),
-                    _summaryCell('Items', '${allSorted.length}', AppColors.fg),
+                    _summaryCell('Items', '${allSorted.length}', AppColors.of(context).fg),
                   ],
                 ),
               ],
@@ -149,7 +149,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_fmtDateLong(group.key),
-                  style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.fg2)),
+                  style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2)),
               const SizedBox(height: 6),
               ...group.value.map((e) {
                 final businessName = e.businessId != null
@@ -187,7 +187,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.fg2, fontWeight: FontWeight.w600)),
+          Text(label, style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.of(context).fg2, fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
           Text(value, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: valueColor)),
         ],
@@ -195,7 +195,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
-  Widget _divider() => Container(width: 1, height: 30, color: AppColors.border, margin: const EdgeInsets.symmetric(horizontal: 8));
+  Widget _divider() => Container(width: 1, height: 30, color: AppColors.of(context).border, margin: const EdgeInsets.symmetric(horizontal: 8));
 
 }
 
@@ -234,7 +234,7 @@ class _ExpenseRow extends StatelessWidget {
       child: GestureDetector(
         onTap: onToggle,
         child: LeftAccentCard(
-          accentColor: isPending ? AppColors.accent : AppColors.fg3,
+          accentColor: isPending ? AppColors.accent : AppColors.of(context).fg3,
           child: Column(
             children: [
               Row(
@@ -244,14 +244,14 @@ class _ExpenseRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(expense.description,
-                            style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
+                            style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg),
                             maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 3),
                         Text(
                           _subtitle(isPending),
                           style: GoogleFonts.dmSans(
                             fontSize: 10, fontWeight: FontWeight.w600,
-                            color: isPending ? AppColors.accent : AppColors.fg3,
+                            color: isPending ? AppColors.accent : AppColors.of(context).fg3,
                           ),
                         ),
                       ],
@@ -259,12 +259,12 @@ class _ExpenseRow extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(fmtMoney(expense.amount),
-                      style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                      style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                 ],
               ),
               if (expanded) ...[
                 const SizedBox(height: 10),
-                Container(height: 1, color: AppColors.border),
+                Container(height: 1, color: AppColors.of(context).border),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -274,10 +274,10 @@ class _ExpenseRow extends StatelessWidget {
                         icon: const Icon(Icons.delete_outline, size: 15, color: AppColors.danger),
                         label: Text(
                           isPending ? 'Delete' : 'Cannot delete — on invoice',
-                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: isPending ? AppColors.danger : AppColors.fg3),
+                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: isPending ? AppColors.danger : AppColors.of(context).fg3),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: isPending ? AppColors.danger : AppColors.border, width: 0.5),
+                          side: BorderSide(color: isPending ? AppColors.danger : AppColors.of(context).border, width: 0.5),
                           backgroundColor: isPending ? AppColors.danger.withAlpha(25) : Colors.transparent,
                           minimumSize: const Size(0, 34),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

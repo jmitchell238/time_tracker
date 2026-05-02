@@ -4,7 +4,7 @@ import 'package:time_tracker/theme/app_theme.dart';
 import 'package:time_tracker/widgets/rate_input_field.dart';
 
 Widget _wrap(Widget child) =>
-    MaterialApp(home: Scaffold(body: SingleChildScrollView(child: child)));
+    MaterialApp(theme: AppTheme.dark, home: Scaffold(body: SingleChildScrollView(child: child)));
 
 void main() {
   group('RateInputField', () {
@@ -56,27 +56,27 @@ void main() {
       expect(find.textContaining('Job default: \$50.00/hr'), findsOneWidget);
     });
 
-    testWidgets('job default hint color is AppColors.fg3', (tester) async {
+    testWidgets('job default hint color is const Color(0xFF64748B)', (tester) async {
       final ctrl = TextEditingController();
       await tester.pumpWidget(
           _wrap(RateInputField(controller: ctrl, jobDefaultRate: 40.0)));
       final hint = tester.widget<Text>(
           find.textContaining('Job default:'));
-      expect(hint.style!.color, AppColors.fg3);
+      expect(hint.style!.color, const Color(0xFF64748B));
     });
 
-    testWidgets('dollar sign color is AppColors.fg2', (tester) async {
+    testWidgets('dollar sign color is const Color(0xFF94A3B8)', (tester) async {
       final ctrl = TextEditingController();
       await tester.pumpWidget(_wrap(RateInputField(controller: ctrl)));
       final dollar = tester.widget<Text>(find.text(r'$'));
-      expect(dollar.style!.color, AppColors.fg2);
+      expect(dollar.style!.color, const Color(0xFF94A3B8));
     });
 
-    testWidgets('/hr color is AppColors.fg2', (tester) async {
+    testWidgets('/hr color is const Color(0xFF94A3B8)', (tester) async {
       final ctrl = TextEditingController();
       await tester.pumpWidget(_wrap(RateInputField(controller: ctrl)));
       final hr = tester.widget<Text>(find.text('/hr'));
-      expect(hr.style!.color, AppColors.fg2);
+      expect(hr.style!.color, const Color(0xFF94A3B8));
     });
   });
 }

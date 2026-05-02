@@ -80,9 +80,9 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
       lastDate: DateTime(2030),
       builder: (context, child) => Theme(
         data: AppTheme.dark.copyWith(
-          colorScheme: const ColorScheme.dark(
+          colorScheme: ColorScheme.dark(
             primary: AppColors.accent,
-            surface: AppColors.bgCard,
+            surface: AppColors.of(context).bgCard,
           ),
         ),
         child: child!,
@@ -100,9 +100,9 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
       initialTime: TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1])),
       builder: (context, child) => Theme(
         data: AppTheme.dark.copyWith(
-          colorScheme: const ColorScheme.dark(
+          colorScheme: ColorScheme.dark(
             primary: AppColors.accent,
-            surface: AppColors.bgCard,
+            surface: AppColors.of(context).bgCard,
           ),
         ),
         child: child!,
@@ -138,21 +138,21 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
   InputDecoration _inputDec(String hint) => InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: AppColors.bgElevated,
+        fillColor: AppColors.of(context).bgElevated,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.of(context).border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.of(context).border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+        hintStyle: GoogleFonts.dmSans(color: AppColors.of(context).fg3, fontSize: 13),
       );
 
   Widget _label(String text) => FieldLabel(text);
@@ -169,8 +169,8 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
       maxChildSize: 0.95,
       minChildSize: 0.5,
       builder: (_, controller) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.bgBase,
+        decoration: BoxDecoration(
+          color: AppColors.of(context).bgBase,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -182,7 +182,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                 child: Container(
                   width: 36, height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
+                    color: AppColors.of(context).border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -193,10 +193,10 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
               padding: const EdgeInsets.fromLTRB(20, 0, 12, 14),
               child: Row(
                 children: [
-                  Text('Log Time', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.fg)),
+                  Text('Log Time', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.fg2, size: 22),
+                    icon: Icon(Icons.close, color: AppColors.of(context).fg2, size: 22),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -245,13 +245,13 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                           child: TextField(
                             controller: _manualController,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+                            style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
                             decoration: _inputDec('0.0'),
                             onChanged: (v) => setState(() => _manualHours = double.tryParse(v) ?? 0),
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Text('hours', style: GoogleFonts.dmSans(color: AppColors.fg2, fontSize: 13)),
+                        Text('hours', style: GoogleFonts.dmSans(color: AppColors.of(context).fg2, fontSize: 13)),
                       ],
                     )
                   else
@@ -260,7 +260,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                         Expanded(child: _timeTile(_startTime, () => _pickTime(true))),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text('to', style: GoogleFonts.dmSans(color: AppColors.fg2, fontSize: 13)),
+                          child: Text('to', style: GoogleFonts.dmSans(color: AppColors.of(context).fg2, fontSize: 13)),
                         ),
                         Expanded(child: _timeTile(_endTime, () => _pickTime(false))),
                       ],
@@ -280,7 +280,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                   TextField(
                     controller: _descController,
                     maxLines: 3,
-                    style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+                    style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
                     decoration: _inputDec('What did you do?'),
                     onChanged: (v) => _description = v,
                   ),
@@ -293,7 +293,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                     child: ElevatedButton(
                       onPressed: canSave ? _save : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: canSave ? AppColors.accent : AppColors.fg3,
+                        backgroundColor: canSave ? AppColors.accent : AppColors.of(context).fg3,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
@@ -320,27 +320,27 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
       builder: (_) {
         final ctrl = TextEditingController();
         return AlertDialog(
-          backgroundColor: AppColors.bgBase,
+          backgroundColor: AppColors.of(context).bgBase,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text('New Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.fg)),
+          title: Text('New Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
           content: TextField(
             controller: ctrl,
             autofocus: true,
-            style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13),
+            style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
             onChanged: (v) => pendingName = v,
             decoration: InputDecoration(
               hintText: 'Job name',
-              hintStyle: GoogleFonts.dmSans(color: AppColors.fg3, fontSize: 13),
+              hintStyle: GoogleFonts.dmSans(color: AppColors.of(context).fg3, fontSize: 13),
               filled: true,
-              fillColor: AppColors.bgElevated,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+              fillColor: AppColors.of(context).bgElevated,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.of(context).border)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.of(context).border)),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.fg2))),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.of(context).fg2))),
             ElevatedButton(
               onPressed: () {
                 if (ctrl.text.trim().isEmpty) return;
@@ -386,11 +386,11 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
-          color: AppColors.bgElevated,
-          border: Border.all(color: AppColors.border),
+          color: AppColors.of(context).bgElevated,
+          border: Border.all(color: AppColors.of(context).border),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Text(_fmt12(time), style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13)),
+        child: Text(_fmt12(time), style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13)),
       ),
     );
   }

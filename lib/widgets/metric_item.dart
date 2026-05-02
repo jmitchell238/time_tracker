@@ -24,7 +24,7 @@ class MetricItem extends StatelessWidget {
           style: GoogleFonts.dmSans(
             fontSize: 10,
             fontWeight: FontWeight.w600,
-            color: AppColors.fg2,
+            color: AppColors.of(context).fg2,
             letterSpacing: 0.5,
           ),
         ),
@@ -33,7 +33,7 @@ class MetricItem extends StatelessWidget {
           style: GoogleFonts.lora(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: color ?? AppColors.fg,
+            color: color ?? AppColors.of(context).fg,
           ),
         ),
       ],

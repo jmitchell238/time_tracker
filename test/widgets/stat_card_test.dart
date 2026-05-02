@@ -4,6 +4,7 @@ import 'package:time_tracker/theme/app_theme.dart';
 import 'package:time_tracker/widgets/stat_card.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
+      theme: AppTheme.dark,
       home: Scaffold(body: Row(children: [child])),
     );
 
@@ -52,7 +53,7 @@ void main() {
         find.descendant(of: find.byType(StatCard), matching: find.byType(Container)).first,
       );
       final decoration = container.decoration as BoxDecoration;
-      expect(decoration.color, AppColors.bgCard);
+      expect(decoration.color, const Color(0xFF334155));
     });
 
     testWidgets('default mode label text color is fg3', (tester) async {
@@ -60,7 +61,7 @@ void main() {
         const StatCard(label: 'Week', hours: 8.0, amount: 360.0),
       ));
       final labelText = tester.widget<Text>(find.text('WEEK'));
-      expect(labelText.style!.color, AppColors.fg3);
+      expect(labelText.style!.color, const Color(0xFF64748B));
     });
 
     testWidgets('default mode hours text color is fg', (tester) async {
@@ -68,7 +69,7 @@ void main() {
         const StatCard(label: 'Week', hours: 8.0, amount: 360.0),
       ));
       final hoursText = tester.widget<Text>(find.text('8.0h'));
-      expect(hoursText.style!.color, AppColors.fg);
+      expect(hoursText.style!.color, const Color(0xFFF1F5F9));
     });
 
     testWidgets('default mode amount text color is accent', (tester) async {
@@ -134,7 +135,7 @@ void main() {
         const StatCard(label: 'Week', hours: 8.0, amount: 360.0, gold: true),
       ));
       final hoursText = tester.widget<Text>(find.text('8.0h'));
-      expect(hoursText.style!.color, AppColors.fg);
+      expect(hoursText.style!.color, const Color(0xFFF1F5F9));
     });
   });
 }

@@ -4,7 +4,7 @@ import 'package:time_tracker/theme/app_theme.dart';
 import 'package:time_tracker/widgets/amount_display_pair.dart';
 
 Widget _wrap(Widget child) =>
-    MaterialApp(home: Scaffold(body: child));
+    MaterialApp(theme: AppTheme.dark, home: Scaffold(body: child));
 
 void main() {
   group('AmountDisplayPair', () {
@@ -24,23 +24,23 @@ void main() {
       expect(find.text(r'$112.50'), findsOneWidget);
     });
 
-    testWidgets('hours text is bold and AppColors.fg colored', (tester) async {
+    testWidgets('hours text is bold and const Color(0xFFF1F5F9) colored', (tester) async {
       await tester.pumpWidget(_wrap(const AmountDisplayPair(
         hoursText: '2.5h',
         amountText: r'$112.50',
       )));
       final hoursText = tester.widget<Text>(find.text('2.5h'));
       expect(hoursText.style!.fontWeight, FontWeight.w700);
-      expect(hoursText.style!.color, AppColors.fg);
+      expect(hoursText.style!.color, const Color(0xFFF1F5F9));
     });
 
-    testWidgets('amount color defaults to AppColors.fg2', (tester) async {
+    testWidgets('amount color defaults to const Color(0xFF94A3B8)', (tester) async {
       await tester.pumpWidget(_wrap(const AmountDisplayPair(
         hoursText: '2.5h',
         amountText: r'$112.50',
       )));
       final amountText = tester.widget<Text>(find.text(r'$112.50'));
-      expect(amountText.style!.color, AppColors.fg2);
+      expect(amountText.style!.color, const Color(0xFF94A3B8));
     });
 
     testWidgets('amount color can be overridden', (tester) async {

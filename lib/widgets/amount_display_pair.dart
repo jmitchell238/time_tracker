@@ -6,14 +6,14 @@ class AmountDisplayPair extends StatelessWidget {
   final String hoursText;
   final String amountText;
   final double hoursSize;
-  final Color amountColor;
+  final Color? amountColor;
 
   const AmountDisplayPair({
     super.key,
     required this.hoursText,
     required this.amountText,
     this.hoursSize = 13,
-    this.amountColor = AppColors.fg2,
+    this.amountColor,
   });
 
   @override
@@ -26,12 +26,12 @@ class AmountDisplayPair extends StatelessWidget {
           style: GoogleFonts.dmSans(
             fontSize: hoursSize,
             fontWeight: FontWeight.w700,
-            color: AppColors.fg,
+            color: AppColors.of(context).fg,
           ),
         ),
         Text(
           amountText,
-          style: GoogleFonts.dmSans(fontSize: 11, color: amountColor),
+          style: GoogleFonts.dmSans(fontSize: 11, color: amountColor ?? AppColors.of(context).fg2),
         ),
       ],
     );

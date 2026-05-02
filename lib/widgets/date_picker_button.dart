@@ -20,17 +20,17 @@ class DatePickerButton extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 44),
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: AppColors.bgElevated,
-          border: Border.all(color: AppColors.border),
+          color: AppColors.of(context).bgElevated,
+          border: Border.all(color: AppColors.of(context).border),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           children: [
             Text(label,
-                style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.fg)),
+                style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg)),
             const Spacer(),
-            const Icon(Icons.calendar_today_outlined,
-                color: AppColors.fg2, size: 16),
+            Icon(Icons.calendar_today_outlined,
+                color: AppColors.of(context).fg2, size: 16),
           ],
         ),
       ),
