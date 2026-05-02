@@ -24,47 +24,64 @@ class _JobsScreenState extends State<JobsScreen> {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     final rateCtrl = TextEditingController();
+    var saving = false;
 
     await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.of(context).bgBase,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Add Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _dialogField(nameCtrl, 'Job name *'),
-            const SizedBox(height: 12),
-            _dialogField(descCtrl, 'Description (optional)'),
-            const SizedBox(height: 12),
-            _dialogField(rateCtrl, 'Hourly rate override (optional)', numeric: true),
+      barrierDismissible: false,
+      builder: (_) => StatefulBuilder(
+        builder: (_, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.of(context).bgBase,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Add Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _dialogField(nameCtrl, 'Job name *'),
+              const SizedBox(height: 12),
+              _dialogField(descCtrl, 'Description (optional)'),
+              const SizedBox(height: 12),
+              _dialogField(rateCtrl, 'Hourly rate override (optional)', numeric: true),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: saving ? null : () => Navigator.pop(context),
+              child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.of(context).fg2)),
+            ),
+            ElevatedButton(
+              onPressed: saving
+                  ? null
+                  : () async {
+                      final name = nameCtrl.text.trim();
+                      if (name.isEmpty) return;
+                      setDialogState(() => saving = true);
+                      try {
+                        await context.read<AppProvider>().addJob(
+                              name,
+                              descCtrl.text.trim(),
+                              double.tryParse(rateCtrl.text.trim()),
+                            );
+                        if (context.mounted) Navigator.pop(context);
+                      } catch (_) {
+                        setDialogState(() => saving = false);
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: saving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text('Add', style: GoogleFonts.dmSans(fontWeight: FontWeight.w700)),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.of(context).fg2)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameCtrl.text.trim();
-              if (name.isEmpty) return;
-              context.read<AppProvider>().addJob(
-                    name,
-                    descCtrl.text.trim(),
-                    double.tryParse(rateCtrl.text.trim()),
-                  );
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text('Add', style: GoogleFonts.dmSans(fontWeight: FontWeight.w700)),
-          ),
-        ],
       ),
     );
   }

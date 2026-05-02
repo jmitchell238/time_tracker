@@ -67,7 +67,7 @@ void main() {
 
     testWidgets('renders hours for a job card', (tester) async {
       final p = await _emptyProvider();
-      p.addJob('Test Job', '', null);
+      await p.addJob('Test Job', '', null);
       await tester.pumpWidget(_wrap(p));
       await tester.pump();
       // no entries → 0.0 hours
@@ -139,7 +139,7 @@ void main() {
 
     testWidgets('job card shows description when non-empty', (tester) async {
       final p = await _emptyProvider();
-      p.addJob('Test Job', 'A description', null);
+      await p.addJob('Test Job', 'A description', null);
       await tester.pumpWidget(_wrap(p));
       await tester.pump();
       expect(find.text('A description'), findsOneWidget);
@@ -172,7 +172,7 @@ void main() {
     testWidgets('active timer card shows job name when timer has a job',
         (tester) async {
       final p = await _emptyProvider();
-      p.addJob('Test Job', '', null);
+      await p.addJob('Test Job', '', null);
       final jobId = p.jobs.first.id;
       p.clockIn(jobId: jobId);
       await tester.pumpWidget(_wrap(p));

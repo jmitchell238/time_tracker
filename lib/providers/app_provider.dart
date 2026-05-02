@@ -191,7 +191,7 @@ class AppProvider extends ChangeNotifier {
 
   // ── Jobs ──────────────────────────────────────────────────────────────────
 
-  void addJob(String name, String description, double? rate, {String? businessId}) {
+  Future<void> addJob(String name, String description, double? rate, {String? businessId}) async {
     final job = Job(
       id: _uuid.v4(),
       name: name,
@@ -201,10 +201,10 @@ class AppProvider extends ChangeNotifier {
       createdAt: DateTime.now(),
       businessId: businessId,
     );
-    jobs = [...jobs, job];
     if (_workspaceId != null) {
-      _col('jobs').doc(job.id).set(job.toJson());
+      await _col('jobs').doc(job.id).set(job.toJson());
     }
+    jobs = [...jobs, job];
     notifyListeners();
   }
 
