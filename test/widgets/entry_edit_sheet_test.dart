@@ -58,7 +58,7 @@ void main() {
       final entry = _entry();
       final p = await _provider([_job()], [entry]);
       await tester.pumpWidget(_wrap(p, entry));
-      expect(find.text('2026-04-01  09:00 – 11:00'), findsOneWidget);
+      expect(find.text('2026-04-01  9:00 AM – 11:00 AM'), findsOneWidget);
     });
 
     testWidgets('pre-fills hours field with entry hours', (tester) async {

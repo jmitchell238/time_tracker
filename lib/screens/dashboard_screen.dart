@@ -78,6 +78,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '${months[dt.month - 1]} ${dt.day}';
   }
 
+  String _fmt12(String hhmm) {
+    final parts = hhmm.split(':');
+    final h = int.parse(parts[0]);
+    final m = parts[1];
+    final period = h < 12 ? 'AM' : 'PM';
+    final h12 = h % 12 == 0 ? 12 : h % 12;
+    return '$h12:$m $period';
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
@@ -241,7 +250,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'No job assigned · ${e.startTime} – ${e.endTime}',
+                                'No job assigned · ${_fmt12(e.startTime)} – ${_fmt12(e.endTime)}',
                                 style: GoogleFonts.dmSans(
                                     fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.fg),
                               ),

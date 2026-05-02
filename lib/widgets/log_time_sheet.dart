@@ -206,7 +206,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
             Expanded(
               child: ListView(
                 controller: controller,
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.viewInsetsOf(context).bottom + 32),
                 children: [
                   // Job picker
                   _label('Job'),
@@ -369,6 +369,15 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
   }
 
 
+  String _fmt12(String hhmm) {
+    final parts = hhmm.split(':');
+    final h = int.parse(parts[0]);
+    final m = parts[1];
+    final period = h < 12 ? 'AM' : 'PM';
+    final h12 = h % 12 == 0 ? 12 : h % 12;
+    return '$h12:$m $period';
+  }
+
   Widget _timeTile(String time, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -381,7 +390,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
           border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Text(time, style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13)),
+        child: Text(_fmt12(time), style: GoogleFonts.dmSans(color: AppColors.fg, fontSize: 13)),
       ),
     );
   }

@@ -90,6 +90,15 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
 
   Widget _label(String text) => FieldLabel(text);
 
+  String _fmt12(String hhmm) {
+    final parts = hhmm.split(':');
+    final h = int.parse(parts[0]);
+    final m = parts[1];
+    final period = h < 12 ? 'AM' : 'PM';
+    final h12 = h % 12 == 0 ? 12 : h % 12;
+    return '$h12:$m $period';
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
@@ -160,7 +169,7 @@ class _EntryEditSheetState extends State<EntryEditSheet> {
                         size: 14, color: AppColors.fg2),
                     const SizedBox(width: 6),
                     Text(
-                      '${widget.entry.date}  ${widget.entry.startTime} – ${widget.entry.endTime}',
+                      '${widget.entry.date}  ${_fmt12(widget.entry.startTime)} – ${_fmt12(widget.entry.endTime)}',
                       style: GoogleFonts.dmSans(
                           fontSize: 12, color: AppColors.fg2),
                     ),
