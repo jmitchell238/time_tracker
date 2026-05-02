@@ -16,6 +16,7 @@ class ActiveTimerCard extends StatefulWidget {
 
 class _ActiveTimerCardState extends State<ActiveTimerCard> {
   late Timer _tick;
+  bool _clockingOut = false;
 
   @override
   void initState() {
@@ -132,7 +133,16 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => context.read<AppProvider>().clockOut(t.id),
+                  onPressed: _clockingOut
+                      ? null
+                      : () async {
+                          setState(() => _clockingOut = true);
+                          try {
+                            await context.read<AppProvider>().clockOut(t.id);
+                          } catch (_) {
+                            if (mounted) setState(() => _clockingOut = false);
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.danger,
                     foregroundColor: Colors.white,
@@ -141,10 +151,12 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
                         borderRadius: BorderRadius.circular(8)),
                     elevation: 0,
                   ),
-                  child: Text(
-                    'Clock Out',
-                    style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700),
-                  ),
+                  child: _clockingOut
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : Text(
+                          'Clock Out',
+                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
                 ),
               ),
             ],

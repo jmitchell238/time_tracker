@@ -234,14 +234,14 @@ class AppProvider extends ChangeNotifier {
 
   // ── Entries ───────────────────────────────────────────────────────────────
 
-  void addEntry({
+  Future<void> addEntry({
     required String jobId,
     required String date,
     required String startTime,
     required String endTime,
     required double hours,
     required String description,
-  }) {
+  }) async {
     final entry = TimeEntry(
       id: _uuid.v4(),
       jobId: jobId,
@@ -251,10 +251,10 @@ class AppProvider extends ChangeNotifier {
       hours: hours,
       description: description,
     );
-    entries = [entry, ...entries];
     if (_workspaceId != null) {
-      _col('entries').doc(entry.id).set(entry.toJson());
+      await _col('entries').doc(entry.id).set(entry.toJson());
     }
+    entries = [entry, ...entries];
     notifyListeners();
   }
 
@@ -373,7 +373,7 @@ class AppProvider extends ChangeNotifier {
 
   // ── Invoices ──────────────────────────────────────────────────────────────
 
-  void createInvoice({
+  Future<void> createInvoice({
     required List<String> entryIds,
     List<String> expenseIds = const [],
     required double totalHours,
@@ -384,7 +384,7 @@ class AppProvider extends ChangeNotifier {
     String? clientCompany,
     String? clientPhone,
     String? billedBy,
-  }) {
+  }) async {
     final num = 'INV-${(invoices.length + 1).toString().padLeft(3, '0')}';
     final today = DateTime.now().toIso8601String().substring(0, 10);
     final inv = Invoice(
@@ -402,7 +402,6 @@ class AppProvider extends ChangeNotifier {
       clientPhone: clientPhone?.isEmpty == true ? null : clientPhone,
       billedBy: billedBy,
     );
-    invoices = [...invoices, inv];
 
     Business? newBusiness;
     if (clientCompany != null || clientName != null) {
@@ -416,15 +415,14 @@ class AppProvider extends ChangeNotifier {
           company: clientCompany?.isEmpty == true ? null : clientCompany,
           phone: clientPhone?.isEmpty == true ? null : clientPhone,
         );
-        businesses = [...businesses, newBusiness];
       }
     }
 
-    entries = entries.map((e) {
+    final updatedEntries = entries.map((e) {
       if (!entryIds.contains(e.id)) return e;
       return e.copyWith(invoiceId: inv.id);
     }).toList();
-    expenses = expenses.map((e) {
+    final updatedExpenses = expenses.map((e) {
       if (!expenseIds.contains(e.id)) return e;
       return e.copyWith(invoiceId: inv.id);
     }).toList();
@@ -432,17 +430,22 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       final batch = _db!.batch();
       batch.set(_col('invoices').doc(inv.id), inv.toJson());
-      for (final e in entries.where((e) => entryIds.contains(e.id))) {
+      for (final e in updatedEntries.where((e) => entryIds.contains(e.id))) {
         batch.set(_col('entries').doc(e.id), e.toJson());
       }
-      for (final e in expenses.where((e) => expenseIds.contains(e.id))) {
+      for (final e in updatedExpenses.where((e) => expenseIds.contains(e.id))) {
         batch.set(_col('expenses').doc(e.id), e.toJson());
       }
       if (newBusiness != null) {
         batch.set(_col('businesses').doc(newBusiness.id), newBusiness.toJson());
       }
-      batch.commit();
+      await batch.commit();
     }
+
+    invoices = [...invoices, inv];
+    if (newBusiness != null) businesses = [...businesses, newBusiness];
+    entries = updatedEntries;
+    expenses = updatedExpenses;
     notifyListeners();
   }
 
@@ -531,14 +534,14 @@ class AppProvider extends ChangeNotifier {
 
   // ── Expenses ──────────────────────────────────────────────────────────────
 
-  void addExpense({
+  Future<void> addExpense({
     required String description,
     required double amount,
     required String date,
     required String purchasedBy,
     String? businessId,
     String? jobId,
-  }) {
+  }) async {
     final expense = ExpenseItem(
       id: _uuid.v4(),
       description: description,
@@ -548,10 +551,10 @@ class AppProvider extends ChangeNotifier {
       businessId: businessId,
       jobId: jobId,
     );
-    expenses = [expense, ...expenses];
     if (_workspaceId != null) {
-      _col('expenses').doc(expense.id).set(expense.toJson());
+      await _col('expenses').doc(expense.id).set(expense.toJson());
     }
+    expenses = [expense, ...expenses];
     notifyListeners();
   }
 
@@ -592,7 +595,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clockOut(String timerId) {
+  Future<void> clockOut(String timerId) async {
     final timer = activeTimers.where((t) => t.id == timerId).firstOrNull;
     if (timer == null) return;
 
@@ -620,15 +623,15 @@ class AppProvider extends ChangeNotifier {
       description: '',
       rateOverride: timer.rateOverride,
     );
-    entries = [entry, ...entries];
-    activeTimers = activeTimers.where((t) => t.id != timerId).toList();
 
     if (_workspaceId != null) {
       final batch = _db!.batch();
       batch.delete(_col('timers').doc(timerId));
       batch.set(_col('entries').doc(entry.id), entry.toJson());
-      batch.commit();
+      await batch.commit();
     }
+    entries = [entry, ...entries];
+    activeTimers = activeTimers.where((t) => t.id != timerId).toList();
     notifyListeners();
   }
 

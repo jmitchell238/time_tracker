@@ -35,6 +35,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
   String _description = '';
   bool _useManual = false;
   double _manualHours = 0;
+  bool _saving = false;
 
   final _descController = TextEditingController();
   final _manualController = TextEditingController();
@@ -120,19 +121,24 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
     }
   }
 
-  void _save() {
+  Future<void> _save() async {
     final hours = _calculatedHours;
     if (_jobId.isEmpty || hours <= 0) return;
-    context.read<AppProvider>().addEntry(
-          jobId: _jobId,
-          date: _date,
-          startTime: _startTime,
-          endTime: _endTime,
-          hours: hours,
-          description: _description,
-        );
-    widget.onConfirmSave?.call();
-    Navigator.pop(context);
+    setState(() => _saving = true);
+    try {
+      await context.read<AppProvider>().addEntry(
+            jobId: _jobId,
+            date: _date,
+            startTime: _startTime,
+            endTime: _endTime,
+            hours: hours,
+            description: _description,
+          );
+      widget.onConfirmSave?.call();
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   InputDecoration _inputDec(String hint) => InputDecoration(
@@ -291,14 +297,16 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                     height: 48,
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: canSave ? _save : null,
+                      onPressed: (canSave && !_saving) ? _save : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: canSave ? AppColors.accent : AppColors.of(context).fg3,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
-                      child: Text('Save Entry', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
+                      child: _saving
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : Text('Save Entry', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],

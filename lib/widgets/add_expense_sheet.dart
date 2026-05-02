@@ -41,6 +41,7 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
   String _purchasedBy = 'James';
   String? _selectedBusinessId;
   String? _selectedJobId;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -81,20 +82,25 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
     return true;
   }
 
-  void _save(AppProvider provider) {
+  Future<void> _save(AppProvider provider) async {
     final desc = _descCtrl.text.trim();
     final amount = double.tryParse(_amountCtrl.text.trim());
     final date = _dateCtrl.text.trim();
     if (desc.isEmpty || amount == null || date.isEmpty) return;
-    provider.addExpense(
-      description: desc,
-      amount: amount,
-      date: date,
-      purchasedBy: _purchasedBy,
-      businessId: _selectedBusinessId,
-      jobId: _selectedJobId,
-    );
-    Navigator.pop(context);
+    setState(() => _saving = true);
+    try {
+      await provider.addExpense(
+        description: desc,
+        amount: amount,
+        date: date,
+        purchasedBy: _purchasedBy,
+        businessId: _selectedBusinessId,
+        jobId: _selectedJobId,
+      );
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -230,26 +236,26 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
             const SizedBox(height: 20),
 
             // Save button
-            StatefulBuilder(builder: (ctx, _) {
-              return SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _canSave(provider) ? () => _save(provider) : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.of(context).bgElevated,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 0,
-                  ),
-                  child: Text('Save',
-                      style: GoogleFonts.dmSans(
-                          fontSize: 14, fontWeight: FontWeight.w700)),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: (_canSave(provider) && !_saving) ? () => _save(provider) : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.of(context).bgElevated,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  elevation: 0,
                 ),
-              );
-            }),
+                child: _saving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text('Save',
+                        style: GoogleFonts.dmSans(
+                            fontSize: 14, fontWeight: FontWeight.w700)),
+              ),
+            ),
           ],
         ),
       ),

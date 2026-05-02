@@ -21,6 +21,7 @@ class InvoicesScreen extends StatefulWidget {
 
 class _InvoicesScreenState extends State<InvoicesScreen> {
   bool _creating = false;
+  bool _savingInvoice = false;
   String? _detailId;
   // 'all', 'unpaid', 'paid'
   String _filter = 'all';
@@ -43,6 +44,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
   void _resetCreate() {
     _creating = false;
+    _savingInvoice = false;
     _selectedEntries.clear();
     _selectedExpenses.clear();
     _billedBy = 'James';
@@ -470,22 +472,27 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         SizedBox(
           height: 48,
           child: ElevatedButton(
-            onPressed: selectedEntries.isEmpty && selectedExpenses.isEmpty
+            onPressed: (selectedEntries.isEmpty && selectedExpenses.isEmpty) || _savingInvoice
                 ? null
-                : () {
-                    provider.createInvoice(
-                      entryIds: selectedEntries.map((e) => e.id).toList(),
-                      expenseIds: selectedExpenses.map((e) => e.id).toList(),
-                      totalHours: totalHours,
-                      totalAmount: totalAmount,
-                      expensesTotal: expensesTotal,
-                      notes: _notesCtrl.text.trim(),
-                      clientName: _clientNameCtrl.text.trim(),
-                      clientCompany: _clientCompanyCtrl.text.trim(),
-                      clientPhone: _clientPhoneCtrl.text.trim(),
-                      billedBy: _billedBy,
-                    );
-                    setState(_resetCreate);
+                : () async {
+                    setState(() => _savingInvoice = true);
+                    try {
+                      await provider.createInvoice(
+                        entryIds: selectedEntries.map((e) => e.id).toList(),
+                        expenseIds: selectedExpenses.map((e) => e.id).toList(),
+                        totalHours: totalHours,
+                        totalAmount: totalAmount,
+                        expensesTotal: expensesTotal,
+                        notes: _notesCtrl.text.trim(),
+                        clientName: _clientNameCtrl.text.trim(),
+                        clientCompany: _clientCompanyCtrl.text.trim(),
+                        clientPhone: _clientPhoneCtrl.text.trim(),
+                        billedBy: _billedBy,
+                      );
+                      if (mounted) setState(_resetCreate);
+                    } catch (_) {
+                      if (mounted) setState(() => _savingInvoice = false);
+                    }
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: (selectedEntries.isNotEmpty || selectedExpenses.isNotEmpty) ? AppColors.accent : AppColors.of(context).fg3,
@@ -493,7 +500,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 0,
             ),
-            child: Text('Create Invoice', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
+            child: _savingInvoice
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : Text('Create Invoice', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
           ),
         ),
       ],

@@ -205,7 +205,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () => provider.clockOut(t.id),
+                        onPressed: () async {
+                          await provider.clockOut(t.id);
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.danger,
                           foregroundColor: Colors.white,
