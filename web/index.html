@@ -109,15 +109,29 @@
       console.log('[firestore-preinit] dbInit settings:', JSON.stringify(dbInit._settings || {}));
       console.log('[firestore-preinit] dbGetDefault settings:', JSON.stringify(dbGetDefault._settings || {}));
 
-      // Trace promise rejections from Dart-initiated calls. ES module
-      // namespaces are sealed, so wrap with a Proxy and rebind window.firebase_firestore.
-      const traced = new Set(['getDocs', 'getDoc', 'addDoc', 'setDoc', 'updateDoc', 'deleteDoc', 'getDocsFromServer', 'getDocsFromCache']);
+      // Trace EVERY access of window.firebase_firestore so we can see what
+      // Dart is using. If we never see [fst-trace] access:foo lines, Dart
+      // isn't going through window.firebase_firestore at all.
+      const seenAccess = new Set();
+      const traced = new Set(['getDocs', 'getDoc', 'addDoc', 'setDoc', 'updateDoc', 'deleteDoc', 'getDocsFromServer', 'getDocsFromCache', 'collection', 'doc', 'query', 'getFirestore', 'initializeFirestore']);
       window.firebase_firestore = new Proxy(firestoreMod, {
         get(target, prop) {
           const val = Reflect.get(target, prop);
+          // Log first time each prop is accessed
+          if (typeof prop === 'string' && !seenAccess.has(prop)) {
+            seenAccess.add(prop);
+            console.log('[fst-trace] access:', prop, typeof val);
+          }
           if (typeof val !== 'function' || !traced.has(prop)) return val;
           return function(...args) {
-            const r = val.apply(target, args);
+            console.log(`[fst-trace] CALL ${prop}`, args.length, 'args');
+            let r;
+            try {
+              r = val.apply(target, args);
+            } catch (e) {
+              console.error(`[fst-trace] ${prop} SYNC THREW:`, e?.code, e?.name, e?.message, e?.stack);
+              throw e;
+            }
             if (r && typeof r.then === 'function') {
               r.then(
                 () => console.log(`[fst-trace] ${prop} resolved`),
