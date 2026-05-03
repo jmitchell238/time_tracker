@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +27,16 @@ void main() async {
     statusBarIconBrightness: Brightness.light,
   ));
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Apply Firestore transport settings before any widget or provider touches
+  // the Firestore instance. Must happen here — if initializeFirestore() is
+  // called by the SDK before settings are applied it throws on subsequent
+  // calls in release mode, leaving long-polling never enabled.
+  if (kIsWeb) {
+    FirebaseFirestore.instance.settings = const Settings(
+      webExperimentalAutoDetectLongPolling: true,
+      persistenceEnabled: false,
+    );
+  }
   runApp(const TimeTrackerApp());
 }
 

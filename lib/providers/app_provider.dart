@@ -64,15 +64,6 @@ class AppProvider extends ChangeNotifier {
     _db = _dbOverride ?? FirebaseFirestore.instance;
     _auth = _authOverride ?? FirebaseAuth.instance;
 
-    // Safari/PWA blocks Firestore's default WebChannel (gRPC) transport.
-    // Force long polling so all reads and writes succeed on iOS.
-    if (kIsWeb && _dbOverride == null) {
-      _db!.settings = const Settings(
-        webExperimentalForceLongPolling: true,
-        persistenceEnabled: false,
-      );
-    }
-
     final user = _auth!.currentUser;
     if (user == null) {
       _loaded = true;
