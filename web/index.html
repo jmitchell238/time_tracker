@@ -92,6 +92,7 @@
       firestoreMod.initializeFirestore(app, {
         experimentalForceLongPolling: true,
       });
+      console.log('[firestore-preinit] ok — long polling forced');
     } catch (e) {
       console.error('[firestore-preinit] failed', e);
     }
