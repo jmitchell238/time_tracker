@@ -97,6 +97,22 @@
       });
       log('initializeFirestore ok with experimentalForceLongPolling=true', db);
       window.__preinitFirestore = db;
+
+      // Direct REST ping to firestore.googleapis.com — bypasses the SDK
+      // entirely. A 401/403 means the network IS reachable and the issue is
+      // SDK/auth/rules. A network error or CORS error means the host is
+      // unreachable from this browser (firewall, DNS, ad-blocker, etc).
+      try {
+        const resp = await fetch(
+          'https://firestore.googleapis.com/v1/projects/time-tracker-jm/databases/(default)/documents/users/__ping',
+          { method: 'GET', cache: 'no-store' }
+        );
+        log('REST ping status:', resp.status, resp.statusText);
+        const body = await resp.text();
+        log('REST ping body:', body.slice(0, 300));
+      } catch (e) {
+        err('REST ping failed (network/CORS):', e?.message || e, e);
+      }
     } catch (e) {
       err('pre-init failed', e);
     }
