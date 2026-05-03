@@ -89,10 +89,17 @@
         storageBucket: 'time-tracker-jm.firebasestorage.app',
       });
 
-      firestoreMod.initializeFirestore(app, {
+      const dbInit = firestoreMod.initializeFirestore(app, {
         experimentalForceLongPolling: true,
       });
+      // Verify what Dart will get when it calls getFirestore(app, '(default)')
+      const dbGetDefault = firestoreMod.getFirestore(app, '(default)');
+      const dbGetNoArg = firestoreMod.getFirestore(app);
       console.log('[firestore-preinit] ok — long polling forced');
+      console.log('[firestore-preinit] dbInit === dbGetDefault?', dbInit === dbGetDefault);
+      console.log('[firestore-preinit] dbInit === dbGetNoArg?', dbInit === dbGetNoArg);
+      console.log('[firestore-preinit] dbInit settings:', JSON.stringify(dbInit._settings || {}));
+      console.log('[firestore-preinit] dbGetDefault settings:', JSON.stringify(dbGetDefault._settings || {}));
     } catch (e) {
       console.error('[firestore-preinit] failed', e);
     }
