@@ -59,35 +59,47 @@
     pre-initialized instance with long polling already enabled.
   -->
   <script type="module">
-    const FIREBASE_VERSION = '11.9.1';
-    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
+    const log = (...args) => console.log('[firestore-preinit]', ...args);
+    const err = (...args) => console.error('[firestore-preinit]', ...args);
+    log('starting');
+    try {
+      const FIREBASE_VERSION = '11.9.1';
+      const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
 
-    const [appMod, firestoreMod, authMod] = await Promise.all([
-      import(`${base}/firebase-app.js`),
-      import(`${base}/firebase-firestore.js`),
-      import(`${base}/firebase-auth.js`),
-    ]);
+      log('importing modules');
+      const [appMod, firestoreMod, authMod] = await Promise.all([
+        import(`${base}/firebase-app.js`),
+        import(`${base}/firebase-firestore.js`),
+        import(`${base}/firebase-auth.js`),
+      ]);
+      log('modules imported');
 
-    window.firebase_core = appMod;
-    window.firebase_app = appMod;
-    window.firebase_auth = authMod;
-    window.firebase_firestore = firestoreMod;
+      window.firebase_core = appMod;
+      window.firebase_app = appMod;
+      window.firebase_auth = authMod;
+      window.firebase_firestore = firestoreMod;
 
-    const app = appMod.initializeApp({
-      apiKey: 'AIzaSyCP6JRS4POzegeRZw1QjKpaxBKoNR-Vn24',
-      appId: '1:179997314991:web:c1ec70eefa8b2c5483295a',
-      messagingSenderId: '179997314991',
-      projectId: 'time-tracker-jm',
-      authDomain: 'time-tracker-jm.firebaseapp.com',
-      storageBucket: 'time-tracker-jm.firebasestorage.app',
-    });
+      const app = appMod.initializeApp({
+        apiKey: 'AIzaSyCP6JRS4POzegeRZw1QjKpaxBKoNR-Vn24',
+        appId: '1:179997314991:web:c1ec70eefa8b2c5483295a',
+        messagingSenderId: '179997314991',
+        projectId: 'time-tracker-jm',
+        authDomain: 'time-tracker-jm.firebaseapp.com',
+        storageBucket: 'time-tracker-jm.firebasestorage.app',
+      });
+      log('initializeApp ok');
 
-    // Must run before any getFirestore(app) call. initializeFirestore() can
-    // only be called once per app; subsequent getFirestore(app) returns this
-    // instance with long polling enabled.
-    firestoreMod.initializeFirestore(app, {
-      experimentalForceLongPolling: true,
-    });
+      // Must run before any getFirestore(app) call. initializeFirestore() can
+      // only be called once per app; subsequent getFirestore(app) returns this
+      // instance with long polling enabled.
+      const db = firestoreMod.initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+      });
+      log('initializeFirestore ok with experimentalForceLongPolling=true', db);
+      window.__preinitFirestore = db;
+    } catch (e) {
+      err('pre-init failed', e);
+    }
 
     const s = document.createElement('script');
     s.src = 'flutter_bootstrap.js';
