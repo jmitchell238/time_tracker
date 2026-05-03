@@ -89,8 +89,14 @@
         storageBucket: 'time-tracker-jm.firebasestorage.app',
       });
 
+      // useFetchStreams MUST be false alongside experimentalForceLongPolling.
+      // The two are incompatible — leaving useFetchStreams at its default (true)
+      // silently disables long polling, leaving the SDK on WebChannel streaming
+      // which fails on iOS Safari and some PWA contexts with
+      // "Unable to establish connection on channel."
       const dbInit = firestoreMod.initializeFirestore(app, {
         experimentalForceLongPolling: true,
+        useFetchStreams: false,
       });
       // Verify what Dart will get when it calls getFirestore(app, '(default)')
       const dbGetDefault = firestoreMod.getFirestore(app, '(default)');
