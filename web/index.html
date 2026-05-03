@@ -59,20 +59,21 @@
     pre-initialized instance with long polling already enabled.
   -->
   <script type="module">
-    const log = (...args) => console.log('[firestore-preinit]', ...args);
-    const err = (...args) => console.error('[firestore-preinit]', ...args);
-    log('starting');
+    // We only initialize Firestore here — NOT auth. Calling getAuth(app) or
+    // initializeAuth(app, ...) before the Dart firebase_auth plugin loads
+    // throws "auth/already-initialized" when the Dart side then tries to
+    // initialize auth with its own persistence settings. We just need the
+    // module to be present on window so firebase_core_web's CDN check
+    // skips it.
     try {
       const FIREBASE_VERSION = '11.9.1';
       const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
 
-      log('importing modules');
       const [appMod, firestoreMod, authMod] = await Promise.all([
         import(`${base}/firebase-app.js`),
         import(`${base}/firebase-firestore.js`),
         import(`${base}/firebase-auth.js`),
       ]);
-      log('modules imported');
 
       window.firebase_core = appMod;
       window.firebase_app = appMod;
@@ -87,53 +88,12 @@
         authDomain: 'time-tracker-jm.firebaseapp.com',
         storageBucket: 'time-tracker-jm.firebasestorage.app',
       });
-      log('initializeApp ok');
 
-      // Must run before any getFirestore(app) call. initializeFirestore() can
-      // only be called once per app; subsequent getFirestore(app) returns this
-      // instance with long polling enabled.
-      const db = firestoreMod.initializeFirestore(app, {
+      firestoreMod.initializeFirestore(app, {
         experimentalForceLongPolling: true,
       });
-      log('initializeFirestore ok with experimentalForceLongPolling=true', db);
-      window.__preinitFirestore = db;
-
-      // Wait for auth state to resolve, then attempt an SDK-level read of
-      // the actual user's data. If this succeeds, Firestore is fully
-      // working and the failure must be in the Dart layer. If it fails
-      // with the same channel error, it's a server-side issue (App Check,
-      // API key restriction, IAM, etc).
-      const auth = authMod.getAuth(app);
-      authMod.onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          log('SDK test skipped: not signed in');
-          return;
-        }
-        log('SDK test: signed in as', user.uid);
-        // Authenticated REST GET — bypasses WebChannel entirely.
-        try {
-          const token = await user.getIdToken();
-          const resp = await fetch(
-            `https://firestore.googleapis.com/v1/projects/time-tracker-jm/databases/(default)/documents/users/${user.uid}/jobs`,
-            { method: 'GET', headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' }
-          );
-          log('Authed REST status:', resp.status);
-          const body = await resp.text();
-          log('Authed REST body:', body.slice(0, 500));
-        } catch (e) {
-          err('Authed REST failed:', e?.message || e);
-        }
-        // SDK-level test using getDocs
-        try {
-          const col = firestoreMod.collection(db, 'users', user.uid, 'jobs');
-          const snap = await firestoreMod.getDocs(col);
-          log('SDK getDocs ok, docs:', snap.size);
-        } catch (e) {
-          err('SDK getDocs failed:', e?.code, e?.message, e);
-        }
-      });
     } catch (e) {
-      err('pre-init failed', e);
+      console.error('[firestore-preinit] failed', e);
     }
 
     const s = document.createElement('script');
