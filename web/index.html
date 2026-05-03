@@ -106,6 +106,27 @@
       console.log('[firestore-preinit] dbInit === dbGetNoArg?', dbInit === dbGetNoArg);
       console.log('[firestore-preinit] dbInit settings:', JSON.stringify(dbInit._settings || {}));
       console.log('[firestore-preinit] dbGetDefault settings:', JSON.stringify(dbGetDefault._settings || {}));
+
+      // Wrap firebase_firestore.getDocs / getDoc so we can see the raw Promise
+      // rejection from the Dart side. Dart compiles to call window.firebase_firestore.<fn>(...).
+      const wrappedFs = Object.create(firestoreMod);
+      for (const k of Object.keys(firestoreMod)) wrappedFs[k] = firestoreMod[k];
+      const wrap = (name) => {
+        const orig = firestoreMod[name];
+        if (typeof orig !== 'function') return;
+        wrappedFs[name] = function(...args) {
+          const r = orig.apply(firestoreMod, args);
+          if (r && typeof r.then === 'function') {
+            r.then(
+              (v) => console.log(`[fst-trace] ${name} resolved`),
+              (e) => console.error(`[fst-trace] ${name} REJECTED:`, e?.code, e?.name, e?.message, e?.stack || e),
+            );
+          }
+          return r;
+        };
+      };
+      ['getDocs', 'getDoc', 'addDoc', 'setDoc', 'updateDoc', 'deleteDoc', 'getDocsFromServer', 'getDocsFromCache'].forEach(wrap);
+      window.firebase_firestore = wrappedFs;
     } catch (e) {
       console.error('[firestore-preinit] failed', e);
     }
