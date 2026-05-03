@@ -45,13 +45,53 @@
 </head>
 <body>
   <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+    Pre-initialize Firebase + Firestore with FORCED long polling BEFORE Flutter
+    loads. iOS Safari (and some PWA / corporate-network contexts) cannot
+    establish Firestore's default WebChannel streaming transport, producing
+    "[cloud_firestore/unknown] Unable to establish connection on channel."
+    The Dart settings API has proven unreliable for forcing long polling on
+    real devices, so we initialize Firestore directly via JS interop here.
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
+    firebase_core_web checks for window.firebase_core and skips its own CDN
+    injection if present, so we must populate every Firebase module we use.
+    Flutter's Firebase.initializeApp() will then find the existing default
+    app (matched by apiKey) and reuse it; getFirestore(app) returns this
+    pre-initialized instance with long polling already enabled.
   -->
-  <script src="flutter_bootstrap.js" async></script>
+  <script type="module">
+    const FIREBASE_VERSION = '11.9.1';
+    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
+
+    const [appMod, firestoreMod, authMod] = await Promise.all([
+      import(`${base}/firebase-app.js`),
+      import(`${base}/firebase-firestore.js`),
+      import(`${base}/firebase-auth.js`),
+    ]);
+
+    window.firebase_core = appMod;
+    window.firebase_app = appMod;
+    window.firebase_auth = authMod;
+    window.firebase_firestore = firestoreMod;
+
+    const app = appMod.initializeApp({
+      apiKey: 'AIzaSyCP6JRS4POzegeRZw1QjKpaxBKoNR-Vn24',
+      appId: '1:179997314991:web:c1ec70eefa8b2c5483295a',
+      messagingSenderId: '179997314991',
+      projectId: 'time-tracker-jm',
+      authDomain: 'time-tracker-jm.firebaseapp.com',
+      storageBucket: 'time-tracker-jm.firebasestorage.app',
+    });
+
+    // Must run before any getFirestore(app) call. initializeFirestore() can
+    // only be called once per app; subsequent getFirestore(app) returns this
+    // instance with long polling enabled.
+    firestoreMod.initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+    });
+
+    const s = document.createElement('script');
+    s.src = 'flutter_bootstrap.js';
+    document.body.appendChild(s);
+  </script>
 </body>
 </html>
