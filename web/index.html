@@ -49,25 +49,23 @@
     loads. iOS Safari (and some PWA / corporate-network contexts) cannot
     establish Firestore's default WebChannel streaming transport, producing
     "[cloud_firestore/unknown] Unable to establish connection on channel."
-    The Dart settings API has proven unreliable for forcing long polling on
-    real devices, so we initialize Firestore directly via JS interop here.
 
-    firebase_core_web checks for window.firebase_core and skips its own CDN
-    injection if present, so we must populate every Firebase module we use.
-    Flutter's Firebase.initializeApp() will then find the existing default
-    app (matched by apiKey) and reuse it; getFirestore(app) returns this
-    pre-initialized instance with long polling already enabled.
+    The Dart settings API (FirebaseFirestore.instance.settings = ...) was
+    unreliable for forcing long polling, so we initialize Firestore directly
+    via the JS SDK here. firebase_core_web checks window.firebase_core and
+    skips its own CDN injection when present, so we populate every Firebase
+    module the app uses (core/app, auth, firestore). Flutter's
+    Firebase.initializeApp() reuses the existing default app (matched by
+    apiKey); cloud_firestore_web's getFirestore(app, '(default)') retrieves
+    this pre-initialized instance with long polling already active.
+
+    Auth is intentionally NOT initialized here — calling getAuth(app) before
+    Dart's firebase_auth plugin runs makes its initializeAuth(app, ...) call
+    throw "auth/already-initialized". We only need the module on window.
   -->
   <script type="module">
-    // We only initialize Firestore here — NOT auth. Calling getAuth(app) or
-    // initializeAuth(app, ...) before the Dart firebase_auth plugin loads
-    // throws "auth/already-initialized" when the Dart side then tries to
-    // initialize auth with its own persistence settings. We just need the
-    // module to be present on window so firebase_core_web's CDN check
-    // skips it.
     try {
       // Must match firebase_core_web's supportedFirebaseJsSdkVersion.
-      // Mismatch causes a console warning but otherwise still works.
       const FIREBASE_VERSION = '12.12.0';
       const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
 
@@ -91,56 +89,12 @@
         storageBucket: 'time-tracker-jm.firebasestorage.app',
       });
 
-      // useFetchStreams MUST be false alongside experimentalForceLongPolling.
-      // The two are incompatible — leaving useFetchStreams at its default (true)
-      // silently disables long polling, leaving the SDK on WebChannel streaming
-      // which fails on iOS Safari and some PWA contexts with
-      // "Unable to establish connection on channel."
-      const dbInit = firestoreMod.initializeFirestore(app, {
+      // useFetchStreams MUST be false alongside experimentalForceLongPolling
+      // — the two are mutually incompatible. Leaving useFetchStreams at its
+      // default (true) silently keeps the SDK on WebChannel streaming.
+      firestoreMod.initializeFirestore(app, {
         experimentalForceLongPolling: true,
         useFetchStreams: false,
-      });
-      // Verify what Dart will get when it calls getFirestore(app, '(default)')
-      const dbGetDefault = firestoreMod.getFirestore(app, '(default)');
-      const dbGetNoArg = firestoreMod.getFirestore(app);
-      console.log('[firestore-preinit] ok — long polling forced');
-      console.log('[firestore-preinit] dbInit === dbGetDefault?', dbInit === dbGetDefault);
-      console.log('[firestore-preinit] dbInit === dbGetNoArg?', dbInit === dbGetNoArg);
-      console.log('[firestore-preinit] dbInit settings:', JSON.stringify(dbInit._settings || {}));
-      console.log('[firestore-preinit] dbGetDefault settings:', JSON.stringify(dbGetDefault._settings || {}));
-
-      // Trace EVERY access of window.firebase_firestore so we can see what
-      // Dart is using. If we never see [fst-trace] access:foo lines, Dart
-      // isn't going through window.firebase_firestore at all.
-      const seenAccess = new Set();
-      const traced = new Set(['getDocs', 'getDoc', 'addDoc', 'setDoc', 'updateDoc', 'deleteDoc', 'getDocsFromServer', 'getDocsFromCache', 'collection', 'doc', 'query', 'getFirestore', 'initializeFirestore']);
-      window.firebase_firestore = new Proxy(firestoreMod, {
-        get(target, prop) {
-          const val = Reflect.get(target, prop);
-          // Log first time each prop is accessed
-          if (typeof prop === 'string' && !seenAccess.has(prop)) {
-            seenAccess.add(prop);
-            console.log('[fst-trace] access:', prop, typeof val);
-          }
-          if (typeof val !== 'function' || !traced.has(prop)) return val;
-          return function(...args) {
-            console.log(`[fst-trace] CALL ${prop}`, args.length, 'args');
-            let r;
-            try {
-              r = val.apply(target, args);
-            } catch (e) {
-              console.error(`[fst-trace] ${prop} SYNC THREW:`, e?.code, e?.name, e?.message, e?.stack);
-              throw e;
-            }
-            if (r && typeof r.then === 'function') {
-              r.then(
-                () => console.log(`[fst-trace] ${prop} resolved`),
-                (e) => console.error(`[fst-trace] ${prop} REJECTED:`, e?.code, e?.name, e?.message, e?.stack),
-              );
-            }
-            return r;
-          };
-        },
       });
     } catch (e) {
       console.error('[firestore-preinit] failed', e);
