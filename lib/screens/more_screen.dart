@@ -64,10 +64,10 @@ class _PushedScreen extends StatelessWidget {
                   onTap: () => Navigator.pop(context),
                   child: Row(
                     children: [
-                      const Icon(Icons.arrow_back, size: 18, color: Colors.white70),
+                      Icon(Icons.arrow_back, size: 18, color: AppColors.of(context).fg),
                       const SizedBox(width: 4),
                       Text('Back',
-                          style: GoogleFonts.dmSans(fontSize: 13, color: Colors.white70)),
+                          style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg)),
                     ],
                   ),
                 ),
