@@ -20,10 +20,6 @@ final _authService = AuthService();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   initFirebasePlatform();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-  ));
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // NOTE: Firestore transport (long polling) is configured in web/index.html
   // BEFORE this Dart code runs. Setting FirebaseFirestore.instance.settings
@@ -118,9 +114,19 @@ class _AppShellState extends State<AppShell> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.of(context).bgDeep,
-      body: IndexedStack(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        // iOS: Brightness.dark = dark background → light icons
+        //      Brightness.light = light background → dark icons
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        // Android icon brightness (inverse of iOS naming)
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.of(context).bgDeep,
+        body: IndexedStack(
         index: _index,
         children: const [
           JobsScreen(),
@@ -172,6 +178,8 @@ class _AppShellState extends State<AppShell> {
           ),
         ),
       ),
+    ),
     );
   }
 }
+

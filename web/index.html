@@ -20,12 +20,15 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Property Work Time Tracker — log hours, manage jobs, and generate invoices.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0F172A">
+  <!-- Adapts to iOS/Android system light/dark mode -->
+  <meta name="theme-color" content="#F8FAFC" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)">
 
   <!-- iOS PWA meta tags -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <!-- black-translucent = transparent overlay; iOS auto-adapts icon colors for light/dark -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Time Tracker">
 
   <style>
@@ -33,6 +36,9 @@
       background-color: #0F172A;
       margin: 0;
       padding: 0;
+    }
+    @media (prefers-color-scheme: light) {
+      html, body { background-color: #F8FAFC; }
     }
   </style>
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
