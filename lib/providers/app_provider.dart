@@ -233,6 +233,14 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void deleteJob(String id) {
+    jobs = jobs.where((j) => j.id != id).toList();
+    if (_workspaceId != null) {
+      _col('jobs').doc(id).delete();
+    }
+    notifyListeners();
+  }
+
   // ── Entries ───────────────────────────────────────────────────────────────
 
   Future<void> addEntry({

@@ -10,6 +10,7 @@ import '../widgets/log_time_sheet.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/amount_display_pair.dart';
 import '../widgets/left_accent_card.dart';
+import '../widgets/entry_edit_sheet.dart';
 
 class JobDetailScreen extends StatefulWidget {
   final String jobId;
@@ -266,6 +267,23 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ),
                   ),
                 ),
+                if (job.isArchived) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 40,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _confirmDeleteJob(context, provider),
+                      icon: const Icon(Icons.delete_forever_outlined, size: 16, color: AppColors.danger),
+                      label: Text('Delete Job',
+                          style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.danger)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.danger),
+                        backgroundColor: AppColors.danger.withAlpha(20),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Text(
                   'ALL ENTRIES (${jobEntries.length})',
@@ -276,43 +294,98 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   const EmptyStateWidget('No entries yet', verticalPadding: 24),
                 ...jobEntries.map((e) {
                   final entryRate = provider.getEntryRate(e);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: LeftAccentCard(
-                      accentColor: e.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(_fmtDateShort(e.date),
-                                    style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
-                                const SizedBox(height: 2),
-                                Text(e.description,
-                                    style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
-                                const SizedBox(height: 4),
-                                Text(
-                                  e.invoiceId != null ? 'Invoiced' : 'Uninvoiced',
-                                  style: GoogleFonts.dmSans(
-                                    fontSize: 10, fontWeight: FontWeight.w600,
-                                    color: e.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
-                                  ),
+                  return Dismissible(
+                    key: ValueKey(e.id),
+                    direction: DismissDirection.endToStart,
+                    onDismissed: (_) => provider.deleteEntry(e.id),
+                    background: const SizedBox.shrink(),
+                    secondaryBackground: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.danger,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text('DELETE',
+                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: GestureDetector(
+                        onTap: () => EntryEditSheet.show(context, e),
+                        child: LeftAccentCard(
+                          accentColor: e.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_fmtDateShort(e.date),
+                                        style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+                                    const SizedBox(height: 2),
+                                    Text(e.description,
+                                        style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      e.invoiceId != null ? 'Invoiced' : 'Uninvoiced',
+                                      style: GoogleFonts.dmSans(
+                                        fontSize: 10, fontWeight: FontWeight.w600,
+                                        color: e.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              AmountDisplayPair(
+                                hoursText: '${e.hours.toStringAsFixed(1)}h',
+                                amountText: '\$${(e.hours * entryRate).toStringAsFixed(2)}',
+                              ),
+                            ],
                           ),
-                          AmountDisplayPair(
-                            hoursText: '${e.hours.toStringAsFixed(1)}h',
-                            amountText: '\$${(e.hours * entryRate).toStringAsFixed(2)}',
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   );
                 }),
               ]),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteJob(BuildContext context, AppProvider provider) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.of(context).bgBase,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Delete Job?',
+            style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+        content: Text(
+          'This permanently deletes the job. Existing entries will remain but will no longer be linked to it.',
+          style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.of(context).fg2),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.of(context).fg2)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.deleteJob(widget.jobId);
+              Navigator.pop(context); // close dialog
+              Navigator.pop(context); // close detail screen
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text('Delete', style: GoogleFonts.dmSans(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
