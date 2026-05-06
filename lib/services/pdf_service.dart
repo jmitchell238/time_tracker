@@ -99,13 +99,23 @@ class PdfService {
 
   // ── Billing row ───────────────────────────────────────────────────────────
 
+  static String _resolveFromName(Invoice inv, AppSettings settings) {
+    final full = settings.billingName ?? 'James & Whitney Mitchell';
+    final b = inv.billedBy;
+    if (b != null && b != 'Combined') {
+      final lastName = full.split(' ').last;
+      return '$b $lastName';
+    }
+    return full;
+  }
+
   static pw.Widget _billingRow(Invoice inv, AppSettings settings,
       pw.Font bold, pw.Font regular) {
     return pw.Row(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Expanded(child: _billingBlock('FROM', [
-          settings.billingName ?? 'James & Whitney Mitchell',
+          _resolveFromName(inv, settings),
           if (settings.billingAddress != null) settings.billingAddress!,
           if (settings.billingPhone != null) settings.billingPhone!,
         ], bold, regular)),

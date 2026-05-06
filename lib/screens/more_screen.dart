@@ -51,7 +51,7 @@ class _PushedScreen extends StatelessWidget {
       body: Column(
         children: [
           Container(
-            color: AppColors.of(context).bgBase,
+            color: AppColors.of(context).bgDeep,
             padding: EdgeInsets.fromLTRB(
               16,
               MediaQuery.of(context).padding.top + 12,
