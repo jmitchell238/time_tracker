@@ -9,6 +9,7 @@ import '../widgets/metric_item.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/amount_display_pair.dart';
 import '../widgets/left_accent_card.dart';
+import '../widgets/entry_detail_sheet.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -19,7 +20,6 @@ class EntriesScreen extends StatefulWidget {
 
 class _EntriesScreenState extends State<EntriesScreen> {
   String _tab = 'Week';
-  String? _expandedId;
 
   String _today() => DateTime.now().toIso8601String().substring(0, 10);
 
@@ -139,8 +139,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
               ...dateGroup.value.map((e) => _EntryRow(
                     entry: e,
                     provider: provider,
-                    expanded: _expandedId == e.id,
-                    onToggle: () => setState(() => _expandedId = _expandedId == e.id ? null : e.id),
                     showDate: false,
                   )),
             ],
@@ -179,9 +177,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
                 ...unassigned.map((e) => _EntryRow(
                       entry: e,
                       provider: provider,
-                      expanded: _expandedId == e.id,
-                      onToggle: () =>
-                          setState(() => _expandedId = _expandedId == e.id ? null : e.id),
                       showDate: true,
                     )),
               ],
@@ -215,9 +210,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
                 ...jobEs.map((e) => _EntryRow(
                       entry: e,
                       provider: provider,
-                      expanded: _expandedId == e.id,
-                      onToggle: () =>
-                          setState(() => _expandedId = _expandedId == e.id ? null : e.id),
                       showDate: true,
                     )),
               ],
@@ -232,15 +224,11 @@ class _EntriesScreenState extends State<EntriesScreen> {
 class _EntryRow extends StatelessWidget {
   final TimeEntry entry;
   final AppProvider provider;
-  final bool expanded;
-  final VoidCallback onToggle;
   final bool showDate;
 
   const _EntryRow({
     required this.entry,
     required this.provider,
-    required this.expanded,
-    required this.onToggle,
     required this.showDate,
   });
 
@@ -272,75 +260,47 @@ class _EntryRow extends StatelessWidget {
             style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
       ),
       child: Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: GestureDetector(
-        onTap: onToggle,
-        child: LeftAccentCard(
-          accentColor: entry.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
-          child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (showDate) ...[
-                                    Text(_fmtDateShort(entry.date), style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
-                                    const SizedBox(height: 2),
-                                  ],
-                                  Text(
-                                    entry.description.isNotEmpty ? entry.description : (job?.name ?? 'Unassigned'),
-                                    style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    entry.invoiceId != null ? 'Invoiced' : '● Uninvoiced',
-                                    style: GoogleFonts.dmSans(
-                                      fontSize: 10, fontWeight: FontWeight.w600,
-                                      color: entry.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            AmountDisplayPair(
-                              hoursText: '${entry.hours.toStringAsFixed(1)}h',
-                              amountText: '\$${(entry.hours * rate).toStringAsFixed(2)}',
-                            ),
-                          ],
+        padding: const EdgeInsets.only(bottom: 6),
+        child: GestureDetector(
+          onTap: () => EntryDetailSheet.show(context, entry),
+          child: LeftAccentCard(
+            accentColor: entry.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (showDate) ...[
+                        Text(_fmtDateShort(entry.date), style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
+                        const SizedBox(height: 2),
+                      ],
+                      Text(
+                        entry.description.isNotEmpty ? entry.description : (job?.name ?? 'Unassigned'),
+                        style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        entry.invoiceId != null ? 'Invoiced' : '● Uninvoiced',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 10, fontWeight: FontWeight.w600,
+                          color: entry.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
                         ),
-                        if (expanded) ...[
-                          const SizedBox(height: 10),
-                          Container(height: 1, color: AppColors.of(context).border),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    provider.deleteEntry(entry.id);
-                                  },
-                                  icon: const Icon(Icons.delete_outline, size: 15, color: AppColors.danger),
-                                  label: Text('Delete', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.danger)),
-                                  style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: AppColors.danger, width: 0.5),
-                                    backgroundColor: AppColors.danger.withAlpha(25),
-                                    minimumSize: const Size(0, 34),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-          ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                AmountDisplayPair(
+                  hoursText: '${entry.hours.toStringAsFixed(1)}h',
+                  amountText: '\$${(entry.hours * rate).toStringAsFixed(2)}',
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-    ),
       ),
     );
   }
