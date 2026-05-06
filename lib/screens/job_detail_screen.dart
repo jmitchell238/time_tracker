@@ -10,7 +10,7 @@ import '../widgets/log_time_sheet.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/amount_display_pair.dart';
 import '../widgets/left_accent_card.dart';
-import '../widgets/entry_edit_sheet.dart';
+import '../widgets/entry_detail_sheet.dart';
 
 class JobDetailScreen extends StatefulWidget {
   final String jobId;
@@ -313,7 +313,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: GestureDetector(
-                        onTap: () => EntryEditSheet.show(context, e),
+                        onTap: () => EntryDetailSheet.show(context, e),
                         child: LeftAccentCard(
                           accentColor: e.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
                           child: Row(

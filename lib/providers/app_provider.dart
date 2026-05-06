@@ -272,6 +272,9 @@ class AppProvider extends ChangeNotifier {
     String id, {
     String? jobId,
     bool clearJobId = false,
+    String? date,
+    String? startTime,
+    String? endTime,
     String? description,
     double? hours,
     double? rateOverride,
@@ -282,6 +285,9 @@ class AppProvider extends ChangeNotifier {
       return e.copyWith(
         jobId: jobId,
         clearJobId: clearJobId,
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
         description: description,
         hours: hours,
         rateOverride: rateOverride,
