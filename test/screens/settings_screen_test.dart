@@ -52,12 +52,20 @@ void main() {
     });
 
     testWidgets('shows app info text', (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final p = await _provider();
       await tester.pumpWidget(_wrap(p));
       expect(find.text('Property Work Time Tracker', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('shows version info text', (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final p = await _provider();
       await tester.pumpWidget(_wrap(p));
       expect(

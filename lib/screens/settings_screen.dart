@@ -82,8 +82,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
+        Image.asset('assets/images/logo.png', height: 28),
+        const SizedBox(height: 4),
         Text('Settings', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
 
         // Default hourly rate
         SectionContainer(
