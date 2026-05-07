@@ -40,7 +40,9 @@ class TimeTrackerApp extends StatelessWidget {
           return MaterialApp(
             title: 'Time Tracker',
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.dark,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: ThemeMode.system,
             home: const _SplashScreen(),
           );
         }
@@ -64,7 +66,9 @@ class TimeTrackerApp extends StatelessWidget {
         return MaterialApp(
           title: 'Time Tracker',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.dark,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ThemeMode.system,
           home: const LoginScreen(),
         );
       },
