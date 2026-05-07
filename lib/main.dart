@@ -10,6 +10,7 @@ import 'providers/app_provider.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
 import 'screens/login_screen.dart';
+import 'screens/dashboard_screen.dart';
 import 'screens/jobs_screen.dart';
 import 'screens/log_screen.dart';
 import 'screens/invoices_screen.dart';
@@ -98,15 +99,22 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _index = 0;
+  late int _index;
 
-  static const _labels = ['Jobs', 'Log', 'Invoices', 'More'];
+  static const _labels = ['Home', 'Jobs', 'Log', 'Invoices', 'More'];
   static const _icons = [
+    Icons.home_outlined,
     Icons.work_outline,
     Icons.list_alt_outlined,
     Icons.receipt_long_outlined,
     Icons.more_horiz,
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _index = context.read<AppProvider>().settings.defaultTab.clamp(0, 4);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +141,7 @@ class _AppShellState extends State<AppShell> {
         body: IndexedStack(
         index: _index,
         children: const [
+          DashboardScreen(),
           JobsScreen(),
           LogScreen(),
           InvoicesScreen(),
@@ -148,7 +157,7 @@ class _AppShellState extends State<AppShell> {
           child: SizedBox(
             height: 62,
             child: Row(
-              children: List.generate(4, (i) {
+              children: List.generate(5, (i) {
                 final active = _index == i;
                 return Expanded(
                   child: GestureDetector(

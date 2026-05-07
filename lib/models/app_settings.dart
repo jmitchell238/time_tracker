@@ -8,6 +8,10 @@ class AppSettings {
   final List<String> paymentMethods;
   /// One of 'dark', 'light', 'system'.
   final String themeMode;
+  /// Index of the tab to open on launch: 0=Dashboard, 1=Jobs, 2=Log, 3=Invoices, 4=More.
+  final int defaultTab;
+  /// One of 'recent' or 'az'.
+  final String defaultJobsSort;
 
   const AppSettings({
     this.defaultRate = 35.0,
@@ -16,6 +20,8 @@ class AppSettings {
     this.billingPhone,
     this.paymentMethods = const ['Cash', 'Check', 'Direct Deposit', 'Venmo'],
     this.themeMode = 'system',
+    this.defaultTab = 0,
+    this.defaultJobsSort = 'recent',
   });
 
   AppSettings copyWith({
@@ -28,6 +34,8 @@ class AppSettings {
     bool clearBillingPhone = false,
     List<String>? paymentMethods,
     String? themeMode,
+    int? defaultTab,
+    String? defaultJobsSort,
   }) =>
       AppSettings(
         defaultRate: defaultRate ?? this.defaultRate,
@@ -36,6 +44,8 @@ class AppSettings {
         billingPhone: clearBillingPhone ? null : (billingPhone ?? this.billingPhone),
         paymentMethods: paymentMethods ?? this.paymentMethods,
         themeMode: themeMode ?? this.themeMode,
+        defaultTab: defaultTab ?? this.defaultTab,
+        defaultJobsSort: defaultJobsSort ?? this.defaultJobsSort,
       );
 
   Map<String, dynamic> toJson() => {
@@ -45,6 +55,8 @@ class AppSettings {
         'billingPhone': billingPhone,
         'paymentMethods': paymentMethods,
         'themeMode': themeMode,
+        'defaultTab': defaultTab,
+        'defaultJobsSort': defaultJobsSort,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> j) => AppSettings(
@@ -56,5 +68,7 @@ class AppSettings {
             ? List<String>.from(j['paymentMethods'] as List)
             : _kDefaultPaymentMethods,
         themeMode: j['themeMode'] as String? ?? 'system',
+        defaultTab: (j['defaultTab'] as int?) ?? 0,
+        defaultJobsSort: j['defaultJobsSort'] as String? ?? 'recent',
       );
 }

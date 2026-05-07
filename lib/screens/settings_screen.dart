@@ -151,6 +151,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
+        // Default landing tab
+        SectionContainer(
+          title: 'Default Landing Tab',
+          subtitle: 'Which tab opens when you launch the app',
+          child: Column(
+            children: [
+              for (int i = 0; i < 5; i++) ...[
+                if (i > 0) Divider(height: 1, color: AppColors.of(context).borderLight),
+                _TabOptionRow(
+                  label: const ['Home', 'Jobs', 'Log', 'Invoices', 'More'][i],
+                  icon: const [
+                    Icons.home_outlined,
+                    Icons.work_outline,
+                    Icons.list_alt_outlined,
+                    Icons.receipt_long_outlined,
+                    Icons.more_horiz,
+                  ][i],
+                  selected: provider.settings.defaultTab == i,
+                  onTap: () => context.read<AppProvider>().updateSettings(
+                        provider.settings.copyWith(defaultTab: i)),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Jobs default sort
+        SectionContainer(
+          title: 'Jobs Default Sort',
+          subtitle: 'Starting sort order on the Jobs tab',
+          child: SegmentedToggleBar(
+            labels: const ['Recent', 'A–Z'],
+            selected: provider.settings.defaultJobsSort == 'az' ? 'A–Z' : 'Recent',
+            onChanged: (val) => context.read<AppProvider>().updateSettings(
+                  provider.settings.copyWith(
+                      defaultJobsSort: val == 'A–Z' ? 'az' : 'recent')),
+          ),
+        ),
+        const SizedBox(height: 20),
+
         // Theme
         SectionContainer(
           title: 'THEME',
@@ -357,6 +398,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TabOptionRow extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TabOptionRow({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        color: Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: selected ? AppColors.primary : AppColors.of(context).fg2),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? AppColors.of(context).fg : AppColors.of(context).fg2,
+                ),
+              ),
+            ),
+            if (selected)
+              const Icon(Icons.check_circle, size: 18, color: AppColors.primary)
+            else
+              Icon(Icons.radio_button_unchecked, size: 18, color: AppColors.of(context).fg3),
+          ],
+        ),
       ),
     );
   }

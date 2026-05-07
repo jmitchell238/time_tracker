@@ -20,7 +20,14 @@ class JobsScreen extends StatefulWidget {
 enum _SortMode { recent, alphabetical }
 
 class _JobsScreenState extends State<JobsScreen> {
-  _SortMode _sortMode = _SortMode.recent;
+  late _SortMode _sortMode;
+
+  @override
+  void initState() {
+    super.initState();
+    final sort = context.read<AppProvider>().settings.defaultJobsSort;
+    _sortMode = sort == 'az' ? _SortMode.alphabetical : _SortMode.recent;
+  }
 
   Future<void> _showAddJobDialog() async {
     final nameCtrl = TextEditingController();

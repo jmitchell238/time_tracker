@@ -103,7 +103,7 @@ void main() {
     });
 
     testWidgets('saving updates defaultRate in provider', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -119,7 +119,7 @@ void main() {
     });
 
     testWidgets('Saved! appears after tapping Save Changes', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -132,7 +132,7 @@ void main() {
     });
 
     testWidgets('Log Out tapped shows confirmation dialog', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -144,7 +144,7 @@ void main() {
     });
 
     testWidgets('Cancel in logout dialog dismisses without navigating', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -164,21 +164,29 @@ void main() {
     });
 
     testWidgets('theme toggle section is present', (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final p = await _provider();
       await tester.pumpWidget(_wrap(p));
-      expect(find.text('THEME', skipOffstage: false), findsOneWidget);
+      expect(find.text('THEME'), findsOneWidget);
     });
 
     testWidgets('theme toggle shows Dark, Light, System options', (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final p = await _provider();
       await tester.pumpWidget(_wrap(p));
-      expect(find.text('Dark', skipOffstage: false), findsOneWidget);
-      expect(find.text('Light', skipOffstage: false), findsOneWidget);
-      expect(find.text('System', skipOffstage: false), findsOneWidget);
+      expect(find.text('Dark'), findsOneWidget);
+      expect(find.text('Light'), findsOneWidget);
+      expect(find.text('System'), findsOneWidget);
     });
 
     testWidgets('tapping Light updates provider themeMode to light', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -190,7 +198,7 @@ void main() {
     });
 
     testWidgets('tapping Dark updates provider themeMode to dark', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -202,7 +210,7 @@ void main() {
     });
 
     testWidgets('tapping System updates provider themeMode to system', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
