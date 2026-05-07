@@ -120,7 +120,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final incompleteEntries = provider.incompleteEntries;
 
-    return ListView(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () => context.read<AppProvider>().reload(),
+      child: ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
         // Greeting
@@ -408,6 +411,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ],
+      ),
     );
   }
 }

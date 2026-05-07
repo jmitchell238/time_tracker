@@ -53,7 +53,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final jamesTotal = allSorted.where((e) => e.purchasedBy == 'James').fold(0.0, (a, e) => a + e.amount);
     final whitneyTotal = allSorted.where((e) => e.purchasedBy == 'Whitney').fold(0.0, (a, e) => a + e.amount);
 
-    return ListView(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () => context.read<AppProvider>().reload(),
+      child: ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
         Row(
@@ -131,6 +134,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         else
           _buildList(visible, provider),
       ],
+      ),
     );
   }
 

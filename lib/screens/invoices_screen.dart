@@ -85,7 +85,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       return true;
     }).toList();
 
-    return ListView(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () => context.read<AppProvider>().reload(),
+      child: ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
         Row(
@@ -188,6 +191,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               onTap: () => setState(() => _detailId = inv.id),
             )),
       ],
+      ),
     );
   }
 

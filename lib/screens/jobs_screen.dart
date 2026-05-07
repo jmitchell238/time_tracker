@@ -157,7 +157,10 @@ class _JobsScreenState extends State<JobsScreen> {
     final activeJobs = provider.jobs.where((j) => !j.isArchived).toList();
     final archivedJobs = provider.jobs.where((j) => j.isArchived).toList();
 
-    return ListView(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () => context.read<AppProvider>().reload(),
+      child: ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
         // Header: logo + title+sort chips on left, Add Job button on right
@@ -218,6 +221,7 @@ class _JobsScreenState extends State<JobsScreen> {
           _ArchivedSection(jobs: archivedJobs, provider: provider),
         ],
       ],
+      ),
     );
   }
 }

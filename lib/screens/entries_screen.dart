@@ -71,7 +71,10 @@ class _EntriesScreenState extends State<EntriesScreen> {
       return a + e.hours * provider.getEntryRate(e);
     });
 
-    return ListView(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () => context.read<AppProvider>().reload(),
+      child: ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
         Text('Entries', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
@@ -112,6 +115,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
         else
           _buildByDateTab(provider, visible),
       ],
+      ),
     );
   }
 

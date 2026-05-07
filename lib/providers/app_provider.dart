@@ -118,6 +118,34 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> reload() async {
+    if (_workspaceId == null) return;
+    try {
+      final results = await Future.wait([
+        _col('jobs').get(),
+        _col('entries').get(),
+        _col('invoices').get(),
+        _col('expenses').get(),
+        _col('timers').get(),
+        _col('businesses').get(),
+        _settingsDoc.get(),
+      ]);
+      jobs         = (results[0] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => Job.fromJson(d.data())).toList();
+      entries      = (results[1] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => TimeEntry.fromJson(d.data())).toList();
+      invoices     = (results[2] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => Invoice.fromJson(d.data())).toList();
+      expenses     = (results[3] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => ExpenseItem.fromJson(d.data())).toList();
+      activeTimers = (results[4] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => ActiveTimer.fromJson(d.data())).toList();
+      businesses   = (results[5] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => Business.fromJson(d.data())).toList();
+      final settingsSnap = results[6] as DocumentSnapshot<Map<String, dynamic>>;
+      if (settingsSnap.exists && settingsSnap.data() != null) {
+        settings = AppSettings.fromJson(settingsSnap.data()!);
+      }
+    } catch (e) {
+      debugPrint('AppProvider.reload error: $e');
+    }
+    notifyListeners();
+  }
+
   // ── Migration from SharedPreferences ──────────────────────────────────────
 
   Future<void> _migrateFromSharedPreferences() async {
