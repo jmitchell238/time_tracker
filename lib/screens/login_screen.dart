@@ -110,6 +110,13 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Center(
+                    child: SizedBox(
+                      width: MediaQuery.sizeOf(context).width * 0.75,
+                      child: Image.asset('assets/images/logo.png'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     'Time Tracker',
                     style: GoogleFonts.lora(
