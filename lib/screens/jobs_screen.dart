@@ -177,8 +177,6 @@ class _JobsScreenState extends State<JobsScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset('assets/images/logo.png', height: 52),
-                const SizedBox(height: 2),
                 Row(
                   children: [
                     Text('Jobs', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
