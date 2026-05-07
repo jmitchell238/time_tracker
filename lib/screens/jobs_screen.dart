@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
+import '../utils/job_sort.dart';
 import '../widgets/segmented_toggle_bar.dart';
 import '../widgets/empty_state.dart';
 import 'job_detail_screen.dart';
@@ -17,8 +18,11 @@ class JobsScreen extends StatefulWidget {
   State<JobsScreen> createState() => _JobsScreenState();
 }
 
+enum _SortMode { recent, alphabetical }
+
 class _JobsScreenState extends State<JobsScreen> {
   bool _showArchived = false;
+  _SortMode _sortMode = _SortMode.recent;
 
   Future<void> _showAddJobDialog() async {
     final nameCtrl = TextEditingController();
@@ -121,6 +125,32 @@ class _JobsScreenState extends State<JobsScreen> {
     );
   }
 
+  List<Widget> _buildJobList(AppProvider provider, List<Job> visible) {
+    if (visible.isEmpty) {
+      return [EmptyStateWidget('No ${_showArchived ? 'archived' : 'active'} jobs')];
+    }
+
+    if (_sortMode == _SortMode.recent) {
+      final sorted = sortJobsByRecent(visible, provider.entries);
+      return sorted.map((job) => _JobCard(job: job, provider: provider)).toList();
+    }
+
+    // Alphabetical: group by first letter with section headers.
+    // Active timer jobs are already shown in the ON THE CLOCK section — exclude them.
+    final activeJobIds = provider.activeTimers.map((t) => t.jobId).toSet();
+    final offClock = visible.where((j) => !activeJobIds.contains(j.id)).toList();
+    final groups = groupJobsAlphabetically(offClock);
+
+    final widgets = <Widget>[];
+    for (final group in groups) {
+      widgets.add(_SectionHeader('OFF THE CLOCK – ${group.letter}'));
+      for (final job in group.jobs) {
+        widgets.add(_JobCard(job: job, provider: provider));
+      }
+    }
+    return widgets;
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
@@ -159,6 +189,8 @@ class _JobsScreenState extends State<JobsScreen> {
 
         // Active timers pinned at top
         if (provider.activeTimers.isNotEmpty) ...[
+          if (_sortMode == _SortMode.alphabetical)
+            const _SectionHeader('ON THE CLOCK'),
           ...provider.activeTimers.map((t) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: ActiveTimerCard(key: ValueKey(t.id), timer: t),
@@ -166,19 +198,132 @@ class _JobsScreenState extends State<JobsScreen> {
           const SizedBox(height: 8),
         ],
 
-        // Active/Archived toggle
+        // Active/Archived toggle + sort toggle
         SegmentedToggleBar(
           labels: const ['Active', 'Archived'],
           selected: _showArchived ? 'Archived' : 'Active',
           onChanged: (v) => setState(() => _showArchived = v == 'Archived'),
         ),
+        const SizedBox(height: 10),
+        _SortToggle(
+          mode: _sortMode,
+          onChanged: (m) => setState(() => _sortMode = m),
+        ),
         const SizedBox(height: 16),
 
         // Job list
-        if (visible.isEmpty)
-          EmptyStateWidget('No ${_showArchived ? 'archived' : 'active'} jobs'),
-        ...visible.map((job) => _JobCard(job: job, provider: provider)),
+        ..._buildJobList(provider, visible),
       ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String text;
+  const _SectionHeader(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 6),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withAlpha(30),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.primary.withAlpha(60)),
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.dmSans(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: AppColors.primary,
+            letterSpacing: 0.6,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SortToggle extends StatelessWidget {
+  final _SortMode mode;
+  final ValueChanged<_SortMode> onChanged;
+
+  const _SortToggle({required this.mode, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text('Sort:',
+            style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.of(context).fg2,
+                fontWeight: FontWeight.w600)),
+        const SizedBox(width: 8),
+        _Chip(
+          label: 'Recent',
+          icon: Icons.history,
+          selected: mode == _SortMode.recent,
+          onTap: () => onChanged(_SortMode.recent),
+        ),
+        const SizedBox(width: 6),
+        _Chip(
+          label: 'A–Z',
+          icon: Icons.sort_by_alpha,
+          selected: mode == _SortMode.alphabetical,
+          onTap: () => onChanged(_SortMode.alphabetical),
+        ),
+      ],
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _Chip(
+      {required this.label,
+      required this.icon,
+      required this.selected,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : AppColors.of(context).bgElevated,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.of(context).border,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 13,
+                color: selected ? Colors.white : AppColors.of(context).fg2),
+            const SizedBox(width: 4),
+            Text(label,
+                style: GoogleFonts.dmSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? Colors.white : AppColors.of(context).fg2,
+                )),
+          ],
+        ),
+      ),
     );
   }
 }

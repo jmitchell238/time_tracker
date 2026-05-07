@@ -4,9 +4,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:time_tracker/models/job.dart';
+import 'package:time_tracker/models/time_entry.dart';
 import 'package:time_tracker/providers/app_provider.dart';
 import 'package:time_tracker/screens/jobs_screen.dart';
 import 'package:time_tracker/widgets/segmented_toggle_bar.dart';
+
+Job _job(String id, String name, {DateTime? createdAt}) => Job(
+      id: id,
+      name: name,
+      description: '',
+      isArchived: false,
+      createdAt: createdAt ?? DateTime(2026, 1, 1),
+    );
+
+TimeEntry _entry(String id, String jobId, String date) => TimeEntry(
+      id: id,
+      jobId: jobId,
+      date: date,
+      startTime: '09:00',
+      endTime: '10:00',
+      hours: 1.0,
+      description: '',
+    );
 
 Future<AppProvider> _emptyProvider() async {
   SharedPreferences.setMockInitialValues(
@@ -243,6 +263,67 @@ void main() {
       await tester.tap(find.text('Clock Out'));
       await tester.pump();
       expect(p.activeTimers, isEmpty);
+    });
+
+    // ── Sort toggle ─────────────────────────────────────────────────────────
+
+    testWidgets('shows Recent and A-Z sort chips', (tester) async {
+      final p = await _emptyProvider();
+      await tester.pumpWidget(_wrap(p));
+      expect(find.text('Recent'), findsOneWidget);
+      expect(find.text('A–Z'), findsOneWidget);
+    });
+
+    testWidgets('Recent is selected by default', (tester) async {
+      final p = await _emptyProvider();
+      p.jobs = [_job('a', 'Alpha'), _job('b', 'Beta')];
+      await tester.pumpWidget(_wrap(p));
+      expect(find.text('Alpha'), findsOneWidget);
+      expect(find.text('Beta'), findsOneWidget);
+    });
+
+    testWidgets('Recent mode shows job with most recent entry first', (tester) async {
+      final p = await _emptyProvider();
+      p.jobs = [_job('a', 'Alpha'), _job('b', 'Beta')];
+      p.entries = [
+        _entry('e1', 'a', '2026-01-01'),
+        _entry('e2', 'b', '2026-04-01'),
+      ];
+      await tester.pumpWidget(_wrap(p));
+      final alphaPos = tester.getTopLeft(find.text('Alpha')).dy;
+      final betaPos = tester.getTopLeft(find.text('Beta')).dy;
+      expect(betaPos, lessThan(alphaPos));
+    });
+
+    testWidgets('switching to A-Z shows section header', (tester) async {
+      final p = await _emptyProvider();
+      p.jobs = [_job('a', 'Alpha'), _job('b', 'Beta')];
+      await tester.pumpWidget(_wrap(p));
+      await tester.tap(find.text('A–Z'));
+      await tester.pump();
+      expect(find.textContaining('OFF THE CLOCK'), findsWidgets);
+    });
+
+    testWidgets('A-Z mode groups jobs under correct letter headers', (tester) async {
+      final p = await _emptyProvider();
+      p.jobs = [_job('a', 'Alpha'), _job('b', 'Beta')];
+      await tester.pumpWidget(_wrap(p));
+      await tester.tap(find.text('A–Z'));
+      await tester.pump();
+      expect(find.textContaining('OFF THE CLOCK – A'), findsOneWidget);
+      expect(find.textContaining('OFF THE CLOCK – B'), findsOneWidget);
+    });
+
+    testWidgets('switching back to Recent removes section headers', (tester) async {
+      final p = await _emptyProvider();
+      p.jobs = [_job('a', 'Alpha')];
+      await tester.pumpWidget(_wrap(p));
+      await tester.tap(find.text('A–Z'));
+      await tester.pump();
+      expect(find.textContaining('OFF THE CLOCK'), findsWidgets);
+      await tester.tap(find.text('Recent'));
+      await tester.pump();
+      expect(find.textContaining('OFF THE CLOCK'), findsNothing);
     });
   });
 }
