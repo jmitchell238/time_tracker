@@ -387,6 +387,30 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addBreak(String id, int breakMinutes) {
+    final idx = entries.indexWhere((e) => e.id == id);
+    if (idx == -1) return;
+    final deducted = (entries[idx].hours - breakMinutes / 60.0).clamp(0.0, double.infinity);
+    entries = [...entries];
+    entries[idx] = entries[idx].copyWith(hours: deducted);
+    if (_workspaceId != null) {
+      _col('entries').doc(id).set(entries[idx].toJson());
+    }
+    notifyListeners();
+  }
+
+  void addAdjustment(String id, double hoursAdjustment) {
+    final idx = entries.indexWhere((e) => e.id == id);
+    if (idx == -1) return;
+    final adjusted = (entries[idx].hours + hoursAdjustment).clamp(0.0, double.infinity);
+    entries = [...entries];
+    entries[idx] = entries[idx].copyWith(hours: adjusted);
+    if (_workspaceId != null) {
+      _col('entries').doc(id).set(entries[idx].toJson());
+    }
+    notifyListeners();
+  }
+
   // ── Invoices ──────────────────────────────────────────────────────────────
 
   Future<void> createInvoice({

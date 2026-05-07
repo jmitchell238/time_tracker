@@ -579,4 +579,76 @@ void main() {
     });
   });
 
+  // ── addBreak ─────────────────────────────────────────────────────────────
+
+  group('addBreak', () {
+    test('subtracts break minutes from entry hours', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 2.0)];
+      p.addBreak('e1', 30);
+      expect(p.entries.first.hours, closeTo(1.5, 0.001));
+    });
+
+    test('subtracts a 15-minute break correctly', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 1.0)];
+      p.addBreak('e1', 15);
+      expect(p.entries.first.hours, closeTo(0.75, 0.001));
+    });
+
+    test('does not reduce hours below zero', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 0.25)];
+      p.addBreak('e1', 60);
+      expect(p.entries.first.hours, 0.0);
+    });
+
+    test('does nothing when entry not found', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 2.0)];
+      p.addBreak('missing', 30);
+      expect(p.entries.first.hours, 2.0);
+    });
+
+    test('notifies listeners after break', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 2.0)];
+      var notified = false;
+      p.addListener(() => notified = true);
+      p.addBreak('e1', 30);
+      expect(notified, isTrue);
+    });
+  });
+
+  // ── addAdjustment ─────────────────────────────────────────────────────────
+
+  group('addAdjustment', () {
+    test('adds positive adjustment to entry hours', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 2.0)];
+      p.addAdjustment('e1', 0.5);
+      expect(p.entries.first.hours, closeTo(2.5, 0.001));
+    });
+
+    test('subtracts negative adjustment from entry hours', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 2.0)];
+      p.addAdjustment('e1', -0.5);
+      expect(p.entries.first.hours, closeTo(1.5, 0.001));
+    });
+
+    test('does not reduce hours below zero', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 1.0)];
+      p.addAdjustment('e1', -5.0);
+      expect(p.entries.first.hours, 0.0);
+    });
+
+    test('does nothing when entry not found', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 2.0)];
+      p.addAdjustment('missing', 1.0);
+      expect(p.entries.first.hours, 2.0);
+    });
+
+    test('notifies listeners after adjustment', () {
+      final p = _fresh()..entries = [_entry(id: 'e1', hours: 2.0)];
+      var notified = false;
+      p.addListener(() => notified = true);
+      p.addAdjustment('e1', 0.5);
+      expect(notified, isTrue);
+    });
+  });
+
 }

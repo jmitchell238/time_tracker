@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../models/time_entry.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import 'add_adjustment_sheet.dart';
+import 'add_break_sheet.dart';
 import 'entry_edit_form_sheet.dart';
 
 class EntryDetailSheet extends StatelessWidget {
@@ -142,6 +144,54 @@ class EntryDetailSheet extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              AddBreakSheet.show(context, entry);
+                            },
+                            icon: const Icon(Icons.coffee_outlined, size: 16),
+                            label: Text('Add Break',
+                                style: GoogleFonts.dmSans(
+                                    fontSize: 13, fontWeight: FontWeight.w600)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.of(context).fg,
+                              side: BorderSide(color: AppColors.of(context).border),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              AddAdjustmentSheet.show(context, entry);
+                            },
+                            icon: const Icon(Icons.tune_outlined, size: 16),
+                            label: Text('Add Adjustment',
+                                style: GoogleFonts.dmSans(
+                                    fontSize: 13, fontWeight: FontWeight.w600)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.of(context).fg,
+                              side: BorderSide(color: AppColors.of(context).border),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   SizedBox(
                     height: 50,
                     width: double.infinity,
