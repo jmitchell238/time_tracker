@@ -8,7 +8,6 @@ import 'package:time_tracker/models/job.dart';
 import 'package:time_tracker/models/time_entry.dart';
 import 'package:time_tracker/providers/app_provider.dart';
 import 'package:time_tracker/screens/jobs_screen.dart';
-import 'package:time_tracker/widgets/segmented_toggle_bar.dart';
 
 Job _job(String id, String name, {DateTime? createdAt}) => Job(
       id: id,
@@ -64,13 +63,15 @@ void main() {
       expect(find.text('Add Job'), findsOneWidget);
     });
 
-    testWidgets('renders SegmentedToggleBar with Active and Archived labels',
+    testWidgets('header shows Recent and A-Z sort chips with no Active/Archived toggle',
         (tester) async {
       final p = await _emptyProvider();
       await tester.pumpWidget(_wrap(p));
-      expect(find.byType(SegmentedToggleBar), findsOneWidget);
-      expect(find.text('Active'), findsOneWidget);
-      expect(find.text('Archived'), findsOneWidget);
+      expect(find.text('Recent'), findsOneWidget);
+      expect(find.text('A–Z'), findsOneWidget);
+      // SegmentedToggleBar with Active/Archived is gone
+      expect(find.text('Active'), findsNothing);
+      expect(find.text('Archived'), findsNothing);
     });
 
     testWidgets('shows empty-active message when no active jobs', (tester) async {
@@ -94,22 +95,24 @@ void main() {
       expect(find.text('0.0h'), findsOneWidget);
     });
 
-    testWidgets('switching to Archived tab shows archived job from default data',
-        (tester) async {
-      final p = await _defaultProvider();
-      await tester.pumpWidget(_wrap(p));
-      await tester.tap(find.text('Archived'));
-      await tester.pumpAndSettle();
-      expect(find.text('Spray for Ants'), findsOneWidget);
-    });
-
-    testWidgets('switching to Archived tab shows empty message when none archived',
+    testWidgets('archived jobs appear in collapsible section after expanding',
         (tester) async {
       final p = await _emptyProvider();
+      await p.addJob('Active Job', '', null);
+      await p.addJob('Archived Job', '', null);
+      p.toggleArchiveJob(p.jobs.last.id);
       await tester.pumpWidget(_wrap(p));
-      await tester.tap(find.text('Archived'));
+      await tester.pump();
+      expect(find.textContaining('Archived Jobs'), findsOneWidget);
+      await tester.tap(find.textContaining('Archived Jobs'));
       await tester.pumpAndSettle();
-      expect(find.text('No archived jobs'), findsOneWidget);
+      expect(find.text('Archived Job'), findsOneWidget);
+    });
+
+    testWidgets('archived section is hidden when no archived jobs', (tester) async {
+      final p = await _emptyProvider();
+      await tester.pumpWidget(_wrap(p));
+      expect(find.textContaining('Archived Jobs'), findsNothing);
     });
 
     testWidgets('tapping Add Job opens dialog', (tester) async {
@@ -293,6 +296,19 @@ void main() {
       final alphaPos = tester.getTopLeft(find.text('Alpha')).dy;
       final betaPos = tester.getTopLeft(find.text('Beta')).dy;
       expect(betaPos, lessThan(alphaPos));
+    });
+
+    testWidgets('Recent mode excludes job with active timer from regular list',
+        (tester) async {
+      final p = await _emptyProvider();
+      await p.addJob('Clocked Job', '', null);
+      final jobId = p.jobs.first.id;
+      p.clockIn(jobId: jobId);
+      await tester.pumpWidget(_wrap(p));
+      await tester.pump();
+      expect(find.text('CLOCKED IN'), findsOneWidget);
+      // Job appears in timer card only — not duplicated in regular list
+      expect(find.text('Clocked Job'), findsOneWidget);
     });
 
     testWidgets('switching to A-Z shows section header', (tester) async {

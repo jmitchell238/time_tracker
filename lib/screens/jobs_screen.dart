@@ -5,7 +5,6 @@ import '../providers/app_provider.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
 import '../utils/job_sort.dart';
-import '../widgets/segmented_toggle_bar.dart';
 import '../widgets/empty_state.dart';
 import 'job_detail_screen.dart';
 import '../widgets/left_accent_card.dart';
@@ -21,7 +20,6 @@ class JobsScreen extends StatefulWidget {
 enum _SortMode { recent, alphabetical }
 
 class _JobsScreenState extends State<JobsScreen> {
-  bool _showArchived = false;
   _SortMode _sortMode = _SortMode.recent;
 
   Future<void> _showAddJobDialog() async {
@@ -125,22 +123,24 @@ class _JobsScreenState extends State<JobsScreen> {
     );
   }
 
-  List<Widget> _buildJobList(AppProvider provider, List<Job> visible) {
-    if (visible.isEmpty) {
-      return [EmptyStateWidget('No ${_showArchived ? 'archived' : 'active'} jobs')];
+  List<Widget> _buildJobList(AppProvider provider, List<Job> active) {
+    final activeJobIds = provider.activeTimers.map((t) => t.jobId).toSet();
+    final offClock = active.where((j) => !activeJobIds.contains(j.id)).toList();
+
+    if (offClock.isEmpty) {
+      if (provider.activeTimers.isEmpty) {
+        return [EmptyStateWidget('No active jobs')];
+      }
+      return [];
     }
 
     if (_sortMode == _SortMode.recent) {
-      final sorted = sortJobsByRecent(visible, provider.entries);
+      final sorted = sortJobsByRecent(offClock, provider.entries);
       return sorted.map((job) => _JobCard(job: job, provider: provider)).toList();
     }
 
-    // Alphabetical: group by first letter with section headers.
-    // Active timer jobs are already shown in the ON THE CLOCK section — exclude them.
-    final activeJobIds = provider.activeTimers.map((t) => t.jobId).toSet();
-    final offClock = visible.where((j) => !activeJobIds.contains(j.id)).toList();
+    // Alphabetical: group by first letter with section headers
     final groups = groupJobsAlphabetically(offClock);
-
     final widgets = <Widget>[];
     for (final group in groups) {
       widgets.add(_SectionHeader('OFF THE CLOCK – ${group.letter}'));
@@ -154,20 +154,31 @@ class _JobsScreenState extends State<JobsScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
-    final visible = provider.jobs.where((j) => j.isArchived == _showArchived).toList();
+    final activeJobs = provider.jobs.where((j) => !j.isArchived).toList();
+    final archivedJobs = provider.jobs.where((j) => j.isArchived).toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
-        // Header
+        // Header: logo + title+sort chips on left, Add Job button on right
         Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Image.asset('assets/images/logo.png', height: 52),
                 const SizedBox(height: 2),
-                Text('Jobs', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+                Row(
+                  children: [
+                    Text('Jobs', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+                    const SizedBox(width: 10),
+                    _SortToggle(
+                      mode: _sortMode,
+                      onChanged: (m) => setState(() => _sortMode = m),
+                    ),
+                  ],
+                ),
               ],
             ),
             const Spacer(),
@@ -198,21 +209,14 @@ class _JobsScreenState extends State<JobsScreen> {
           const SizedBox(height: 8),
         ],
 
-        // Active/Archived toggle + sort toggle
-        SegmentedToggleBar(
-          labels: const ['Active', 'Archived'],
-          selected: _showArchived ? 'Archived' : 'Active',
-          onChanged: (v) => setState(() => _showArchived = v == 'Archived'),
-        ),
-        const SizedBox(height: 10),
-        _SortToggle(
-          mode: _sortMode,
-          onChanged: (m) => setState(() => _sortMode = m),
-        ),
-        const SizedBox(height: 16),
+        // Active job list (excludes archived and currently clocked-in jobs)
+        ..._buildJobList(provider, activeJobs),
 
-        // Job list
-        ..._buildJobList(provider, visible),
+        // Archived jobs — collapsible section at bottom
+        if (archivedJobs.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _ArchivedSection(jobs: archivedJobs, provider: provider),
+        ],
       ],
     );
   }
@@ -257,13 +261,8 @@ class _SortToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Sort:',
-            style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: AppColors.of(context).fg2,
-                fontWeight: FontWeight.w600)),
-        const SizedBox(width: 8),
         _Chip(
           label: 'Recent',
           icon: Icons.history,
@@ -324,6 +323,64 @@ class _Chip extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ArchivedSection extends StatefulWidget {
+  final List<Job> jobs;
+  final AppProvider provider;
+
+  const _ArchivedSection({required this.jobs, required this.provider});
+
+  @override
+  State<_ArchivedSection> createState() => _ArchivedSectionState();
+}
+
+class _ArchivedSectionState extends State<_ArchivedSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.of(context).bgElevated,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.of(context).border),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.archive_outlined, size: 14, color: AppColors.of(context).fg2),
+                const SizedBox(width: 8),
+                Text(
+                  'Archived Jobs (${widget.jobs.length})',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.of(context).fg2,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  _expanded ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                  color: AppColors.of(context).fg2,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_expanded) ...[
+          const SizedBox(height: 8),
+          ...widget.jobs.map((job) => _JobCard(job: job, provider: widget.provider)),
+        ],
+      ],
     );
   }
 }

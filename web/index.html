@@ -48,6 +48,16 @@
 
   <title>Time Tracker</title>
   <link rel="manifest" href="manifest.json">
+
+  <script>
+    // When a new service worker takes control, reload so the user gets the
+    // latest version automatically instead of staying on the cached build.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        window.location.reload();
+      });
+    }
+  </script>
 </head>
 <body>
   <!--
