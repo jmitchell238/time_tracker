@@ -258,13 +258,17 @@ void main() {
       expect(p.activeTimers.first.isOnBreak, false);
     });
 
-    testWidgets('tapping Clock Out removes the active timer', (tester) async {
+    testWidgets('tapping Clock Out opens sheet, Save & Clock Out removes the active timer',
+        (tester) async {
       final p = await _emptyProvider();
       p.clockIn();
       await tester.pumpWidget(_wrap(p));
       await tester.pump();
       await tester.tap(find.text('Clock Out'));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(find.text('Save & Clock Out'), findsOneWidget);
+      await tester.tap(find.text('Save & Clock Out'));
+      await tester.pumpAndSettle();
       expect(p.activeTimers, isEmpty);
     });
 

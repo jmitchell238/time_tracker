@@ -664,7 +664,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> clockOut(String timerId) async {
+  Future<void> clockOut(String timerId, {String? jobId, String? description}) async {
     final timer = activeTimers.where((t) => t.id == timerId).firstOrNull;
     if (timer == null) return;
 
@@ -684,12 +684,12 @@ class AppProvider extends ChangeNotifier {
 
     final entry = TimeEntry(
       id: _uuid.v4(),
-      jobId: timer.jobId,
+      jobId: jobId ?? timer.jobId,
       date: today,
       startTime: startStr,
       endTime: endStr,
       hours: hours,
-      description: '',
+      description: description ?? '',
       rateOverride: timer.rateOverride,
     );
 

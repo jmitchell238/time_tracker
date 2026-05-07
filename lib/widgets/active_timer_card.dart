@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/active_timer.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import 'clock_out_sheet.dart';
 
 class ActiveTimerCard extends StatefulWidget {
   final ActiveTimer timer;
@@ -16,7 +17,6 @@ class ActiveTimerCard extends StatefulWidget {
 
 class _ActiveTimerCardState extends State<ActiveTimerCard> {
   late Timer _tick;
-  bool _clockingOut = false;
 
   @override
   void initState() {
@@ -133,24 +133,7 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: _clockingOut
-                      ? null
-                      : () async {
-                          setState(() => _clockingOut = true);
-                          try {
-                            await context.read<AppProvider>().clockOut(t.id);
-                          } catch (_) {
-                            if (mounted) {
-                              setState(() => _clockingOut = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Clock out failed — check your connection and try again'),
-                                  backgroundColor: Color(0xFFE53935),
-                                ),
-                              );
-                            }
-                          }
-                        },
+                  onPressed: () => ClockOutSheet.show(context, t),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.danger,
                     foregroundColor: Colors.white,
@@ -159,12 +142,10 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
                         borderRadius: BorderRadius.circular(8)),
                     elevation: 0,
                   ),
-                  child: _clockingOut
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text(
-                          'Clock Out',
-                          style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700),
-                        ),
+                  child: Text(
+                    'Clock Out',
+                    style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],

@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/stat_card.dart';
-import '../widgets/clock_in_sheet.dart';
+import '../widgets/clock_out_sheet.dart';
 import '../widgets/entry_edit_sheet.dart';
 import '../widgets/log_time_sheet.dart';
 import '../widgets/left_accent_card.dart';
@@ -134,11 +134,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2)),
         const SizedBox(height: 16),
 
-        // CLOCK IN button
+        // CLOCK IN button — one tap, no setup required
         SizedBox(
           height: 54,
           child: ElevatedButton.icon(
-            onPressed: () => ClockInSheet.show(context),
+            onPressed: () => context.read<AppProvider>().clockIn(),
             icon: const Icon(Icons.login, size: 20),
             label: Text('CLOCK IN',
                 style: GoogleFonts.dmSans(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
@@ -208,9 +208,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () async {
-                          await provider.clockOut(t.id);
-                        },
+                        onPressed: () => ClockOutSheet.show(context, t),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.danger,
                           foregroundColor: Colors.white,
