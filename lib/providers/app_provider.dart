@@ -35,6 +35,14 @@ class AppProvider extends ChangeNotifier {
 
   bool get isLoaded => _loaded;
 
+  String get currentUserFirstName {
+    final email = (_auth ?? _authOverride ?? FirebaseAuth.instance).currentUser?.email ?? '';
+    if (email == 'jmitchell238@gmail.com') return 'James';
+    if (email == 'wlmitchell238@gmail.com') return 'Whitney';
+    final local = email.split('@').first;
+    return local.isEmpty ? 'there' : local[0].toUpperCase() + local.substring(1);
+  }
+
   ThemeMode get resolvedThemeMode {
     switch (settings.themeMode) {
       case 'dark':   return ThemeMode.dark;
@@ -70,7 +78,17 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    _workspaceId = user.uid;
+    // Use a single shared workspace for all family members.
+    // The first user to log in creates the canonical workspace doc; all
+    // subsequent users read it and point at the same Firestore path.
+    final wsRef = _db!.collection('config').doc('workspace');
+    final wsSnap = await wsRef.get();
+    if (wsSnap.exists) {
+      _workspaceId = wsSnap.data()!['primaryUid'] as String;
+    } else {
+      _workspaceId = user.uid;
+      await wsRef.set({'primaryUid': user.uid});
+    }
 
     try {
       final results = await Future.wait([
