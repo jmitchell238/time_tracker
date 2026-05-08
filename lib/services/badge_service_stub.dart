@@ -1,0 +1,1 @@
+void setBadgeCount(int count) {}

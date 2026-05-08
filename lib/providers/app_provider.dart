@@ -12,6 +12,7 @@ import '../models/invoice.dart';
 import '../models/job.dart';
 import '../models/business.dart';
 import '../models/time_entry.dart';
+import '../services/badge_service.dart';
 import '../services/csv_import_service.dart';
 
 const _uuid = Uuid();
@@ -54,6 +55,12 @@ class AppProvider extends ChangeNotifier {
   AppProvider({FirebaseFirestore? db, FirebaseAuth? auth})
       : _dbOverride = db,
         _authOverride = auth;
+
+  @override
+  void notifyListeners() {
+    setBadgeCount(activeTimers.length);
+    super.notifyListeners();
+  }
 
   // ── Firestore helpers ─────────────────────────────────────────────────────
 
