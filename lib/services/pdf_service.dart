@@ -43,6 +43,8 @@ class PdfService {
           _entriesTable(invoice, entries, jobs, getRate, bold, regular),
           if (expenses.isNotEmpty) ...[
             pw.SizedBox(height: 16),
+            _expensesSectionHeader(bold, regular),
+            pw.SizedBox(height: 6),
             _expensesTable(expenses, bold, regular),
           ],
           pw.SizedBox(height: 16),
@@ -210,6 +212,30 @@ class PdfService {
     );
   }
 
+  // ── Expenses section header ───────────────────────────────────────────────
+
+  static pw.Widget _expensesSectionHeader(pw.Font bold, pw.Font regular) {
+    return pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: pw.BoxDecoration(
+        color: _kBgLight,
+        border: pw.Border.all(color: _kBorder),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text('REIMBURSABLE EXPENSES',
+              style: pw.TextStyle(font: bold, fontSize: 9, color: _kFg2, letterSpacing: 0.6)),
+          pw.SizedBox(height: 2),
+          pw.Text('Out-of-pocket purchases paid by us — reimbursement requested',
+              style: pw.TextStyle(font: regular, fontSize: 8, color: _kFg2)),
+        ],
+      ),
+    );
+  }
+
   // ── Expenses table ────────────────────────────────────────────────────────
 
   static pw.Widget _expensesTable(
@@ -274,7 +300,7 @@ class PdfService {
                   accent: !hasExpenses),
               if (hasExpenses) ...[
                 pw.Divider(color: _kBorder, height: 1),
-                _totalRow('Parts & Expenses',
+                _totalRow('Reimbursable Expenses',
                     '\$${inv.expensesTotal.toStringAsFixed(2)}', bold, regular,
                     accent: false),
                 pw.Divider(color: _kBorder, height: 1),

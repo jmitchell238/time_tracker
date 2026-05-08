@@ -431,7 +431,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                     MetricItem(label: 'Labour', value: _fmtMoney(totalAmount), color: AppColors.accent),
                     const SizedBox(width: 16),
                     if (expensesTotal > 0)
-                      MetricItem(label: 'Parts', value: _fmtMoney(expensesTotal), color: AppColors.accent),
+                      MetricItem(label: 'Reimbursable', value: _fmtMoney(expensesTotal), color: AppColors.accent),
                   ],
                 ),
                 if (expensesTotal > 0) ...[
@@ -742,7 +742,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: _totalCard('PARTS / EXPENSES', _fmtMoney(inv.expensesTotal), AppColors.accent, highlight: true)),
+              Expanded(child: _totalCard('REIMBURSABLE', _fmtMoney(inv.expensesTotal), AppColors.accent, highlight: true)),
               const SizedBox(width: 12),
               Expanded(child: _totalCard('GRAND TOTAL', _fmtMoney(inv.totalAmount + inv.expensesTotal), AppColors.accent, highlight: true)),
             ],
@@ -846,7 +846,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         // Expenses section
         if (invExpenses.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Text('PARTS & EXPENSES (${invExpenses.length})',
+          Text('REIMBURSABLE EXPENSES (${invExpenses.length})',
               style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
           const SizedBox(height: 8),
           ...invExpenses.map((e) => Padding(
