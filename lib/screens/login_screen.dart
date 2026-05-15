@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
@@ -30,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signIn() async {
+    TextInput.finishAutofillContext();
     if (!_formKey.currentState!.validate()) return;
     setState(() {
       _loading = true;
@@ -139,42 +141,50 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 36),
 
-                  // Email
-                  TextFormField(
-                    controller: _emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    autocorrect: false,
-                    style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
-                    decoration: _inputDec('Email'),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Email is required' : null,
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Password
-                  TextFormField(
-                    controller: _passwordCtrl,
-                    obscureText: _obscurePassword,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _signIn(),
-                    style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
-                    decoration: _inputDec(
-                      'Password',
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: AppColors.of(context).fg3,
-                          size: 20,
+                  AutofillGroup(
+                    child: Column(
+                      children: [
+                        // Email
+                        TextFormField(
+                          controller: _emailCtrl,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autocorrect: false,
+                          autofillHints: const [AutofillHints.username, AutofillHints.email],
+                          style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
+                          decoration: _inputDec('Email'),
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? 'Email is required' : null,
                         ),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
-                      ),
+                        const SizedBox(height: 14),
+
+                        // Password
+                        TextFormField(
+                          controller: _passwordCtrl,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.password],
+                          onFieldSubmitted: (_) => _signIn(),
+                          style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
+                          decoration: _inputDec(
+                            'Password',
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.of(context).fg3,
+                                size: 20,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                          ),
+                          validator: (v) =>
+                              (v == null || v.isEmpty) ? 'Password is required' : null,
+                        ),
+                      ],
                     ),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Password is required' : null,
                   ),
                   const SizedBox(height: 20),
 
