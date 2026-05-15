@@ -20,7 +20,13 @@ class Analytics {
   static void identify(String userId, {String? email}) {
     _userEmail = email ?? userId;
     try {
-      Posthog().identify(userId: userId).catchError((_) {});
+      Posthog().identify(
+        userId: email ?? userId,
+        userProperties: {
+          if (email != null) 'email': email,
+          'firebase_uid': userId,
+        },
+      ).catchError((_) {});
     } catch (_) {}
   }
 
