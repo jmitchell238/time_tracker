@@ -85,10 +85,10 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    // Resolve workspace — any authenticated user shares the same workspace.
+    // Falls back to the current user's uid if the config doc is unreachable,
+    // so data reads/writes always have a valid path.
     try {
-      // Use a single shared workspace for all family members.
-      // The first user to log in creates the canonical workspace doc; all
-      // subsequent users read it and point at the same Firestore path.
       final wsRef = _db!.collection('config').doc('workspace');
       final wsSnap = await wsRef.get();
       if (wsSnap.exists) {
@@ -97,7 +97,12 @@ class AppProvider extends ChangeNotifier {
         _workspaceId = user.uid;
         await wsRef.set({'primaryUid': user.uid});
       }
+    } catch (e) {
+      debugPrint('Workspace lookup failed, falling back to own uid: $e');
+      _workspaceId = user.uid;
+    }
 
+    try {
       final results = await Future.wait([
         _col('jobs').get(),
         _col('entries').get(),
