@@ -52,6 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _save() {
     final rate = double.tryParse(_rateCtrl.text.trim());
     if (rate == null) return;
+    Analytics.action('settings_saved');
     final s = context.read<AppProvider>().settings;
     context.read<AppProvider>().updateSettings(s.copyWith(
       defaultRate: rate,
@@ -170,8 +171,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Icons.more_horiz,
                   ][i],
                   selected: provider.settings.defaultTab == i,
-                  onTap: () => context.read<AppProvider>().updateSettings(
-                        provider.settings.copyWith(defaultTab: i)),
+                  onTap: () {
+                    Analytics.action('default_tab_changed', properties: {
+                      'tab': const ['Home', 'Jobs', 'Log', 'Invoices', 'More'][i],
+                    });
+                    context.read<AppProvider>().updateSettings(
+                        provider.settings.copyWith(defaultTab: i));
+                  },
                 ),
               ],
             ],
@@ -186,9 +192,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: SegmentedToggleBar(
             labels: const ['Recent', 'A–Z'],
             selected: provider.settings.defaultJobsSort == 'az' ? 'A–Z' : 'Recent',
-            onChanged: (val) => context.read<AppProvider>().updateSettings(
+            onChanged: (val) {
+              Analytics.action('jobs_sort_changed', properties: {'sort': val});
+              context.read<AppProvider>().updateSettings(
                   provider.settings.copyWith(
-                      defaultJobsSort: val == 'A–Z' ? 'az' : 'recent')),
+                      defaultJobsSort: val == 'A–Z' ? 'az' : 'recent'));
+            },
           ),
         ),
         const SizedBox(height: 20),
@@ -207,6 +216,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             }(),
             onChanged: (val) {
               final mode = val == 'Dark' ? 'dark' : val == 'Light' ? 'light' : 'system';
+              Analytics.action('theme_changed', properties: {'theme': mode});
               context.read<AppProvider>().updateSettings(
                     provider.settings.copyWith(themeMode: mode));
             },
@@ -240,7 +250,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: _importing ? null : _importCsv,
+              onPressed: _importing ? null : () {
+                Analytics.action('import_csv_tapped');
+                _importCsv();
+              },
               icon: _importing
                   ? const SizedBox(
                       width: 16,

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/active_timer.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import 'clock_out_sheet.dart';
 
@@ -115,8 +116,14 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: onBreak
-                      ? () => context.read<AppProvider>().endBreak(t.id)
-                      : () => context.read<AppProvider>().startBreak(t.id),
+                      ? () {
+                          Analytics.action('break_ended_tapped');
+                          context.read<AppProvider>().endBreak(t.id);
+                        }
+                      : () {
+                          Analytics.action('break_started_tapped');
+                          context.read<AppProvider>().startBreak(t.id);
+                        },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.of(context).fg2,
                     side: BorderSide(color: AppColors.of(context).border),
@@ -133,7 +140,10 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => ClockOutSheet.show(context, t),
+                  onPressed: () {
+                    Analytics.action('clock_out_tapped', properties: {'source': 'timer_card'});
+                    ClockOutSheet.show(context, t);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.danger,
                     foregroundColor: Colors.white,

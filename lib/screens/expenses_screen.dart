@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/expense_item.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/add_expense_sheet.dart';
 import '../widgets/segmented_toggle_bar.dart';
@@ -64,7 +65,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             Text('Expenses', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
             const Spacer(),
             ElevatedButton.icon(
-              onPressed: () => AddExpenseSheet.show(context),
+              onPressed: () {
+                Analytics.action('add_expense_tapped');
+                AddExpenseSheet.show(context);
+              },
               icon: const Icon(Icons.add, size: 16),
               label: Text('Add', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
@@ -124,7 +128,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         SegmentedToggleBar(
           labels: const ['All', 'Pending', 'Reimbursed'],
           selected: _filter,
-          onChanged: (v) => setState(() => _filter = v),
+          onChanged: (v) {
+            Analytics.action('expenses_filter_changed', properties: {'filter': v});
+            setState(() => _filter = v);
+          },
         ),
         const SizedBox(height: 14),
 
@@ -174,9 +181,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   expanded: _expandedId == e.id,
                   businessName: businessName,
                   jobName: jobName,
-                  onToggle: () => setState(
-                      () => _expandedId = _expandedId == e.id ? null : e.id),
-                  onDelete: () => context.read<AppProvider>().deleteExpense(e.id),
+                  onToggle: () {
+                    Analytics.action('expense_row_toggled', properties: {'expanding': _expandedId != e.id});
+                    setState(() => _expandedId = _expandedId == e.id ? null : e.id);
+                  },
+                  onDelete: () {
+                    Analytics.action('expense_deleted_tapped');
+                    context.read<AppProvider>().deleteExpense(e.id);
+                  },
                 );
               }),
             ],

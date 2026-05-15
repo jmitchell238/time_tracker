@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/invoice.dart';
 import '../models/expense_item.dart';
+import '../services/analytics_service.dart';
 import '../services/pdf_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/metric_item.dart';
@@ -96,7 +97,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             Text('Invoices', style: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
             const Spacer(),
             ElevatedButton.icon(
-              onPressed: () => setState(() => _creating = true),
+              onPressed: () {
+                Analytics.action('new_invoice_tapped');
+                setState(() => _creating = true);
+              },
               icon: const Icon(Icons.add, size: 16),
               label: Text('New Invoice', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
@@ -116,7 +120,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           children: [
             for (final f in [('all', 'All'), ('unpaid', 'Unpaid'), ('paid', 'Paid')]) ...[
               GestureDetector(
-                onTap: () => setState(() => _filter = f.$1),
+                onTap: () {
+                  Analytics.action('invoices_filter_changed', properties: {'filter': f.$1});
+                  setState(() => _filter = f.$1);
+                },
                 child: Container(
                   margin: const EdgeInsets.only(right: 8),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -141,7 +148,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         // Uninvoiced banner
         if (uninvoiced.isNotEmpty || pendingExpenses.isNotEmpty) ...[
           GestureDetector(
-            onTap: () => setState(() => _creating = true),
+            onTap: () {
+              Analytics.action('uninvoiced_banner_tapped');
+              setState(() => _creating = true);
+            },
             child: Container(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
               decoration: BoxDecoration(
@@ -188,7 +198,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               invoice: inv,
               fmtDate: _fmtDateShort,
               fmtMoney: _fmtMoney,
-              onTap: () => setState(() => _detailId = inv.id),
+              onTap: () {
+                Analytics.action('invoice_tapped');
+                setState(() => _detailId = inv.id);
+              },
             )),
       ],
       ),
@@ -213,7 +226,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
         GestureDetector(
-          onTap: () => setState(_resetCreate),
+          onTap: () {
+            Analytics.action('create_invoice_cancelled');
+            setState(_resetCreate);
+          },
           child: Row(
             children: [
               Icon(Icons.arrow_back, size: 18, color: AppColors.of(context).fg2),
@@ -236,7 +252,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             final isLast = name == 'Combined';
             return Expanded(
               child: GestureDetector(
-                onTap: () => setState(() => _billedBy = name),
+                onTap: () {
+                  Analytics.action('invoice_billed_by_changed', properties: {'billed_by': name});
+                  setState(() => _billedBy = name);
+                },
                 child: Container(
                   margin: EdgeInsets.only(right: isLast ? 0 : 8),
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -479,6 +498,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             onPressed: (selectedEntries.isEmpty && selectedExpenses.isEmpty) || _savingInvoice
                 ? null
                 : () async {
+                    Analytics.action('create_invoice_tapped', properties: {
+                      'entry_count': selectedEntries.length,
+                      'expense_count': selectedExpenses.length,
+                    });
                     setState(() => _savingInvoice = true);
                     try {
                       await provider.createInvoice(
@@ -686,7 +709,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
         GestureDetector(
-          onTap: () => setState(() => _detailId = null),
+          onTap: () {
+            Analytics.action('invoice_detail_back');
+            setState(() => _detailId = null);
+          },
           child: Row(
             children: [
               Icon(Icons.arrow_back, size: 18, color: AppColors.of(context).fg2),
@@ -781,7 +807,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => provider.unmarkInvoicePaid(inv.id),
+                  onTap: () {
+                    Analytics.action('unmark_paid_tapped');
+                    provider.unmarkInvoicePaid(inv.id);
+                  },
                   child: Text('Undo', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg3)),
                 ),
               ],
@@ -792,7 +821,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             height: 44,
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => _showMarkPaidSheet(context, provider, inv),
+              onPressed: () {
+                Analytics.action('mark_paid_tapped');
+                _showMarkPaidSheet(context, provider, inv);
+              },
               icon: const Icon(Icons.payments_outlined, size: 16),
               label: Text('Mark as Paid', style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
@@ -863,6 +895,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         const SizedBox(height: 24),
         OutlinedButton.icon(
           onPressed: () {
+            Analytics.action('delete_invoice_tapped');
             provider.deleteInvoice(inv.id);
             setState(() => _detailId = null);
           },
@@ -962,6 +995,7 @@ class _PdfButtonState extends State<_PdfButton> {
   bool _generating = false;
 
   Future<void> _generate() async {
+    Analytics.action('pdf_generated');
     setState(() => _generating = true);
     try {
       final p = widget.provider;

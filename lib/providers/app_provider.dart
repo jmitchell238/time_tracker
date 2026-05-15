@@ -86,7 +86,7 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    Analytics.identify(user.email ?? user.uid);
+    Analytics.identify(user.uid, email: user.email);
 
     // Resolve workspace — any authenticated user shares the same workspace.
     // Falls back to the current user's uid if the config doc is unreachable,
@@ -283,6 +283,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('jobs').doc(id).set(updated.toJson());
     }
+    Analytics.action('job_updated');
     notifyListeners();
   }
 
@@ -370,6 +371,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('entries').doc(id).set(updated.toJson());
     }
+    Analytics.action('entry_updated');
     notifyListeners();
   }
 
@@ -446,6 +448,11 @@ class AppProvider extends ChangeNotifier {
             final d = b.date.compareTo(a.date);
             return d != 0 ? d : b.startTime.compareTo(a.startTime);
           }));
+    Analytics.action('csv_imported', properties: {
+      'imported': imported,
+      'skipped': skipped,
+      'jobs_created': jobsCreated,
+    });
     notifyListeners();
 
     return (imported: imported, skipped: skipped, jobsCreated: jobsCreated);
@@ -469,6 +476,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('entries').doc(id).set(entries[idx].toJson());
     }
+    Analytics.action('break_added', properties: {'minutes': breakMinutes});
     notifyListeners();
   }
 
@@ -481,6 +489,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('entries').doc(id).set(entries[idx].toJson());
     }
+    Analytics.action('adjustment_added', properties: {'hours': hoursAdjustment});
     notifyListeners();
   }
 
@@ -578,6 +587,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('invoices').doc(id).set(updated.toJson());
     }
+    Analytics.action('invoice_marked_paid', properties: {'payment_method': paymentMethod});
     notifyListeners();
   }
 
@@ -590,6 +600,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('invoices').doc(id).set(updated.toJson());
     }
+    Analytics.action('invoice_unmarked_paid');
     notifyListeners();
   }
 
@@ -630,6 +641,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('businesses').doc(business.id).set(business.toJson());
     }
+    Analytics.action('business_added');
     notifyListeners();
   }
 
@@ -638,6 +650,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('businesses').doc(id).delete();
     }
+    Analytics.action('business_deleted');
     notifyListeners();
   }
 
@@ -649,6 +662,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _settingsDoc.set(settings.toJson());
     }
+    Analytics.action('payment_method_added');
     notifyListeners();
   }
 
@@ -676,6 +690,7 @@ class AppProvider extends ChangeNotifier {
           .timeout(const Duration(seconds: 15));
     }
     expenses = [expense, ...expenses];
+    Analytics.action('expense_added', properties: {'amount': amount});
     notifyListeners();
   }
 
@@ -684,6 +699,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('expenses').doc(id).delete();
     }
+    Analytics.action('expense_deleted');
     notifyListeners();
   }
 
@@ -697,6 +713,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _settingsDoc.set(s.toJson());
     }
+    Analytics.action('settings_updated');
     notifyListeners();
   }
 
@@ -766,6 +783,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('timers').doc(timerId).delete();
     }
+    Analytics.action('timer_discarded');
     notifyListeners();
   }
 
@@ -777,6 +795,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('timers').doc(timerId).update({'breakStartedAt': updated.breakStartedAt!.toIso8601String()});
     }
+    Analytics.action('break_started');
     notifyListeners();
   }
 
@@ -795,6 +814,7 @@ class AppProvider extends ChangeNotifier {
         'totalBreakSeconds': updated.totalBreakSeconds,
       });
     }
+    Analytics.action('break_ended', properties: {'seconds': breakSeconds});
     notifyListeners();
   }
 

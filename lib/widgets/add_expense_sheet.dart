@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 
 class AddExpenseSheet {
@@ -87,6 +88,12 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
     final amount = double.tryParse(_amountCtrl.text.trim());
     final date = _dateCtrl.text.trim();
     if (desc.isEmpty || amount == null || date.isEmpty) return;
+    Analytics.action('expense_saved', properties: {
+      'amount': amount,
+      'purchased_by': _purchasedBy,
+      'has_business': _selectedBusinessId != null,
+      'has_job': _selectedJobId != null,
+    });
     setState(() => _saving = true);
     try {
       await provider.addExpense(

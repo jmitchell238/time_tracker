@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/time_entry.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import 'add_adjustment_sheet.dart';
 import 'add_break_sheet.dart';
@@ -151,6 +152,7 @@ class EntryDetailSheet extends StatelessWidget {
                           height: 44,
                           child: OutlinedButton.icon(
                             onPressed: () {
+                              Analytics.action('add_break_opened');
                               Navigator.pop(context);
                               AddBreakSheet.show(context, entry);
                             },
@@ -173,6 +175,7 @@ class EntryDetailSheet extends StatelessWidget {
                           height: 44,
                           child: OutlinedButton.icon(
                             onPressed: () {
+                              Analytics.action('add_adjustment_opened');
                               Navigator.pop(context);
                               AddAdjustmentSheet.show(context, entry);
                             },
@@ -197,6 +200,7 @@ class EntryDetailSheet extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () {
+                        Analytics.action('edit_entry_opened');
                         Navigator.pop(context);
                         EntryEditFormSheet.show(context, entry);
                       },

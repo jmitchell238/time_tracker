@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import 'job_picker_dropdown.dart';
 import 'rate_input_field.dart';
@@ -36,6 +37,10 @@ class _ClockInSheetState extends State<ClockInSheet> {
     final provider = context.read<AppProvider>();
     final rateText = _rateCtrl.text.trim();
     final rate = rateText.isEmpty ? null : double.tryParse(rateText);
+    Analytics.action('clock_in_confirmed', properties: {
+      'has_job': _selectedJobId != null,
+      'has_rate_override': rate != null,
+    });
     provider.clockIn(jobId: _selectedJobId, rateOverride: rate);
     Navigator.pop(context);
   }

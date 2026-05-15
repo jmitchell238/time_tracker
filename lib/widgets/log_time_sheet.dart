@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import 'date_picker_button.dart';
 import 'field_label.dart';
@@ -124,6 +125,11 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
   Future<void> _save() async {
     final hours = _calculatedHours;
     if (_jobId.isEmpty || hours <= 0) return;
+    Analytics.action('log_time_saved', properties: {
+      'hours': hours,
+      'mode': _useManual ? 'manual' : 'start_end',
+      'has_description': _description.isNotEmpty,
+    });
     setState(() => _saving = true);
     try {
       await context.read<AppProvider>().addEntry(
@@ -249,7 +255,10 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                   SegmentedToggleBar(
                     labels: const ['Start & End', 'Enter Duration'],
                     selected: _useManual ? 'Enter Duration' : 'Start & End',
-                    onChanged: (v) => setState(() => _useManual = v == 'Enter Duration'),
+                    onChanged: (v) {
+                      Analytics.action('log_time_mode_changed', properties: {'mode': v});
+                      setState(() => _useManual = v == 'Enter Duration');
+                    },
                   ),
                   const SizedBox(height: 10),
                   if (_useManual)

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/time_entry.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import 'field_label.dart';
 
@@ -38,6 +39,10 @@ class _AddAdjustmentSheetState extends State<AddAdjustmentSheet> {
     final hours = double.tryParse(_hoursCtrl.text.trim()) ?? 0.0;
     if (hours == 0.0) return;
     final adjustment = _isAdding ? hours : -hours;
+    Analytics.action('adjustment_applied', properties: {
+      'hours': hours,
+      'direction': _isAdding ? 'add' : 'subtract',
+    });
     context.read<AppProvider>().addAdjustment(widget.entry.id, adjustment);
     Navigator.pop(context);
   }

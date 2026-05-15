@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/time_entry.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import 'field_label.dart';
 import 'rate_input_field.dart';
@@ -113,6 +114,7 @@ class _EntryEditFormSheetState extends State<EntryEditFormSheet> {
   }
 
   void _save() {
+    Analytics.action('entry_edit_saved');
     final provider = context.read<AppProvider>();
     final dateStr =
         '${_date.year}-${_pad2(_date.month)}-${_pad2(_date.day)}';

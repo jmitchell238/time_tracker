@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/clock_out_sheet.dart';
@@ -140,7 +141,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         SizedBox(
           height: 54,
           child: ElevatedButton.icon(
-            onPressed: () => context.read<AppProvider>().clockIn(),
+            onPressed: () {
+              Analytics.action('clock_in_tapped', properties: {'source': 'dashboard'});
+              context.read<AppProvider>().clockIn();
+            },
             icon: const Icon(Icons.login, size: 20),
             label: Text('CLOCK IN',
                 style: GoogleFonts.dmSans(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
@@ -185,9 +189,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: GestureDetector(
                           onTap: t.jobId != null
-                              ? () => Navigator.push(context,
-                                    MaterialPageRoute(
-                                        builder: (_) => JobDetailScreen(jobId: t.jobId!)))
+                              ? () {
+                                  Analytics.action('active_timer_job_tapped');
+                                  Navigator.push(context,
+                                      MaterialPageRoute(
+                                          builder: (_) => JobDetailScreen(jobId: t.jobId!)));
+                                }
                               : null,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,7 +217,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () => ClockOutSheet.show(context, t),
+                        onPressed: () {
+                          Analytics.action('clock_out_tapped', properties: {'source': 'dashboard'});
+                          ClockOutSheet.show(context, t);
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.danger,
                           foregroundColor: Colors.white,
@@ -243,7 +253,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ...incompleteEntries.map((e) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: GestureDetector(
-                  onTap: () => EntryEditSheet.show(context, e),
+                  onTap: () {
+                    Analytics.action('incomplete_entry_tapped');
+                    EntryEditSheet.show(context, e);
+                  },
                   child: LeftAccentCard(
                     accentColor: AppColors.accent,
                     outerBorderColor: AppColors.accent.withAlpha(100),
@@ -319,9 +332,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.only(bottom: 6),
             child: GestureDetector(
               onTap: e.jobId != null
-                  ? () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => JobDetailScreen(jobId: e.jobId!)))
-                  : () => EntryEditSheet.show(context, e),
+                  ? () {
+                      Analytics.action('recent_entry_tapped', properties: {'source': 'dashboard'});
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => JobDetailScreen(jobId: e.jobId!)));
+                    }
+                  : () {
+                      Analytics.action('recent_entry_tapped', properties: {'source': 'dashboard', 'unassigned': true});
+                      EntryEditSheet.show(context, e);
+                    },
               child: Container(
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
@@ -398,7 +417,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         SizedBox(
           height: 48,
           child: ElevatedButton.icon(
-            onPressed: () => LogTimeSheet.show(context),
+            onPressed: () {
+              Analytics.action('log_time_tapped', properties: {'source': 'dashboard'});
+              LogTimeSheet.show(context);
+            },
             icon: const Icon(Icons.add, size: 18),
             label: Text('Log Time',
                 style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/active_timer.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import 'job_picker_dropdown.dart';
 
@@ -69,6 +70,10 @@ class _ClockOutSheetState extends State<ClockOutSheet> {
   }
 
   Future<void> _save() async {
+    Analytics.action('clock_out_confirmed', properties: {
+      'has_job': _selectedJobId != null,
+      'has_description': _descCtrl.text.trim().isNotEmpty,
+    });
     setState(() => _saving = true);
     try {
       await context.read<AppProvider>().clockOut(

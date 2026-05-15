@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/time_entry.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/segmented_toggle_bar.dart';
 import '../widgets/metric_item.dart';
@@ -84,7 +85,10 @@ class _EntriesScreenState extends State<EntriesScreen> {
         SegmentedToggleBar(
           labels: const ['Day', 'Week', 'Month', 'Job'],
           selected: _tab,
-          onChanged: (v) => setState(() => _tab = v),
+          onChanged: (v) {
+            Analytics.action('entries_tab_changed', properties: {'tab': v});
+            setState(() => _tab = v);
+          },
         ),
         const SizedBox(height: 14),
 
@@ -250,7 +254,10 @@ class _EntryRow extends StatelessWidget {
     return Dismissible(
       key: ValueKey(entry.id),
       direction: DismissDirection.endToStart,
-      onDismissed: (_) => provider.deleteEntry(entry.id),
+      onDismissed: (_) {
+        Analytics.action('entry_swiped_delete');
+        provider.deleteEntry(entry.id);
+      },
       background: const SizedBox.shrink(),
       secondaryBackground: Container(
         alignment: Alignment.centerRight,
@@ -266,7 +273,10 @@ class _EntryRow extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 6),
         child: GestureDetector(
-          onTap: () => EntryDetailSheet.show(context, entry),
+          onTap: () {
+            Analytics.action('entry_tapped');
+            EntryDetailSheet.show(context, entry);
+          },
           child: LeftAccentCard(
             accentColor: entry.invoiceId != null ? AppColors.of(context).fg3 : AppColors.accent,
             child: Row(

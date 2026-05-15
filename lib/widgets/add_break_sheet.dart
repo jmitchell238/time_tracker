@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/time_entry.dart';
 import '../providers/app_provider.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import 'field_label.dart';
 
@@ -36,6 +37,7 @@ class _AddBreakSheetState extends State<AddBreakSheet> {
   void _apply() {
     final minutes = int.tryParse(_minutesCtrl.text.trim()) ?? 0;
     if (minutes <= 0) return;
+    Analytics.action('break_deducted', properties: {'minutes': minutes});
     context.read<AppProvider>().addBreak(widget.entry.id, minutes);
     Navigator.pop(context);
   }
