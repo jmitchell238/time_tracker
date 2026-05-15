@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 
@@ -39,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailCtrl.text.trim(),
         _passwordCtrl.text,
       );
+      Analytics.capture('signed_in');
       // StreamBuilder in main.dart handles navigation on auth state change
     } on FirebaseAuthException catch (e) {
       setState(() => _error = _friendlyError(e.code));

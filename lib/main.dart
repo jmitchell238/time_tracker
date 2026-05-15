@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import 'firebase_platform_init_stub.dart'
     if (dart.library.html) 'firebase_platform_init_web.dart';
 import 'providers/app_provider.dart';
+import 'services/analytics_service.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
 import 'screens/login_screen.dart';
@@ -22,6 +23,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   initFirebasePlatform();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Analytics.setup();
   // NOTE: Firestore transport (long polling) is configured in web/index.html
   // BEFORE this Dart code runs. Setting FirebaseFirestore.instance.settings
   // here would call initializeFirestore() a second time and throw, since
@@ -114,6 +116,7 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     _index = context.read<AppProvider>().settings.defaultTab.clamp(0, 4);
+    Analytics.screen(_labels[_index]);
   }
 
   @override
@@ -161,7 +164,10 @@ class _AppShellState extends State<AppShell> {
                 final active = _index == i;
                 return Expanded(
                   child: GestureDetector(
-                    onTap: () => setState(() => _index = i),
+                    onTap: () {
+                      setState(() => _index = i);
+                      Analytics.screen(_labels[i]);
+                    },
                     child: Container(
                       color: Colors.transparent,
                       child: Column(

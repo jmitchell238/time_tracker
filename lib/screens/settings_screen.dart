@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../services/analytics_service.dart';
 import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
 import '../services/csv_import_service.dart';
@@ -372,6 +373,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
     if (confirmed == true) {
+      Analytics.capture('signed_out');
+      Analytics.reset();
       await _authService.signOut();
       // StreamBuilder in main.dart navigates to LoginScreen automatically.
     }

@@ -12,6 +12,7 @@ import '../models/invoice.dart';
 import '../models/job.dart';
 import '../models/business.dart';
 import '../models/time_entry.dart';
+import '../services/analytics_service.dart';
 import '../services/badge_service.dart';
 import '../services/csv_import_service.dart';
 
@@ -85,6 +86,8 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    Analytics.identify(user.email ?? user.uid);
+
     // Resolve workspace — any authenticated user shares the same workspace.
     // Falls back to the current user's uid if the config doc is unreachable,
     // so data reads/writes always have a valid path.
@@ -264,6 +267,10 @@ class AppProvider extends ChangeNotifier {
           .timeout(const Duration(seconds: 15));
     }
     jobs = [...jobs, job];
+    Analytics.capture('job_created', properties: {
+      'has_rate': rate != null,
+      'has_description': description.isNotEmpty,
+    });
     notifyListeners();
   }
 
@@ -288,6 +295,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('jobs').doc(id).set(updated.toJson());
     }
+    Analytics.capture(updated.isArchived ? 'job_archived' : 'job_unarchived');
     notifyListeners();
   }
 
@@ -296,6 +304,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('jobs').doc(id).delete();
     }
+    Analytics.capture('job_deleted');
     notifyListeners();
   }
 
@@ -323,6 +332,11 @@ class AppProvider extends ChangeNotifier {
           .timeout(const Duration(seconds: 15));
     }
     entries = [entry, ...entries];
+    Analytics.capture('entry_created', properties: {
+      'has_job': jobId.isNotEmpty,
+      'has_description': description.isNotEmpty,
+      'hours': hours,
+    });
     notifyListeners();
   }
 
@@ -442,6 +456,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('entries').doc(id).delete();
     }
+    Analytics.capture('entry_deleted');
     notifyListeners();
   }
 
@@ -544,6 +559,12 @@ class AppProvider extends ChangeNotifier {
     if (newBusiness != null) businesses = [...businesses, newBusiness];
     entries = updatedEntries;
     expenses = updatedExpenses;
+    Analytics.capture('invoice_created', properties: {
+      'entry_count': entryIds.length,
+      'expense_count': expenseIds.length,
+      'total_hours': totalHours,
+      'has_client': clientName != null || clientCompany != null,
+    });
     notifyListeners();
   }
 
@@ -596,6 +617,7 @@ class AppProvider extends ChangeNotifier {
       }
       batch.commit();
     }
+    Analytics.capture('invoice_deleted');
     notifyListeners();
   }
 
@@ -691,6 +713,7 @@ class AppProvider extends ChangeNotifier {
     if (_workspaceId != null) {
       _col('timers').doc(timer.id).set(timer.toJson());
     }
+    Analytics.capture('timer_started', properties: {'has_job': jobId != null});
     notifyListeners();
   }
 
@@ -731,6 +754,10 @@ class AppProvider extends ChangeNotifier {
     }
     entries = [entry, ...entries];
     activeTimers = activeTimers.where((t) => t.id != timerId).toList();
+    Analytics.capture('timer_stopped', properties: {
+      'hours': hours,
+      'has_description': (description ?? '').isNotEmpty,
+    });
     notifyListeners();
   }
 
