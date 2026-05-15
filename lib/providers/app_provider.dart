@@ -85,19 +85,19 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    // Use a single shared workspace for all family members.
-    // The first user to log in creates the canonical workspace doc; all
-    // subsequent users read it and point at the same Firestore path.
-    final wsRef = _db!.collection('config').doc('workspace');
-    final wsSnap = await wsRef.get();
-    if (wsSnap.exists) {
-      _workspaceId = wsSnap.data()!['primaryUid'] as String;
-    } else {
-      _workspaceId = user.uid;
-      await wsRef.set({'primaryUid': user.uid});
-    }
-
     try {
+      // Use a single shared workspace for all family members.
+      // The first user to log in creates the canonical workspace doc; all
+      // subsequent users read it and point at the same Firestore path.
+      final wsRef = _db!.collection('config').doc('workspace');
+      final wsSnap = await wsRef.get();
+      if (wsSnap.exists) {
+        _workspaceId = wsSnap.data()!['primaryUid'] as String;
+      } else {
+        _workspaceId = user.uid;
+        await wsRef.set({'primaryUid': user.uid});
+      }
+
       final results = await Future.wait([
         _col('jobs').get(),
         _col('entries').get(),
