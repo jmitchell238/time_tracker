@@ -41,13 +41,18 @@ class Analytics {
   static void screen(String name) {
     _screen = name;
     try {
-      Posthog().screen(screenName: name).catchError((_) {});
+      Posthog().screen(screenName: name, properties: {
+        if (_userEmail != null) 'user': _userEmail!,
+      }).catchError((_) {});
     } catch (_) {}
   }
 
   static void capture(String event, {Map<String, Object>? properties}) {
     try {
-      Posthog().capture(eventName: event, properties: properties).catchError((_) {});
+      Posthog().capture(eventName: event, properties: {
+        if (_userEmail != null) 'user': _userEmail!,
+        ...?properties,
+      }).catchError((_) {});
     } catch (_) {}
   }
 
@@ -55,7 +60,6 @@ class Analytics {
   static void action(String event, {Map<String, Object>? properties}) {
     capture(event, properties: {
       'screen': _screen,
-      if (_userEmail != null) 'user': _userEmail!,
       ...?properties,
     });
   }
