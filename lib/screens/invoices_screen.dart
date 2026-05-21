@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../models/entry_category.dart';
 import '../models/invoice.dart';
 import '../models/expense_item.dart';
+import '../models/time_entry.dart';
 import '../services/analytics_service.dart';
 import '../services/pdf_service.dart';
 import '../theme/app_theme.dart';
@@ -861,19 +863,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         Text('LABOUR ENTRIES (${invEntries.length})',
             style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
         const SizedBox(height: 8),
-        ...invEntries.map((e) {
-          final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
-          final rate = provider.getEntryRate(e);
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _detailRow(
-              left: job?.name ?? 'Unknown',
-              sub: '${_fmtDateShort(e.date)} · ${e.description}',
-              right: _fmtMoney(e.hours * rate),
-              rightSub: '${e.hours.toStringAsFixed(1)}h',
-            ),
-          );
-        }),
+        ..._buildCategorizedEntries(provider, invEntries),
 
         // Expenses section
         if (invExpenses.isNotEmpty) ...[
@@ -913,6 +903,124 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     );
   }
 
+  List<Widget> _buildCategorizedEntries(AppProvider provider, List<TimeEntry> invEntries) {
+    final categories = provider.categories;
+
+    // Group entries by the categoryId of their job
+    final Map<String?, List<TimeEntry>> grouped = {};
+    for (final e in invEntries) {
+      final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
+      final key = job?.categoryId;
+      grouped.putIfAbsent(key, () => []).add(e);
+    }
+
+    // If nothing is categorized, fall back to the flat list
+    if (!grouped.keys.any((k) => k != null)) {
+      return invEntries.map((e) {
+        final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
+        final rate = provider.getEntryRate(e);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _detailRow(
+            left: job?.name ?? 'Unknown',
+            sub: '${_fmtDateShort(e.date)} · ${e.description}',
+            right: _fmtMoney(e.hours * rate),
+            rightSub: '${e.hours.toStringAsFixed(1)}h',
+          ),
+        );
+      }).toList();
+    }
+
+    // Order: named categories alphabetically, then uncategorized last
+    final namedIds = grouped.keys.where((k) => k != null).toList()
+      ..sort((a, b) {
+        final nameA = categories.where((c) => c.id == a).firstOrNull?.name ?? '';
+        final nameB = categories.where((c) => c.id == b).firstOrNull?.name ?? '';
+        return nameA.compareTo(nameB);
+      });
+    final orderedKeys = [...namedIds, if (grouped.containsKey(null)) null];
+
+    final widgets = <Widget>[];
+    double grandHours = 0;
+    double grandAmount = 0;
+
+    for (final catId in orderedKeys) {
+      final catEntries = grouped[catId]!;
+      final category = catId != null ? categories.where((c) => c.id == catId).firstOrNull : null;
+      final catName = category?.name ?? 'Uncategorized';
+      final catColor = category?.color ?? AppColors.of(context).fg3;
+
+      double catHours = catEntries.fold(0, (a, e) => a + e.hours);
+      double catAmount = catEntries.fold(0, (a, e) => a + e.hours * provider.getEntryRate(e));
+      grandHours += catHours;
+      grandAmount += catAmount;
+
+      // Category header
+      widgets.add(Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(children: [
+          Container(width: 10, height: 10, decoration: BoxDecoration(color: catColor, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(catName, style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+        ]),
+      ));
+
+      // Entries
+      for (final e in catEntries) {
+        final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
+        final rate = provider.getEntryRate(e);
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _detailRow(
+            left: job?.name ?? 'Unknown',
+            sub: '${_fmtDateShort(e.date)} · ${e.description}',
+            right: _fmtMoney(e.hours * rate),
+            rightSub: '${e.hours.toStringAsFixed(1)}h',
+            accentColor: catColor,
+          ),
+        ));
+      }
+
+      // Category subtotal
+      widgets.add(Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('$catName · ${catHours.toStringAsFixed(1)}h',
+                style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
+            Text(_fmtMoney(catAmount),
+                style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.accent)),
+          ],
+        ),
+      ));
+    }
+
+    // Grand total row when there are multiple sections
+    if (orderedKeys.length > 1) {
+      widgets.add(Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withAlpha(20),
+          border: Border.all(color: AppColors.accent.withAlpha(76)),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Total Labour · ${grandHours.toStringAsFixed(1)}h',
+                style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+            Text(_fmtMoney(grandAmount),
+                style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.accent)),
+          ],
+        ),
+      ));
+    }
+
+    return widgets;
+  }
+
   Widget _totalCard(String label, String value, Color valueColor, {bool highlight = false}) {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -931,13 +1039,13 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     );
   }
 
-  Widget _detailRow({required String left, required String sub, required String right, required String rightSub}) {
+  Widget _detailRow({required String left, required String sub, required String right, required String rightSub, Color? accentColor}) {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
         color: AppColors.of(context).bgCard,
         border: Border(
-          left: BorderSide(color: AppColors.of(context).fg3, width: 4),
+          left: BorderSide(color: accentColor ?? AppColors.of(context).fg3, width: 4),
           top: BorderSide(color: AppColors.of(context).border),
           right: BorderSide(color: AppColors.of(context).border),
           bottom: BorderSide(color: AppColors.of(context).border),
@@ -1008,6 +1116,7 @@ class _PdfButtonState extends State<_PdfButton> {
         settings: p.settings,
         getRate: p.getEntryRate,
         expenses: expenses,
+        categories: p.categories,
       );
       await Printing.layoutPdf(onLayout: (_) async => bytes, name: '${widget.invoice.number}.pdf');
     } finally {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
+import 'categories_screen.dart';
 import 'insights_screen.dart';
 import 'settings_screen.dart';
 
@@ -25,6 +26,18 @@ class MoreScreen extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const _PushedScreen(title: 'Insights', child: InsightsScreen())),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        _NavTile(
+          icon: Icons.label_outlined,
+          label: 'Categories',
+          onTap: () {
+            Analytics.action('categories_opened');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CategoriesScreen()),
             );
           },
         ),

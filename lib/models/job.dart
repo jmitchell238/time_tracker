@@ -6,6 +6,7 @@ class Job {
   final bool isArchived;
   final DateTime createdAt;
   final String? businessId;
+  final String? categoryId;
 
   const Job({
     required this.id,
@@ -15,6 +16,7 @@ class Job {
     required this.isArchived,
     required this.createdAt,
     this.businessId,
+    this.categoryId,
   });
 
   Job copyWith({
@@ -25,6 +27,8 @@ class Job {
     bool? isArchived,
     String? businessId,
     bool clearBusinessId = false,
+    String? categoryId,
+    bool clearCategoryId = false,
   }) {
     return Job(
       id: id,
@@ -34,6 +38,7 @@ class Job {
       isArchived: isArchived ?? this.isArchived,
       createdAt: createdAt,
       businessId: clearBusinessId ? null : (businessId ?? this.businessId),
+      categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
     );
   }
 
@@ -45,6 +50,7 @@ class Job {
         'isArchived': isArchived,
         'createdAt': createdAt.toIso8601String(),
         'businessId': businessId,
+        'categoryId': categoryId,
       };
 
   factory Job.fromJson(Map<String, dynamic> j) => Job(
@@ -55,5 +61,6 @@ class Job {
         isArchived: j['isArchived'] as bool? ?? false,
         createdAt: DateTime.parse(j['createdAt'] as String),
         businessId: j['businessId'] as String?,
+        categoryId: j['categoryId'] as String?,
       );
 }

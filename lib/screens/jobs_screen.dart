@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../models/entry_category.dart';
 import '../providers/app_provider.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
@@ -34,71 +35,84 @@ class _JobsScreenState extends State<JobsScreen> {
     final descCtrl = TextEditingController();
     final rateCtrl = TextEditingController();
     var saving = false;
+    String? selectedCategoryId;
 
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => StatefulBuilder(
-        builder: (_, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.of(context).bgBase,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text('Add Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _dialogField(nameCtrl, 'Job name *'),
-              const SizedBox(height: 12),
-              _dialogField(descCtrl, 'Description (optional)'),
-              const SizedBox(height: 12),
-              _dialogField(rateCtrl, 'Hourly rate override (optional)', numeric: true),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: saving ? null : () => Navigator.pop(context),
-              child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.of(context).fg2)),
+        builder: (ctx, setDialogState) {
+          final cats = ctx.read<AppProvider>().categories;
+          return AlertDialog(
+            backgroundColor: AppColors.of(context).bgBase,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text('Add Job', style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _dialogField(nameCtrl, 'Job name *'),
+                const SizedBox(height: 12),
+                _dialogField(descCtrl, 'Description (optional)'),
+                const SizedBox(height: 12),
+                _dialogField(rateCtrl, 'Hourly rate override (optional)', numeric: true),
+                if (cats.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  CategoryPickerWidget(
+                    categories: cats,
+                    selectedId: selectedCategoryId,
+                    onChanged: (id) => setDialogState(() => selectedCategoryId = id),
+                  ),
+                ],
+              ],
             ),
-            ElevatedButton(
-              onPressed: saving
-                  ? null
-                  : () async {
-                      final name = nameCtrl.text.trim();
-                      if (name.isEmpty) return;
-                      setDialogState(() => saving = true);
-                      try {
-                        await context.read<AppProvider>().addJob(
-                              name,
-                              descCtrl.text.trim(),
-                              double.tryParse(rateCtrl.text.trim()),
-                            );
-                        if (context.mounted) Navigator.pop(context);
-                      } catch (_) {
-                        setDialogState(() => saving = false);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Save failed — check your connection and try again'),
-                              backgroundColor: Color(0xFFE53935),
-                            ),
-                          );
-                        }
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            actions: [
+              TextButton(
+                onPressed: saving ? null : () => Navigator.pop(context),
+                child: Text('Cancel', style: GoogleFonts.dmSans(color: AppColors.of(context).fg2)),
               ),
-              child: saving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : Text('Add', style: GoogleFonts.dmSans(fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
+              ElevatedButton(
+                onPressed: saving
+                    ? null
+                    : () async {
+                        final name = nameCtrl.text.trim();
+                        if (name.isEmpty) return;
+                        setDialogState(() => saving = true);
+                        try {
+                          await context.read<AppProvider>().addJob(
+                                name,
+                                descCtrl.text.trim(),
+                                double.tryParse(rateCtrl.text.trim()),
+                                categoryId: selectedCategoryId,
+                              );
+                          if (context.mounted) Navigator.pop(context);
+                        } catch (_) {
+                          setDialogState(() => saving = false);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Save failed — check your connection and try again'),
+                                backgroundColor: Color(0xFFE53935),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: saving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text('Add', style: GoogleFonts.dmSans(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -405,6 +419,8 @@ class _JobCard extends StatelessWidget {
     final hours = jobEntries.fold(0.0, (a, e) => a + e.hours);
     final rate = provider.getRate(job);
     final amount = hours * rate;
+    final category = provider.getCategoryForJob(job);
+    final accentColor = category?.color ?? AppColors.primary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -414,7 +430,7 @@ class _JobCard extends StatelessWidget {
           MaterialPageRoute(builder: (_) => JobDetailScreen(jobId: job.id)),
         ),
         child: LeftAccentCard(
-          accentColor: AppColors.primary,
+          accentColor: accentColor,
           borderRadius: 12,
           contentPadding: const EdgeInsets.fromLTRB(10, 14, 10, 14),
           child: Row(
@@ -427,6 +443,22 @@ class _JobCard extends StatelessWidget {
                     if (job.description.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(job.description, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
+                    ],
+                    if (category != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(color: category.color, shape: BoxShape.circle),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(category.name,
+                              style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.of(context).fg2)),
+                        ],
+                      ),
                     ],
                     if (job.rate != null) ...[
                       const SizedBox(height: 4),
@@ -447,6 +479,82 @@ class _JobCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Icon(Icons.chevron_right, color: AppColors.of(context).fg3, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Shared category picker widget used in add/edit job dialogs
+class CategoryPickerWidget extends StatelessWidget {
+  final List<EntryCategory> categories;
+  final String? selectedId;
+  final ValueChanged<String?> onChanged;
+
+  const CategoryPickerWidget({
+    required this.categories,
+    required this.selectedId,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Category',
+            style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg3)),
+        const SizedBox(height: 6),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _chip(context, null, 'None'),
+              ...categories.map((c) => _chip(context, c.id, c.name, color: c.color)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _chip(BuildContext context, String? id, String label, {Color? color}) {
+    final selected = selectedId == id;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: GestureDetector(
+        onTap: () => onChanged(id),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: selected
+                ? (color ?? AppColors.primary).withOpacity(0.15)
+                : AppColors.of(context).bgElevated,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? (color ?? AppColors.primary) : AppColors.of(context).border,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (color != null) ...[
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 5),
+              ],
+              Text(label,
+                  style: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: selected
+                          ? (color ?? AppColors.primary)
+                          : AppColors.of(context).fg2)),
             ],
           ),
         ),

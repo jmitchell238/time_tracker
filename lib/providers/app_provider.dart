@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/active_timer.dart';
 import '../models/app_settings.dart';
+import '../models/entry_category.dart';
 import '../models/expense_item.dart';
 import '../models/invoice.dart';
 import '../models/job.dart';
@@ -33,6 +34,7 @@ class AppProvider extends ChangeNotifier {
   AppSettings settings = const AppSettings();
   List<ActiveTimer> activeTimers = [];
   List<Business> businesses = [];
+  List<EntryCategory> categories = [];
   bool _loaded = false;
 
   bool get isLoaded => _loaded;
@@ -115,6 +117,7 @@ class AppProvider extends ChangeNotifier {
         _col('businesses').get(),
         _settingsDoc.get(),
         _migrationSentinel.get(),
+        _col('categories').get(),
       ]);
 
       final jobsDocs    = (results[0] as QuerySnapshot<Map<String, dynamic>>).docs;
@@ -125,6 +128,7 @@ class AppProvider extends ChangeNotifier {
       final clientDocs  = (results[5] as QuerySnapshot<Map<String, dynamic>>).docs;
       final settingsSnap   = results[6] as DocumentSnapshot<Map<String, dynamic>>;
       final sentinelSnap   = results[7] as DocumentSnapshot<Map<String, dynamic>>;
+      final categoryDocs   = (results[8] as QuerySnapshot<Map<String, dynamic>>).docs;
       final alreadyMigrated = sentinelSnap.exists;
 
       // Only migrate on genuinely first launch (sentinel absent + no data).
@@ -138,7 +142,8 @@ class AppProvider extends ChangeNotifier {
         invoices    = invDocs.map((d)     => Invoice.fromJson(d.data())).toList();
         expenses    = expDocs.map((d)     => ExpenseItem.fromJson(d.data())).toList();
         activeTimers = timerDocs.map((d)  => ActiveTimer.fromJson(d.data())).toList();
-        businesses = clientDocs.map((d) => Business.fromJson(d.data())).toList();
+        businesses  = clientDocs.map((d)  => Business.fromJson(d.data())).toList();
+        categories  = categoryDocs.map((d) => EntryCategory.fromJson(d.data())).toList();
         if (settingsSnap.exists && settingsSnap.data() != null) {
           settings = AppSettings.fromJson(settingsSnap.data()!);
         }
@@ -162,6 +167,7 @@ class AppProvider extends ChangeNotifier {
         _col('timers').get(),
         _col('businesses').get(),
         _settingsDoc.get(),
+        _col('categories').get(),
       ]);
       jobs         = (results[0] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => Job.fromJson(d.data())).toList();
       entries      = (results[1] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => TimeEntry.fromJson(d.data())).toList();
@@ -169,6 +175,7 @@ class AppProvider extends ChangeNotifier {
       expenses     = (results[3] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => ExpenseItem.fromJson(d.data())).toList();
       activeTimers = (results[4] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => ActiveTimer.fromJson(d.data())).toList();
       businesses   = (results[5] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => Business.fromJson(d.data())).toList();
+      categories   = (results[7] as QuerySnapshot<Map<String, dynamic>>).docs.map((d) => EntryCategory.fromJson(d.data())).toList();
       final settingsSnap = results[6] as DocumentSnapshot<Map<String, dynamic>>;
       if (settingsSnap.exists && settingsSnap.data() != null) {
         settings = AppSettings.fromJson(settingsSnap.data()!);
@@ -252,7 +259,7 @@ class AppProvider extends ChangeNotifier {
 
   // ── Jobs ──────────────────────────────────────────────────────────────────
 
-  Future<void> addJob(String name, String description, double? rate, {String? businessId}) async {
+  Future<void> addJob(String name, String description, double? rate, {String? businessId, String? categoryId}) async {
     final job = Job(
       id: _uuid.v4(),
       name: name,
@@ -261,6 +268,7 @@ class AppProvider extends ChangeNotifier {
       isArchived: false,
       createdAt: DateTime.now(),
       businessId: businessId,
+      categoryId: categoryId,
     );
     if (_workspaceId != null) {
       await _col('jobs').doc(job.id).set(job.toJson())
@@ -270,14 +278,15 @@ class AppProvider extends ChangeNotifier {
     Analytics.capture('job_created', properties: {
       'has_rate': rate != null,
       'has_description': description.isNotEmpty,
+      'has_category': categoryId != null,
     });
     notifyListeners();
   }
 
-  void updateJob(String id, {String? name, String? description, double? rate, bool clearRate = false}) {
+  void updateJob(String id, {String? name, String? description, double? rate, bool clearRate = false, String? categoryId, bool clearCategoryId = false}) {
     jobs = jobs.map((j) {
       if (j.id != id) return j;
-      return j.copyWith(name: name, description: description, rate: rate, clearRate: clearRate);
+      return j.copyWith(name: name, description: description, rate: rate, clearRate: clearRate, categoryId: categoryId, clearCategoryId: clearCategoryId);
     }).toList();
     final updated = jobs.firstWhere((j) => j.id == id);
     if (_workspaceId != null) {
@@ -663,6 +672,51 @@ class AppProvider extends ChangeNotifier {
       _settingsDoc.set(settings.toJson());
     }
     Analytics.action('payment_method_added');
+    notifyListeners();
+  }
+
+  // ── Categories ───────────────────────────────────────────────────────────
+
+  EntryCategory? getCategoryForJob(Job? job) {
+    if (job?.categoryId == null) return null;
+    return categories.where((c) => c.id == job!.categoryId).firstOrNull;
+  }
+
+  Future<void> addCategory(String name, int colorValue) async {
+    final cat = EntryCategory(
+      id: _uuid.v4(),
+      name: name,
+      colorValue: colorValue,
+      createdAt: DateTime.now().toIso8601String(),
+    );
+    if (_workspaceId != null) {
+      await _col('categories').doc(cat.id).set(cat.toJson())
+          .timeout(const Duration(seconds: 15));
+    }
+    categories = [...categories, cat];
+    Analytics.capture('category_created');
+    notifyListeners();
+  }
+
+  void updateCategory(String id, {String? name, int? colorValue}) {
+    categories = categories.map((c) {
+      if (c.id != id) return c;
+      return c.copyWith(name: name, colorValue: colorValue);
+    }).toList();
+    final updated = categories.firstWhere((c) => c.id == id);
+    if (_workspaceId != null) {
+      _col('categories').doc(id).set(updated.toJson());
+    }
+    Analytics.action('category_updated');
+    notifyListeners();
+  }
+
+  void deleteCategory(String id) {
+    categories = categories.where((c) => c.id != id).toList();
+    if (_workspaceId != null) {
+      _col('categories').doc(id).delete();
+    }
+    Analytics.capture('category_deleted');
     notifyListeners();
   }
 

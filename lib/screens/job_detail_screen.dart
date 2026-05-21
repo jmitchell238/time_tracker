@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../models/entry_category.dart';
 import '../models/job.dart';
 import '../providers/app_provider.dart';
+import '../screens/jobs_screen.dart' show CategoryPickerWidget;
 import '../theme/app_theme.dart';
 import '../widgets/add_expense_sheet.dart';
 import '../widgets/log_time_sheet.dart';
@@ -71,6 +73,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final rate = provider.getRate(job);
     final isRunning = provider.isTimerRunning(widget.jobId);
     final activeTimer = provider.getTimer(widget.jobId);
+    final category = provider.getCategoryForJob(job);
+    final headerColor = category?.color ?? AppColors.primary;
 
     return Scaffold(
       backgroundColor: AppColors.of(context).bgDeep,
@@ -78,7 +82,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         slivers: [
           SliverToBoxAdapter(
             child: Container(
-              color: AppColors.primary,
+              color: headerColor,
               padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 16, 16, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,6 +113,18 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
+                  if (category != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      margin: const EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(category.name,
+                          style: GoogleFonts.dmSans(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
                   Text(job.name, style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
                   if (job.description.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -398,6 +414,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final rateCtrl = TextEditingController(
       text: job.rate != null ? job.rate.toString() : '',
     );
+    String? selectedCategoryId = job.categoryId;
 
     showModalBottomSheet(
       context: context,
@@ -407,66 +424,81 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            16, 20, 16,
-            MediaQuery.of(ctx).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Edit Job',
-                  style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameCtrl,
-                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
-                decoration: _inputDecoration('Job Name'),
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final cats = provider.categories;
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                16, 20, 16,
+                MediaQuery.of(ctx).viewInsets.bottom + 24,
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: descCtrl,
-                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
-                decoration: _inputDecoration('Description'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: rateCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
-                decoration: _inputDecoration('Hourly Rate (\$) — leave blank to use default'),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: () {
-                    final name = nameCtrl.text.trim();
-                    if (name.isEmpty) return;
-                    final rateText = rateCtrl.text.trim();
-                    final rate = rateText.isNotEmpty ? double.tryParse(rateText) : null;
-                    provider.updateJob(
-                      job.id,
-                      name: name,
-                      description: descCtrl.text.trim(),
-                      rate: rate,
-                      clearRate: rateText.isEmpty,
-                    );
-                    Navigator.pop(ctx);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    elevation: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Edit Job',
+                      style: GoogleFonts.lora(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameCtrl,
+                    style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
+                    decoration: _inputDecoration('Job Name'),
                   ),
-                  child: Text('Save', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
-                ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descCtrl,
+                    style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
+                    decoration: _inputDecoration('Description'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: rateCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.of(context).fg),
+                    decoration: _inputDecoration('Hourly Rate (\$) — leave blank to use default'),
+                  ),
+                  if (cats.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    CategoryPickerWidget(
+                      categories: cats,
+                      selectedId: selectedCategoryId,
+                      onChanged: (id) => setSheetState(() => selectedCategoryId = id),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final name = nameCtrl.text.trim();
+                        if (name.isEmpty) return;
+                        final rateText = rateCtrl.text.trim();
+                        final rate = rateText.isNotEmpty ? double.tryParse(rateText) : null;
+                        provider.updateJob(
+                          job.id,
+                          name: name,
+                          description: descCtrl.text.trim(),
+                          rate: rate,
+                          clearRate: rateText.isEmpty,
+                          categoryId: selectedCategoryId,
+                          clearCategoryId: selectedCategoryId == null,
+                        );
+                        Navigator.pop(ctx);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 0,
+                      ),
+                      child: Text('Save', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
