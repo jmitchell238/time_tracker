@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:time_tracker/build_info.dart';
 import 'package:time_tracker/models/app_settings.dart';
 import 'package:time_tracker/providers/app_provider.dart';
 import 'package:time_tracker/screens/settings_screen.dart';
@@ -69,7 +70,7 @@ void main() {
       final p = await _provider();
       await tester.pumpWidget(_wrap(p));
       expect(
-        find.text('Version 1.0 · For James & Whitney Mitchell', skipOffstage: false),
+        find.text('Version $kBuildVersion · For James & Whitney Mitchell', skipOffstage: false),
         findsOneWidget,
       );
     });

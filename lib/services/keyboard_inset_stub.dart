@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 
-/// Height in logical pixels of the strip at the bottom of the window covered
-/// by the on-screen keyboard. Always 0 off-web; the web implementation
-/// measures it from the browser's visualViewport.
-final ValueNotifier<double> keyboardInset = ValueNotifier<double>(0);
+/// Bottom edge (in logical pixels, page coordinates) of the browser's visual
+/// viewport — the area actually visible to the user. null means unavailable
+/// (non-web platforms, or browsers without visualViewport support).
+///
+/// KeyboardInsetOverride compares this against the app's own height to work
+/// out how much of the bottom of the app the on-screen keyboard covers.
+final ValueNotifier<double?> visibleViewportBottom = ValueNotifier<double?>(null);
 
 void initKeyboardInset() {}

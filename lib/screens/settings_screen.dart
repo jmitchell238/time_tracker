@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../build_info.dart';
 import '../services/analytics_service.dart';
 import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
@@ -236,7 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text('Property Work Time Tracker', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.of(context).fg2), textAlign: TextAlign.center),
               const SizedBox(height: 4),
-              Text('Version 1.0 · For James & Whitney Mitchell',
+              Text('Version $kBuildVersion · For James & Whitney Mitchell',
                   style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg3), textAlign: TextAlign.center),
             ],
           ),

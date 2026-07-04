@@ -16,7 +16,7 @@ flutter build windows              # release Windows build
 
 ## Release / Deploy (PWA → Firebase Hosting)
 
-When the user says "release", "deploy", or "push to production", run these two commands in order from the project root (`/mnt/c/Users/jmitc/workspace/time_tracker`):
+When the user says "release", "deploy", or "push to production", first bump `kBuildVersion` in `lib/build_info.dart` (it's shown in Settings so devices can be identified), then run these two commands in order from the project root (`/mnt/c/Users/jmitc/workspace/time_tracker`):
 
 ```bash
 # Step 1 — build the web release bundle
