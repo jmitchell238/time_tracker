@@ -580,9 +580,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                       firstDate: DateTime(2020),
                       lastDate: DateTime(2030),
                       builder: (ctx, child) => Theme(
-                        data: ThemeData.dark().copyWith(
-                          colorScheme: const ColorScheme.dark(primary: AppColors.accent),
-                        ),
+                        data: AppTheme.picker(ctx),
                         child: child!,
                       ),
                     );

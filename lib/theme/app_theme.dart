@@ -60,6 +60,19 @@ class AppColors {
 }
 
 class AppTheme {
+  /// Theme for date/time picker dialogs: follows the ambient brightness and
+  /// uses the accent color for the selected day/time.
+  static ThemeData picker(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? dark : light;
+    return base.copyWith(
+      colorScheme: base.colorScheme.copyWith(
+        primary: AppColors.accent,
+        surface: AppColors.of(context).bgCard,
+      ),
+    );
+  }
+
   static TextTheme _buildTextTheme(Color fg, Color fg2, Color fg3) {
     return TextTheme(
       displayLarge: GoogleFonts.lora(fontSize: 24, fontWeight: FontWeight.w700, color: fg),

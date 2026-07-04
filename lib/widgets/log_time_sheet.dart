@@ -81,12 +81,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       builder: (context, child) => Theme(
-        data: AppTheme.dark.copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: AppColors.accent,
-            surface: AppColors.of(context).bgCard,
-          ),
-        ),
+        data: AppTheme.picker(context),
         child: child!,
       ),
     );
@@ -101,12 +96,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
       context: context,
       initialTime: TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1])),
       builder: (context, child) => Theme(
-        data: AppTheme.dark.copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: AppColors.accent,
-            surface: AppColors.of(context).bgCard,
-          ),
-        ),
+        data: AppTheme.picker(context),
         child: child!,
       ),
     );
