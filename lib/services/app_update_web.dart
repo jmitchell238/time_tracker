@@ -3,6 +3,8 @@ import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
 
+import 'analytics_service.dart';
+
 /// True when a newer build of the app has been downloaded by the service
 /// worker and is waiting to take over.
 final ValueNotifier<bool> updateReady = ValueNotifier<bool>(false);
@@ -12,6 +14,9 @@ external _ServiceWorkerContainer? get _swContainer;
 
 @JS('document')
 external _EventTarget get _document;
+
+@JS('window')
+external _EventTarget get _window;
 
 @JS('location')
 external _Location get _location;
@@ -55,7 +60,7 @@ void _reloadOnce() {
 /// Watches the service worker for a newly downloaded build. iOS PWAs only
 /// re-check the worker on cold launch and often get swiped away before the
 /// download finishes, leaving users stuck on old builds — so we also check
-/// whenever the app returns to the foreground and every 30 minutes.
+/// whenever the app returns to the foreground and on a timer.
 Future<void> initAppUpdateWatcher() async {
   final container = _swContainer;
   if (container == null) return;
@@ -67,27 +72,46 @@ Future<void> initAppUpdateWatcher() async {
     // A controller means this page is already running some version, so a
     // waiting/installed worker is an update rather than a first install.
     void flagIfUpdateReady() {
-      if (reg.waiting != null && container.controller != null) {
+      if (reg.waiting != null && container.controller != null && !updateReady.value) {
         updateReady.value = true;
+        Analytics.capture('sw_update_ready');
       }
     }
 
-    flagIfUpdateReady();
-    reg.addEventListener('updatefound', (() {
-      final installing = reg.installing;
-      if (installing == null) return;
-      installing.addEventListener('statechange', (() {
-        if (installing.state == 'installed' && container.controller != null) {
-          updateReady.value = true;
-        }
+    Analytics.capture('sw_watcher_init', properties: {
+      'has_controller': container.controller != null,
+      'has_waiting': reg.waiting != null,
+      'has_installing': reg.installing != null,
+    });
+
+    void watchInstalling(_ServiceWorker? worker) {
+      if (worker == null) return;
+      worker.addEventListener('statechange', (() {
+        if (worker.state == 'installed') flagIfUpdateReady();
       }).toJS);
+    }
+
+    flagIfUpdateReady();
+    // An update discovered before this code ran may already be mid-install.
+    watchInstalling(reg.installing);
+    reg.addEventListener('updatefound', (() {
+      watchInstalling(reg.installing);
     }).toJS);
 
+    // Re-check with the server when the app comes back to the foreground.
     _document.addEventListener('visibilitychange', (() {
+      reg.update();
+    }).toJS);
+    _window.addEventListener('focus', (() {
       reg.update();
     }).toJS);
     Timer.periodic(const Duration(minutes: 30), (_) {
       reg.update();
+    });
+    // Catch-all: statechange/updatefound events can be missed around page
+    // load, but a waiting worker is directly observable.
+    Timer.periodic(const Duration(seconds: 10), (_) {
+      flagIfUpdateReady();
     });
   } catch (_) {}
 }
