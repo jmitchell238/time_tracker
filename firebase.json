@@ -34,15 +34,15 @@
     ],
     "headers": [
       {
-        "source": "flutter_service_worker.js",
+        "source": "**/*.@(js|json|html)",
         "headers": [
           { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
         ]
       },
       {
-        "source": "/index.html",
+        "source": "@(assets|canvaskit|icons)/**",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+          { "key": "Cache-Control", "value": "public, max-age=3600" }
         ]
       }
     ],

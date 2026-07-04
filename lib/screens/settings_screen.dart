@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../build_info.dart';
 import '../services/analytics_service.dart';
+import '../services/app_update.dart';
 import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
 import '../services/csv_import_service.dart';
@@ -239,6 +240,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 4),
               Text('Version $kBuildVersion · For James & Whitney Mitchell',
                   style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg3), textAlign: TextAlign.center),
+              if (updateDebugInfo().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(updateDebugInfo(),
+                    style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.of(context).fg3), textAlign: TextAlign.center),
+              ],
             ],
           ),
         ),

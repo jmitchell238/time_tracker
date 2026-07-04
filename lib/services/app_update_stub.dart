@@ -8,3 +8,6 @@ void initAppUpdateWatcher() {}
 
 /// Activate the waiting version and reload the app.
 void applyUpdate() {}
+
+/// One-line summary of the update machinery's live state. Empty off-web.
+String updateDebugInfo() => '';
