@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/widgets.dart';
 
 import '../services/analytics_service.dart';
 import '../services/keyboard_inset.dart';
@@ -14,11 +14,12 @@ import '../services/keyboard_inset.dart';
 /// 1. Measured — the app's own rendered height minus the visualViewport's
 ///    bottom edge (see keyboard_inset.dart). Correct wherever the browser
 ///    actually reports the keyboard.
-/// 2. Estimated — iOS home-screen web apps report NO viewport change at all
-///    when the keyboard opens (WebKit bug), so when a text field is focused
-///    there and nothing was measured, we assume a typical keyboard height.
-///    Overestimating just scrolls the field slightly higher, so the estimate
-///    is deliberately generous.
+/// 2. Estimated — iOS web apps often report NO viewport change at all when
+///    the keyboard opens (WebKit bug, especially in home-screen mode), so
+///    when a text field is focused on an iOS device and nothing was
+///    measured, we assume a typical keyboard height. Overestimating just
+///    scrolls the field slightly higher, so the estimate is deliberately
+///    generous.
 ///
 /// Because the platform never fires a metrics change here, the focused field
 /// would stay hidden even after the padding grows — so on focus and viewport
@@ -86,8 +87,21 @@ class _KeyboardInsetOverrideState extends State<KeyboardInsetOverride> {
       if (!mounted) return;
       final focusContext = FocusManager.instance.primaryFocus?.context;
       if (focusContext == null || !focusContext.mounted) return;
+      // Scroll the whole TextField (decoration included) into view — the
+      // focus context is the inner editable, whose bottom sits above the
+      // field's border and padding.
+      BuildContext target = focusContext;
+      focusContext.visitAncestorElements((element) {
+        final widget = element.widget;
+        if (widget is TextField) {
+          target = element;
+          return false;
+        }
+        // Don't look past the enclosing scrollable.
+        return widget is! Scrollable;
+      });
       Scrollable.ensureVisible(
-        focusContext,
+        target,
         alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
         duration: const Duration(milliseconds: 150),
       );
@@ -102,7 +116,7 @@ class _KeyboardInsetOverrideState extends State<KeyboardInsetOverride> {
       Analytics.capture('keyboard_viewport_measured', properties: {
         'visible_bottom': visibleViewportBottom.value ?? -1,
         'app_height': MediaQuery.of(context).size.height,
-        'ios_standalone': isIosStandalonePwa(),
+        'detection': keyboardDebugInfo(),
       });
     });
   }
@@ -115,7 +129,7 @@ class _KeyboardInsetOverrideState extends State<KeyboardInsetOverride> {
         final mq = MediaQuery.of(context);
         var inset =
             KeyboardInsetOverride.measuredInset(mq.size.height, visibleBottom);
-        if (inset == 0 && _textFieldFocused && isIosStandalonePwa()) {
+        if (inset == 0 && _textFieldFocused && isIosWeb()) {
           inset = KeyboardInsetOverride.estimatedInset(mq.size.height);
         }
         final bottom = math.max(mq.viewInsets.bottom, inset);

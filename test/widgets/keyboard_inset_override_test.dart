@@ -64,8 +64,8 @@ void main() {
   });
 
   group('iOS standalone estimate fallback', () {
-    final originalDetector = isIosStandalonePwa;
-    tearDown(() => isIosStandalonePwa = originalDetector);
+    final originalDetector = isIosWeb;
+    tearDown(() => isIosWeb = originalDetector);
 
     Widget focusHarness(ValueChanged<double> onBottomInset) {
       return MaterialApp(
@@ -82,7 +82,7 @@ void main() {
     }
 
     testWidgets('applies estimated inset while a text field is focused', (tester) async {
-      isIosStandalonePwa = () => true;
+      isIosWeb = () => true;
       double? seen;
       await tester.pumpWidget(focusHarness((v) => seen = v));
       expect(seen, 0);
@@ -98,7 +98,7 @@ void main() {
     });
 
     testWidgets('no estimate outside iOS standalone mode', (tester) async {
-      isIosStandalonePwa = () => false;
+      isIosWeb = () => false;
       double? seen;
       await tester.pumpWidget(focusHarness((v) => seen = v));
       await tester.tap(find.byType(TextField));
@@ -107,7 +107,7 @@ void main() {
     });
 
     testWidgets('real measurement wins over the estimate', (tester) async {
-      isIosStandalonePwa = () => true;
+      isIosWeb = () => true;
       double? seen;
       await tester.pumpWidget(focusHarness((v) => seen = v));
       await tester.tap(find.byType(TextField));

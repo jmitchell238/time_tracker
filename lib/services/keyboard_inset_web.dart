@@ -14,20 +14,50 @@ external _VisualViewport? get _visualViewport;
 external _Navigator get _navigator;
 
 extension type _Navigator._(JSObject _) implements JSObject {
+  external String get userAgent;
+  external double get maxTouchPoints;
   // iOS Safari only: true when launched from a home-screen icon.
   external JSBoolean? get standalone;
 }
 
-/// Whether the app is running as an iOS home-screen web app, where WebKit
-/// reports no viewport change at all when the keyboard opens and the inset
-/// must be estimated. Mutable so tests can fake it.
-bool Function() isIosStandalonePwa = () {
+@JS('matchMedia')
+external _MediaQueryList _matchMedia(String query);
+
+extension type _MediaQueryList._(JSObject _) implements JSObject {
+  external bool get matches;
+}
+
+bool _isIosDevice() {
   try {
-    return _navigator.standalone?.toDart ?? false;
+    final ua = _navigator.userAgent;
+    if (RegExp('iPhone|iPad|iPod').hasMatch(ua)) return true;
+    // iPadOS masquerades as a Mac but Macs have no touch points.
+    return ua.contains('Macintosh') && _navigator.maxTouchPoints > 1;
   } catch (_) {
     return false;
   }
-};
+}
+
+/// Whether the app is running in a browser on an iOS device, where WebKit
+/// often reports no viewport change at all when the keyboard opens and the
+/// inset must be estimated. Detected by user agent rather than
+/// navigator.standalone, which modern iOS builds don't reliably set.
+/// Mutable so tests can fake it.
+bool Function() isIosWeb = _isIosDevice;
+
+/// Raw detection values for diagnostics.
+String keyboardDebugInfo() {
+  bool? standalone;
+  bool? displayModeStandalone;
+  try {
+    standalone = _navigator.standalone?.toDart;
+  } catch (_) {}
+  try {
+    displayModeStandalone = _matchMedia('(display-mode: standalone)').matches;
+  } catch (_) {}
+  return 'ios:${_isIosDevice()} st:$standalone dm:$displayModeStandalone '
+      'vvB:${visibleViewportBottom.value}';
+}
 
 extension type _VisualViewport._(JSObject _) implements JSObject {
   external double get height;

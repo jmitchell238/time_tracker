@@ -193,6 +193,11 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
           color: AppColors.of(context).bgBase,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
+        // The sheet has a fixed height, so the keyboard inset must shrink the
+        // content area (moving the scroll viewport above the keyboard) —
+        // bottom padding inside the ListView would only extend scroll range
+        // without making covered fields count as off-screen.
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
         child: Column(
           children: [
             // Handle
@@ -226,7 +231,7 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
             Expanded(
               child: ListView(
                 controller: controller,
-                padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.viewInsetsOf(context).bottom + 32),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
                 children: [
                   // Job picker
                   _label('Job'),
