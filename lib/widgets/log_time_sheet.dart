@@ -303,9 +303,6 @@ class _LogTimeSheetState extends State<LogTimeSheet> {
                   TextField(
                     controller: _descController,
                     maxLines: 3,
-                    // Extra scroll padding so the field clears the on-screen
-                    // keyboard on iOS PWA, where viewInsets can report 0.
-                    scrollPadding: const EdgeInsets.only(bottom: 260),
                     style: GoogleFonts.dmSans(color: AppColors.of(context).fg, fontSize: 13),
                     decoration: _inputDec('What did you do?'),
                     onChanged: (v) => _description = v,

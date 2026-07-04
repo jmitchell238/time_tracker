@@ -9,6 +9,8 @@ import 'firebase_platform_init_stub.dart'
 import 'providers/app_provider.dart';
 import 'services/analytics_service.dart';
 import 'services/auth_service.dart';
+import 'services/keyboard_inset.dart';
+import 'widgets/keyboard_inset_override.dart';
 import 'theme/app_theme.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -21,6 +23,7 @@ final _authService = AuthService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  initKeyboardInset();
   initFirebasePlatform();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Analytics.setup();
@@ -61,6 +64,7 @@ class TimeTrackerApp extends StatelessWidget {
                 theme: AppTheme.light,
                 darkTheme: AppTheme.dark,
                 themeMode: provider.resolvedThemeMode,
+                builder: (_, child) => KeyboardInsetOverride(child: child!),
                 home: const AppShell(),
               ),
             ),
@@ -72,6 +76,7 @@ class TimeTrackerApp extends StatelessWidget {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: ThemeMode.system,
+          builder: (_, child) => KeyboardInsetOverride(child: child!),
           home: const LoginScreen(),
         );
       },
