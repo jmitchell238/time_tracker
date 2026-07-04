@@ -32,11 +32,13 @@ void main() {
     expect(find.textContaining('New version available'), findsNothing);
   });
 
-  testWidgets('banner tap does not throw with stub service', (tester) async {
+  testWidgets('banner shows Updating state after tap', (tester) async {
     await tester.pumpWidget(harness());
     updateReady.value = true;
     await tester.pump();
     await tester.tap(find.textContaining('New version available'));
     await tester.pump();
+    expect(find.text('Updating…'), findsOneWidget);
+    expect(find.textContaining('New version available'), findsNothing);
   });
 }
