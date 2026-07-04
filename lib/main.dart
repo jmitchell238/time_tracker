@@ -8,9 +8,11 @@ import 'firebase_platform_init_stub.dart'
     if (dart.library.html) 'firebase_platform_init_web.dart';
 import 'providers/app_provider.dart';
 import 'services/analytics_service.dart';
+import 'services/app_update.dart';
 import 'services/auth_service.dart';
 import 'services/keyboard_inset.dart';
 import 'widgets/keyboard_inset_override.dart';
+import 'widgets/update_banner.dart';
 import 'theme/app_theme.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -24,6 +26,7 @@ final _authService = AuthService();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   initKeyboardInset();
+  initAppUpdateWatcher();
   initFirebasePlatform();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Analytics.setup();
@@ -146,14 +149,21 @@ class _AppShellState extends State<AppShell> {
       ),
       child: Scaffold(
         backgroundColor: AppColors.of(context).bgDeep,
-        body: IndexedStack(
-        index: _index,
-        children: const [
-          DashboardScreen(),
-          JobsScreen(),
-          LogScreen(),
-          InvoicesScreen(),
-          MoreScreen(),
+        body: Column(
+        children: [
+          const UpdateBanner(),
+          Expanded(
+            child: IndexedStack(
+              index: _index,
+              children: const [
+                DashboardScreen(),
+                JobsScreen(),
+                LogScreen(),
+                InvoicesScreen(),
+                MoreScreen(),
+              ],
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: Container(
