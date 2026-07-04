@@ -62,4 +62,61 @@ void main() {
     await tester.pump();
     expect(seen, 0);
   });
+
+  group('iOS standalone estimate fallback', () {
+    final originalDetector = isIosStandalonePwa;
+    tearDown(() => isIosStandalonePwa = originalDetector);
+
+    Widget focusHarness(ValueChanged<double> onBottomInset) {
+      return MaterialApp(
+        builder: (_, child) => KeyboardInsetOverride(child: child!),
+        // Probe MediaQuery above the Scaffold: Scaffold consumes the bottom
+        // view inset for its body (that's how it resizes for keyboards).
+        home: Builder(
+          builder: (context) {
+            onBottomInset(MediaQuery.of(context).viewInsets.bottom);
+            return const Scaffold(body: TextField());
+          },
+        ),
+      );
+    }
+
+    testWidgets('applies estimated inset while a text field is focused', (tester) async {
+      isIosStandalonePwa = () => true;
+      double? seen;
+      await tester.pumpWidget(focusHarness((v) => seen = v));
+      expect(seen, 0);
+
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+      final appHeight = tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      expect(seen, KeyboardInsetOverride.estimatedInset(appHeight));
+
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      expect(seen, 0);
+    });
+
+    testWidgets('no estimate outside iOS standalone mode', (tester) async {
+      isIosStandalonePwa = () => false;
+      double? seen;
+      await tester.pumpWidget(focusHarness((v) => seen = v));
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+      expect(seen, 0);
+    });
+
+    testWidgets('real measurement wins over the estimate', (tester) async {
+      isIosStandalonePwa = () => true;
+      double? seen;
+      await tester.pumpWidget(focusHarness((v) => seen = v));
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+
+      final appHeight = tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      visibleViewportBottom.value = appHeight - 250; // browser reports 250px covered
+      await tester.pumpAndSettle();
+      expect(seen, 250);
+    });
+  });
 }

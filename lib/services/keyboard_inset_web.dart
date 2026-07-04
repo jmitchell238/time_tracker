@@ -10,6 +10,25 @@ final ValueNotifier<double?> visibleViewportBottom = ValueNotifier<double?>(null
 @JS('visualViewport')
 external _VisualViewport? get _visualViewport;
 
+@JS('navigator')
+external _Navigator get _navigator;
+
+extension type _Navigator._(JSObject _) implements JSObject {
+  // iOS Safari only: true when launched from a home-screen icon.
+  external JSBoolean? get standalone;
+}
+
+/// Whether the app is running as an iOS home-screen web app, where WebKit
+/// reports no viewport change at all when the keyboard opens and the inset
+/// must be estimated. Mutable so tests can fake it.
+bool Function() isIosStandalonePwa = () {
+  try {
+    return _navigator.standalone?.toDart ?? false;
+  } catch (_) {
+    return false;
+  }
+};
+
 extension type _VisualViewport._(JSObject _) implements JSObject {
   external double get height;
   external double get offsetTop;
