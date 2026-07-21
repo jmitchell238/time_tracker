@@ -79,7 +79,13 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
     final amount = double.tryParse(_amountCtrl.text.trim());
     final date = _dateCtrl.text.trim();
     if (desc.isEmpty || amount == null || date.isEmpty) return false;
-    if (provider.businesses.isNotEmpty && _selectedBusinessId == null) return false;
+    // Must be tied to something: a business or a job. If neither businesses
+    // nor jobs exist yet, allow saving unlinked.
+    final hasLinkTargets =
+        provider.businesses.isNotEmpty || provider.jobs.any((j) => !j.isArchived);
+    if (hasLinkTargets && _selectedBusinessId == null && _selectedJobId == null) {
+      return false;
+    }
     return true;
   }
 
@@ -126,18 +132,14 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
     // Jobs filtered to selected business, else all active jobs
     final jobs = provider.jobs.where((j) => !j.isArchived).toList()
       ..sort((a, b) => a.name.compareTo(b.name));
+    // When a business is selected, show its jobs — but always keep the
+    // currently-selected job visible even if it isn't tied to that business.
     final filteredJobs = _selectedBusinessId != null
-        ? jobs.where((j) => j.businessId == _selectedBusinessId).toList()
+        ? jobs
+            .where((j) =>
+                j.businessId == _selectedBusinessId || j.id == _selectedJobId)
+            .toList()
         : jobs;
-
-    // If selected job no longer belongs to new business, clear it
-    if (_selectedJobId != null &&
-        _selectedBusinessId != null &&
-        filteredJobs.every((j) => j.id != _selectedJobId)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _selectedJobId = null);
-      });
-    }
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -155,7 +157,7 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
             const SizedBox(height: 20),
 
             // Business (required)
-            _sectionLabel('BUSINESS${businesses.isNotEmpty ? ' (required)' : ''}'),
+            _sectionLabel('BUSINESS (optional)'),
             const SizedBox(height: 8),
             if (businesses.isEmpty)
               Text('No businesses saved yet — expense will be saved without one.',
@@ -169,8 +171,6 @@ class _AddExpenseSheetBodyState extends State<_AddExpenseSheetBody> {
                   return GestureDetector(
                     onTap: () => setState(() {
                       _selectedBusinessId = active ? null : b.id;
-                      // Clear job if it doesn't belong to new business
-                      if (!active) _selectedJobId = null;
                     }),
                     child: _chip(b.displayName, active),
                   );

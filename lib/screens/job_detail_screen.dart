@@ -415,6 +415,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       text: job.rate != null ? job.rate.toString() : '',
     );
     String? selectedCategoryId = job.categoryId;
+    String? selectedBusinessId = job.businessId;
 
     showModalBottomSheet(
       context: context,
@@ -427,6 +428,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             final cats = provider.categories;
+            final businesses = provider.businesses;
             return Padding(
               padding: EdgeInsets.fromLTRB(
                 16, 20, 16,
@@ -465,6 +467,40 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       onChanged: (id) => setSheetState(() => selectedCategoryId = id),
                     ),
                   ],
+                  if (businesses.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text('BUSINESS',
+                        style: GoogleFonts.dmSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.of(context).fg2,
+                            letterSpacing: 0.6)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: businesses.map((b) {
+                        final active = selectedBusinessId == b.id;
+                        return GestureDetector(
+                          onTap: () => setSheetState(() =>
+                              selectedBusinessId = active ? null : b.id),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: active ? AppColors.primary.withAlpha(30) : AppColors.of(context).bgDeep,
+                              border: Border.all(color: active ? AppColors.primary : AppColors.of(context).border),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(b.displayName,
+                                style: GoogleFonts.dmSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: active ? AppColors.primary : AppColors.of(context).fg2)),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -483,6 +519,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           clearRate: rateText.isEmpty,
                           categoryId: selectedCategoryId,
                           clearCategoryId: selectedCategoryId == null,
+                          businessId: selectedBusinessId,
+                          clearBusinessId: selectedBusinessId == null,
                         );
                         Navigator.pop(ctx);
                       },

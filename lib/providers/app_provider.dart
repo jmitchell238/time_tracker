@@ -283,10 +283,10 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateJob(String id, {String? name, String? description, double? rate, bool clearRate = false, String? categoryId, bool clearCategoryId = false}) {
+  void updateJob(String id, {String? name, String? description, double? rate, bool clearRate = false, String? categoryId, bool clearCategoryId = false, String? businessId, bool clearBusinessId = false}) {
     jobs = jobs.map((j) {
       if (j.id != id) return j;
-      return j.copyWith(name: name, description: description, rate: rate, clearRate: clearRate, categoryId: categoryId, clearCategoryId: clearCategoryId);
+      return j.copyWith(name: name, description: description, rate: rate, clearRate: clearRate, categoryId: categoryId, clearCategoryId: clearCategoryId, businessId: businessId, clearBusinessId: clearBusinessId);
     }).toList();
     final updated = jobs.firstWhere((j) => j.id == id);
     if (_workspaceId != null) {
