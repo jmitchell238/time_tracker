@@ -67,6 +67,24 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     return '\$${n.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+\.)'), (m) => '${m[1]},')}';
   }
 
+  String _fmt12(String hhmm) {
+    final parts = hhmm.split(':');
+    final h = int.parse(parts[0]);
+    final m = parts[1];
+    final period = h < 12 ? 'AM' : 'PM';
+    final h12 = h % 12 == 0 ? 12 : h % 12;
+    return '$h12:$m $period';
+  }
+
+  String _entrySubLabel(TimeEntry e) {
+    final isTimeBased = !(e.startTime == '00:00' && e.endTime == '00:00');
+    final dateStr = _fmtDateShort(e.date);
+    if (isTimeBased) {
+      return '$dateStr · ${_fmt12(e.startTime)} – ${_fmt12(e.endTime)} · ${e.description}';
+    }
+    return '$dateStr · ${e.description}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
@@ -963,7 +981,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           padding: const EdgeInsets.only(bottom: 8),
           child: _detailRow(
             left: job?.name ?? 'Unknown',
-            sub: '${_fmtDateShort(e.date)} · ${e.description}',
+            sub: _entrySubLabel(e),
             right: _fmtMoney(e.hours * rate),
             rightSub: '${e.hours.toStringAsFixed(1)}h',
           ),
@@ -1013,7 +1031,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           padding: const EdgeInsets.only(bottom: 8),
           child: _detailRow(
             left: job?.name ?? 'Unknown',
-            sub: '${_fmtDateShort(e.date)} · ${e.description}',
+            sub: _entrySubLabel(e),
             right: _fmtMoney(e.hours * rate),
             rightSub: '${e.hours.toStringAsFixed(1)}h',
             accentColor: catColor,

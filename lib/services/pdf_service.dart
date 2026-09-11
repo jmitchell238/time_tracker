@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../models/app_settings.dart';
@@ -134,6 +134,7 @@ class PdfService {
         final rate = getRate(e);
         return [
           _fmtDateShort(e.date),
+          _fmtTimeRange(e),
           job?.name ?? '—',
           e.description.isEmpty ? '—' : e.description,
           e.hours.toStringAsFixed(2),
@@ -143,30 +144,32 @@ class PdfService {
       }).toList();
 
       widgets.add(pw.TableHelper.fromTextArray(
-        headers: ['Date', 'Job', 'Description', 'Hours', 'Rate', 'Amount'],
+        headers: ['Date', 'Time', 'Job', 'Description', 'Hours', 'Rate', 'Amount'],
         data: rows,
-        headerStyle: pw.TextStyle(font: bold, fontSize: 9, color: PdfColors.white),
-        cellStyle: pw.TextStyle(font: regular, fontSize: 9, color: _kFg),
+        headerStyle: pw.TextStyle(font: bold, fontSize: 8, color: PdfColors.white),
+        cellStyle: pw.TextStyle(font: regular, fontSize: 8, color: _kFg),
         headerDecoration: pw.BoxDecoration(color: catPdfColor),
         rowDecoration: const pw.BoxDecoration(color: _kBgLight),
         oddRowDecoration: const pw.BoxDecoration(color: PdfColors.white),
         border: pw.TableBorder.all(color: _kBorder, width: 0.5),
         cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         columnWidths: {
-          0: const pw.FixedColumnWidth(56),
-          1: const pw.FlexColumnWidth(2),
-          2: const pw.FlexColumnWidth(3),
-          3: const pw.FixedColumnWidth(44),
-          4: const pw.FixedColumnWidth(52),
-          5: const pw.FixedColumnWidth(60),
+          0: const pw.FixedColumnWidth(52),
+          1: const pw.FixedColumnWidth(82),
+          2: const pw.FlexColumnWidth(2),
+          3: const pw.FlexColumnWidth(3),
+          4: const pw.FixedColumnWidth(40),
+          5: const pw.FixedColumnWidth(46),
+          6: const pw.FixedColumnWidth(56),
         },
         cellAlignments: {
           0: pw.Alignment.centerLeft,
           1: pw.Alignment.centerLeft,
           2: pw.Alignment.centerLeft,
-          3: pw.Alignment.centerRight,
+          3: pw.Alignment.centerLeft,
           4: pw.Alignment.centerRight,
           5: pw.Alignment.centerRight,
+          6: pw.Alignment.centerRight,
         },
       ));
 
@@ -327,6 +330,7 @@ class PdfService {
       final amount = e.hours * rate;
       return [
         _fmtDateShort(e.date),
+        _fmtTimeRange(e),
         job?.name ?? '—',
         e.description.isEmpty ? '—' : e.description,
         e.hours.toStringAsFixed(2),
@@ -336,10 +340,10 @@ class PdfService {
     }).toList();
 
     return pw.TableHelper.fromTextArray(
-      headers: ['Date', 'Job', 'Description', 'Hours', 'Rate', 'Amount'],
+      headers: ['Date', 'Time', 'Job', 'Description', 'Hours', 'Rate', 'Amount'],
       data: rows,
-      headerStyle: pw.TextStyle(font: bold, fontSize: 9, color: PdfColors.white),
-      cellStyle: pw.TextStyle(font: regular, fontSize: 9, color: _kFg),
+      headerStyle: pw.TextStyle(font: bold, fontSize: 8, color: PdfColors.white),
+      cellStyle: pw.TextStyle(font: regular, fontSize: 8, color: _kFg),
       headerDecoration: const pw.BoxDecoration(color: _kFg),
       rowDecoration: const pw.BoxDecoration(color: _kBgLight),
       oddRowDecoration: const pw.BoxDecoration(color: PdfColors.white),
@@ -347,20 +351,22 @@ class PdfService {
       cellPadding:
           const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       columnWidths: {
-        0: const pw.FixedColumnWidth(56),
-        1: const pw.FlexColumnWidth(2),
-        2: const pw.FlexColumnWidth(3),
-        3: const pw.FixedColumnWidth(44),
-        4: const pw.FixedColumnWidth(52),
-        5: const pw.FixedColumnWidth(60),
+        0: const pw.FixedColumnWidth(52),
+        1: const pw.FixedColumnWidth(82),
+        2: const pw.FlexColumnWidth(2),
+        3: const pw.FlexColumnWidth(3),
+        4: const pw.FixedColumnWidth(40),
+        5: const pw.FixedColumnWidth(46),
+        6: const pw.FixedColumnWidth(56),
       },
       cellAlignments: {
         0: pw.Alignment.centerLeft,
         1: pw.Alignment.centerLeft,
         2: pw.Alignment.centerLeft,
-        3: pw.Alignment.centerRight,
+        3: pw.Alignment.centerLeft,
         4: pw.Alignment.centerRight,
         5: pw.Alignment.centerRight,
+        6: pw.Alignment.centerRight,
       },
     );
   }
@@ -537,5 +543,22 @@ class PdfService {
     const m = ['January','February','March','April','May','June',
                 'July','August','September','October','November','December'];
     return '${m[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
+
+  @visibleForTesting
+  static String fmtTimeRange(TimeEntry e) => _fmtTimeRange(e);
+
+  static String _fmtTimeRange(TimeEntry e) {
+    if (e.startTime == '00:00' && e.endTime == '00:00') return '—';
+    return '${_fmt12(e.startTime)} – ${_fmt12(e.endTime)}';
+  }
+
+  static String _fmt12(String hhmm) {
+    final parts = hhmm.split(':');
+    final h = int.parse(parts[0]);
+    final m = parts[1];
+    final period = h < 12 ? 'AM' : 'PM';
+    final h12 = h % 12 == 0 ? 12 : h % 12;
+    return '$h12:$m $period';
   }
 }
