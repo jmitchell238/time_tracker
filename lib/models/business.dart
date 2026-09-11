@@ -3,12 +3,14 @@ class Business {
   final String? name;
   final String? company;
   final String? phone;
+  final String? address;
 
   const Business({
     required this.id,
     this.name,
     this.company,
     this.phone,
+    this.address,
   });
 
   String get displayName => company ?? name ?? '—';
@@ -18,6 +20,7 @@ class Business {
         'name': name,
         'company': company,
         'phone': phone,
+        'address': address,
       };
 
   factory Business.fromJson(Map<String, dynamic> j) => Business(
@@ -25,5 +28,6 @@ class Business {
         name: j['name'] as String?,
         company: j['company'] as String?,
         phone: j['phone'] as String?,
+        address: j['address'] as String?,
       );
 }

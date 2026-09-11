@@ -27,6 +27,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _billingNameCtrl;
   late TextEditingController _billingAddressCtrl;
   late TextEditingController _billingPhoneCtrl;
+  late TextEditingController _paymentTermsCtrl;
+  late TextEditingController _paymentInstructionsCtrl;
   bool _saved = false;
   bool _importing = false;
   late final AuthService _authService;
@@ -40,6 +42,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _billingNameCtrl = TextEditingController(text: s.billingName ?? '');
     _billingAddressCtrl = TextEditingController(text: s.billingAddress ?? '');
     _billingPhoneCtrl = TextEditingController(text: s.billingPhone ?? '');
+    _paymentTermsCtrl = TextEditingController(text: s.paymentTermsDays.toString());
+    _paymentInstructionsCtrl = TextEditingController(text: s.paymentInstructions ?? '');
   }
 
   @override
@@ -48,6 +52,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _billingNameCtrl.dispose();
     _billingAddressCtrl.dispose();
     _billingPhoneCtrl.dispose();
+    _paymentTermsCtrl.dispose();
+    _paymentInstructionsCtrl.dispose();
     super.dispose();
   }
 
@@ -64,6 +70,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       clearBillingAddress: _billingAddressCtrl.text.trim().isEmpty,
       billingPhone: _billingPhoneCtrl.text.trim().isEmpty ? null : _billingPhoneCtrl.text.trim(),
       clearBillingPhone: _billingPhoneCtrl.text.trim().isEmpty,
+      paymentTermsDays: () {
+        final parsed = int.tryParse(_paymentTermsCtrl.text.trim());
+        return (parsed == null || parsed < 0) ? 14 : parsed;
+      }(),
+      paymentInstructions: _paymentInstructionsCtrl.text.trim().isEmpty ? null : _paymentInstructionsCtrl.text.trim(),
+      clearPaymentInstructions: _paymentInstructionsCtrl.text.trim().isEmpty,
     ));
     setState(() => _saved = true);
     Future.delayed(const Duration(seconds: 2), () {
@@ -150,6 +162,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               LabeledTextField(label: 'Address', controller: _billingAddressCtrl, keyboardType: TextInputType.streetAddress),
               const SizedBox(height: 10),
               LabeledTextField(label: 'Phone', controller: _billingPhoneCtrl, keyboardType: TextInputType.phone),
+              const SizedBox(height: 10),
+              LabeledTextField(label: 'Payment Terms (days until due)', controller: _paymentTermsCtrl, keyboardType: TextInputType.number),
+              const SizedBox(height: 6),
+              Text('Invoices show a due date this many days after the invoice date.',
+                  style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.of(context).fg2)),
+              const SizedBox(height: 10),
+              LabeledTextField(label: 'Payment Instructions', controller: _paymentInstructionsCtrl),
             ],
           ),
         ),

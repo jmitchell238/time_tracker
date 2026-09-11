@@ -12,6 +12,7 @@ class Invoice {
   final String? clientName;
   final String? clientCompany;
   final String? clientPhone;
+  final String? clientAddress;
   final String? billedBy;
   final String? paidAt;        // 'YYYY-MM-DD' — null means unpaid
   final String? paymentMethod; // 'Cash', 'Check', etc.
@@ -30,6 +31,7 @@ class Invoice {
     this.clientName,
     this.clientCompany,
     this.clientPhone,
+    this.clientAddress,
     this.billedBy,
     this.paidAt,
     this.paymentMethod,
@@ -46,6 +48,8 @@ class Invoice {
     bool clearClientCompany = false,
     String? clientPhone,
     bool clearClientPhone = false,
+    String? clientAddress,
+    bool clearClientAddress = false,
     String? billedBy,
     bool clearBilledBy = false,
     String? paidAt,
@@ -67,6 +71,7 @@ class Invoice {
       clientName: clearClientName ? null : (clientName ?? this.clientName),
       clientCompany: clearClientCompany ? null : (clientCompany ?? this.clientCompany),
       clientPhone: clearClientPhone ? null : (clientPhone ?? this.clientPhone),
+      clientAddress: clearClientAddress ? null : (clientAddress ?? this.clientAddress),
       billedBy: clearBilledBy ? null : (billedBy ?? this.billedBy),
       paidAt: clearPaidAt ? null : (paidAt ?? this.paidAt),
       paymentMethod: clearPaymentMethod ? null : (paymentMethod ?? this.paymentMethod),
@@ -87,6 +92,7 @@ class Invoice {
         'clientName': clientName,
         'clientCompany': clientCompany,
         'clientPhone': clientPhone,
+        'clientAddress': clientAddress,
         'billedBy': billedBy,
         'paidAt': paidAt,
         'paymentMethod': paymentMethod,
@@ -108,6 +114,7 @@ class Invoice {
         clientName: j['clientName'] as String?,
         clientCompany: j['clientCompany'] as String?,
         clientPhone: j['clientPhone'] as String?,
+        clientAddress: j['clientAddress'] as String?,
         billedBy: j['billedBy'] as String?,
         paidAt: j['paidAt'] as String?,
         paymentMethod: j['paymentMethod'] as String?,

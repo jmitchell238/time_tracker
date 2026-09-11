@@ -162,5 +162,92 @@ void main() {
       expect(copy.clientCompany, original.clientCompany);
       expect(copy.clientPhone, original.clientPhone);
     });
+
+    // clientAddress
+    test('toJson serializes clientAddress', () {
+      final inv = Invoice(
+        id: 'inv1',
+        number: 'INV-001',
+        createdAt: '2026-04-01',
+        entryIds: const [],
+        totalHours: 0,
+        totalAmount: 0,
+        notes: '',
+        clientAddress: '123 Main St',
+      );
+      expect(inv.toJson()['clientAddress'], '123 Main St');
+    });
+
+    test('fromJson defaults clientAddress to null when missing', () {
+      final inv = Invoice.fromJson({
+        'id': 'inv1',
+        'number': 'INV-001',
+        'createdAt': '2026-04-01',
+        'entryIds': <String>[],
+        'totalHours': 0.0,
+        'totalAmount': 0.0,
+        'notes': '',
+      });
+      expect(inv.clientAddress, isNull);
+    });
+
+    test('fromJson deserializes clientAddress', () {
+      final inv = Invoice.fromJson({
+        'id': 'inv1',
+        'number': 'INV-001',
+        'createdAt': '2026-04-01',
+        'entryIds': <String>[],
+        'totalHours': 0.0,
+        'totalAmount': 0.0,
+        'notes': '',
+        'clientAddress': '123 Main St',
+      });
+      expect(inv.clientAddress, '123 Main St');
+    });
+
+    test('copyWith updates clientAddress', () {
+      const inv = Invoice(
+        id: 'inv1',
+        number: 'INV-001',
+        createdAt: '2026-04-01',
+        entryIds: [],
+        totalHours: 0,
+        totalAmount: 0,
+        notes: '',
+        clientAddress: 'Old Address',
+      );
+      final updated = inv.copyWith(clientAddress: 'New Address');
+      expect(updated.clientAddress, 'New Address');
+    });
+
+    test('copyWith with clearClientAddress sets it to null', () {
+      const inv = Invoice(
+        id: 'inv1',
+        number: 'INV-001',
+        createdAt: '2026-04-01',
+        entryIds: [],
+        totalHours: 0,
+        totalAmount: 0,
+        notes: '',
+        clientAddress: '123 Main St',
+      );
+      final updated = inv.copyWith(clearClientAddress: true);
+      expect(updated.clientAddress, isNull);
+    });
+
+    test('round-trip toJson -> fromJson preserves clientAddress', () {
+      const original = Invoice(
+        id: 'inv1',
+        number: 'INV-001',
+        createdAt: '2026-04-01',
+        entryIds: [],
+        totalHours: 0,
+        totalAmount: 0,
+        notes: '',
+        clientAddress: '789 Elm St',
+      );
+      final copy = Invoice.fromJson(original.toJson());
+      expect(copy.clientAddress, original.clientAddress);
+    });
   });
 }

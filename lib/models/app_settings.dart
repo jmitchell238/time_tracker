@@ -12,6 +12,10 @@ class AppSettings {
   final int defaultTab;
   /// One of 'recent' or 'az'.
   final String defaultJobsSort;
+  /// Days after the invoice date that payment is due.
+  final int paymentTermsDays;
+  /// When null/empty, the PDF falls back to a default instructions string.
+  final String? paymentInstructions;
 
   const AppSettings({
     this.defaultRate = 35.0,
@@ -22,6 +26,8 @@ class AppSettings {
     this.themeMode = 'system',
     this.defaultTab = 0,
     this.defaultJobsSort = 'recent',
+    this.paymentTermsDays = 14,
+    this.paymentInstructions,
   });
 
   AppSettings copyWith({
@@ -36,6 +42,9 @@ class AppSettings {
     String? themeMode,
     int? defaultTab,
     String? defaultJobsSort,
+    int? paymentTermsDays,
+    String? paymentInstructions,
+    bool clearPaymentInstructions = false,
   }) =>
       AppSettings(
         defaultRate: defaultRate ?? this.defaultRate,
@@ -46,6 +55,10 @@ class AppSettings {
         themeMode: themeMode ?? this.themeMode,
         defaultTab: defaultTab ?? this.defaultTab,
         defaultJobsSort: defaultJobsSort ?? this.defaultJobsSort,
+        paymentTermsDays: paymentTermsDays ?? this.paymentTermsDays,
+        paymentInstructions: clearPaymentInstructions
+            ? null
+            : (paymentInstructions ?? this.paymentInstructions),
       );
 
   Map<String, dynamic> toJson() => {
@@ -57,6 +70,8 @@ class AppSettings {
         'themeMode': themeMode,
         'defaultTab': defaultTab,
         'defaultJobsSort': defaultJobsSort,
+        'paymentTermsDays': paymentTermsDays,
+        'paymentInstructions': paymentInstructions,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> j) => AppSettings(
@@ -70,5 +85,7 @@ class AppSettings {
         themeMode: j['themeMode'] as String? ?? 'system',
         defaultTab: (j['defaultTab'] as int?) ?? 0,
         defaultJobsSort: j['defaultJobsSort'] as String? ?? 'recent',
+        paymentTermsDays: (j['paymentTermsDays'] as int?) ?? 14,
+        paymentInstructions: j['paymentInstructions'] as String?,
       );
 }

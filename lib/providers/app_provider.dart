@@ -514,6 +514,7 @@ class AppProvider extends ChangeNotifier {
     String? clientName,
     String? clientCompany,
     String? clientPhone,
+    String? clientAddress,
     String? billedBy,
   }) async {
     final num = 'INV-${(invoices.length + 1).toString().padLeft(3, '0')}';
@@ -531,6 +532,7 @@ class AppProvider extends ChangeNotifier {
       clientName: clientName?.isEmpty == true ? null : clientName,
       clientCompany: clientCompany?.isEmpty == true ? null : clientCompany,
       clientPhone: clientPhone?.isEmpty == true ? null : clientPhone,
+      clientAddress: clientAddress?.isEmpty == true ? null : clientAddress,
       billedBy: billedBy,
     );
 
@@ -545,6 +547,7 @@ class AppProvider extends ChangeNotifier {
           name: clientName?.isEmpty == true ? null : clientName,
           company: clientCompany?.isEmpty == true ? null : clientCompany,
           phone: clientPhone?.isEmpty == true ? null : clientPhone,
+          address: clientAddress?.isEmpty == true ? null : clientAddress,
         );
       }
     }
@@ -606,6 +609,7 @@ class AppProvider extends ChangeNotifier {
     String? clientName,
     String? clientCompany,
     String? clientPhone,
+    String? clientAddress,
     String? billedBy,
   }) {
     invoices = invoices.map((inv) {
@@ -618,6 +622,8 @@ class AppProvider extends ChangeNotifier {
         clearClientCompany: clientCompany == '',
         clientPhone: clientPhone == '' ? null : clientPhone,
         clearClientPhone: clientPhone == '',
+        clientAddress: clientAddress == '' ? null : clientAddress,
+        clearClientAddress: clientAddress == '',
         billedBy: billedBy == '' ? null : billedBy,
         clearBilledBy: billedBy == '',
       );
@@ -673,9 +679,9 @@ class AppProvider extends ChangeNotifier {
 
   // ── Businesses ────────────────────────────────────────────────────────────
 
-  void addBusiness({String? name, String? company, String? phone}) {
+  void addBusiness({String? name, String? company, String? phone, String? address}) {
     final business = Business(
-        id: _uuid.v4(), name: name, company: company, phone: phone);
+        id: _uuid.v4(), name: name, company: company, phone: phone, address: address);
     businesses = [...businesses, business];
     if (_workspaceId != null) {
       _col('businesses').doc(business.id).set(business.toJson());

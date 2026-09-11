@@ -177,5 +177,60 @@ void main() {
       final copy = AppSettings.fromJson(s.toJson());
       expect(copy.themeMode, 'dark');
     });
+
+    // paymentTermsDays / paymentInstructions
+    test('default paymentTermsDays is 14', () {
+      const s = AppSettings();
+      expect(s.paymentTermsDays, 14);
+    });
+
+    test('default paymentInstructions is null', () {
+      const s = AppSettings();
+      expect(s.paymentInstructions, isNull);
+    });
+
+    test('toJson serializes paymentTermsDays and paymentInstructions', () {
+      const s = AppSettings(paymentTermsDays: 30, paymentInstructions: 'Pay via Zelle.');
+      final j = s.toJson();
+      expect(j['paymentTermsDays'], 30);
+      expect(j['paymentInstructions'], 'Pay via Zelle.');
+    });
+
+    test('fromJson deserializes paymentTermsDays and paymentInstructions', () {
+      final s = AppSettings.fromJson({'paymentTermsDays': 7, 'paymentInstructions': 'Pay via Zelle.'});
+      expect(s.paymentTermsDays, 7);
+      expect(s.paymentInstructions, 'Pay via Zelle.');
+    });
+
+    test('fromJson defaults paymentTermsDays to 14 when missing (old json)', () {
+      final s = AppSettings.fromJson({'defaultRate': 40.0});
+      expect(s.paymentTermsDays, 14);
+      expect(s.paymentInstructions, isNull);
+    });
+
+    test('copyWith updates paymentTermsDays', () {
+      const s = AppSettings(paymentTermsDays: 14);
+      final updated = s.copyWith(paymentTermsDays: 0);
+      expect(updated.paymentTermsDays, 0);
+    });
+
+    test('copyWith updates paymentInstructions', () {
+      const s = AppSettings();
+      final updated = s.copyWith(paymentInstructions: 'Cash only.');
+      expect(updated.paymentInstructions, 'Cash only.');
+    });
+
+    test('copyWith with clearPaymentInstructions sets it to null', () {
+      const s = AppSettings(paymentInstructions: 'Cash only.');
+      final updated = s.copyWith(clearPaymentInstructions: true);
+      expect(updated.paymentInstructions, isNull);
+    });
+
+    test('round-trip preserves paymentTermsDays and paymentInstructions', () {
+      const s = AppSettings(paymentTermsDays: 45, paymentInstructions: 'Wire transfer only.');
+      final copy = AppSettings.fromJson(s.toJson());
+      expect(copy.paymentTermsDays, 45);
+      expect(copy.paymentInstructions, 'Wire transfer only.');
+    });
   });
 }

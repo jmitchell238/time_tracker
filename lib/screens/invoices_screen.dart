@@ -35,6 +35,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   final _clientNameCtrl = TextEditingController();
   final _clientCompanyCtrl = TextEditingController();
   final _clientPhoneCtrl = TextEditingController();
+  final _clientAddressCtrl = TextEditingController();
 
   @override
   void dispose() {
@@ -42,6 +43,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     _clientNameCtrl.dispose();
     _clientCompanyCtrl.dispose();
     _clientPhoneCtrl.dispose();
+    _clientAddressCtrl.dispose();
     super.dispose();
   }
 
@@ -54,6 +56,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     _clientNameCtrl.clear();
     _clientCompanyCtrl.clear();
     _clientPhoneCtrl.clear();
+    _clientAddressCtrl.clear();
     _notesCtrl.clear();
   }
 
@@ -312,6 +315,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   _clientNameCtrl.text = c.name ?? '';
                   _clientCompanyCtrl.text = c.company ?? '';
                   _clientPhoneCtrl.text = c.phone ?? '';
+                  _clientAddressCtrl.text = c.address ?? '';
                 }),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -340,6 +344,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         LabeledTextField(label: 'Company', controller: _clientCompanyCtrl),
         const SizedBox(height: 8),
         LabeledTextField(label: 'Phone', controller: _clientPhoneCtrl, keyboardType: TextInputType.phone),
+        const SizedBox(height: 8),
+        LabeledTextField(label: 'Client Address', controller: _clientAddressCtrl, keyboardType: TextInputType.streetAddress),
         const SizedBox(height: 20),
 
         // ── Select entries ──
@@ -534,6 +540,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                         clientName: _clientNameCtrl.text.trim(),
                         clientCompany: _clientCompanyCtrl.text.trim(),
                         clientPhone: _clientPhoneCtrl.text.trim(),
+                        clientAddress: _clientAddressCtrl.text.trim(),
                         billedBy: _billedBy,
                       );
                       if (mounted) setState(_resetCreate);
@@ -1163,6 +1170,7 @@ class _EditInvoiceSheetState extends State<_EditInvoiceSheet> {
   late final TextEditingController _clientNameCtrl;
   late final TextEditingController _clientCompanyCtrl;
   late final TextEditingController _clientPhoneCtrl;
+  late final TextEditingController _clientAddressCtrl;
   late final TextEditingController _notesCtrl;
 
   @override
@@ -1172,6 +1180,7 @@ class _EditInvoiceSheetState extends State<_EditInvoiceSheet> {
     _clientNameCtrl = TextEditingController(text: widget.invoice.clientName ?? '');
     _clientCompanyCtrl = TextEditingController(text: widget.invoice.clientCompany ?? '');
     _clientPhoneCtrl = TextEditingController(text: widget.invoice.clientPhone ?? '');
+    _clientAddressCtrl = TextEditingController(text: widget.invoice.clientAddress ?? '');
     _notesCtrl = TextEditingController(text: widget.invoice.notes);
   }
 
@@ -1180,6 +1189,7 @@ class _EditInvoiceSheetState extends State<_EditInvoiceSheet> {
     _clientNameCtrl.dispose();
     _clientCompanyCtrl.dispose();
     _clientPhoneCtrl.dispose();
+    _clientAddressCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
   }
@@ -1192,6 +1202,7 @@ class _EditInvoiceSheetState extends State<_EditInvoiceSheet> {
       clientName: _clientNameCtrl.text.trim(),
       clientCompany: _clientCompanyCtrl.text.trim(),
       clientPhone: _clientPhoneCtrl.text.trim(),
+      clientAddress: _clientAddressCtrl.text.trim(),
       billedBy: _billedBy,
     );
     Navigator.pop(context);
@@ -1256,6 +1267,8 @@ class _EditInvoiceSheetState extends State<_EditInvoiceSheet> {
           LabeledTextField(label: 'Company', controller: _clientCompanyCtrl),
           const SizedBox(height: 8),
           LabeledTextField(label: 'Phone', controller: _clientPhoneCtrl, keyboardType: TextInputType.phone),
+          const SizedBox(height: 8),
+          LabeledTextField(label: 'Client Address', controller: _clientAddressCtrl, keyboardType: TextInputType.streetAddress),
           const SizedBox(height: 8),
           LabeledTextField(label: 'Notes', controller: _notesCtrl),
           const SizedBox(height: 20),
