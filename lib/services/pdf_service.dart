@@ -312,10 +312,6 @@ class PdfService {
               pw.Text('INVOICE',
                   style: pw.TextStyle(
                       font: bold, fontSize: 24, color: PdfColors.white, letterSpacing: 0.5)),
-              pw.SizedBox(height: 2),
-              pw.Text('Property Work Time Tracker',
-                  style: pw.TextStyle(
-                      font: regular, fontSize: _kSizeBody, color: _kWhiteMuted)),
             ],
           ),
           pw.Column(
@@ -804,6 +800,32 @@ class PdfService {
   @visibleForTesting
   static String? servicePeriod(List<TimeEntry> entries, List<ExpenseItem> expenses) =>
       _servicePeriod(entries, expenses);
+
+  /// File name for a saved/shared invoice PDF, of the form
+  /// `{person}-{business}-invoice-{mm-dd-yyyy}.pdf`.
+  static String invoiceFileName(Invoice inv, AppSettings settings) {
+    final person = _slug(_resolveFromName(inv, settings));
+    final business =
+        _slug(inv.clientCompany ?? inv.clientName ?? '') ;
+    final parts = inv.createdAt.split('-'); // YYYY-MM-DD
+    final date = parts.length == 3
+        ? '${parts[1]}-${parts[2]}-${parts[0]}'
+        : inv.createdAt;
+    final segments = [
+      if (person.isNotEmpty) person,
+      if (business.isNotEmpty) business,
+      'invoice',
+      date,
+    ];
+    return '${segments.join('-')}.pdf';
+  }
+
+  /// Lowercases and strips anything that is awkward in a file name, collapsing
+  /// runs of removed characters into single hyphens.
+  static String _slug(String raw) => raw
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
 
   static String _fmtDateShort(String d) {
     final dt = DateTime.parse('${d}T12:00:00');

@@ -1323,7 +1323,10 @@ class _PdfButtonState extends State<_PdfButton> {
         expenses: expenses,
         categories: p.categories,
       );
-      await Printing.layoutPdf(onLayout: (_) async => bytes, name: '${widget.invoice.number}.pdf');
+      await Printing.layoutPdf(
+        onLayout: (_) async => bytes,
+        name: PdfService.invoiceFileName(widget.invoice, p.settings),
+      );
     } finally {
       if (mounted) setState(() => _generating = false);
     }

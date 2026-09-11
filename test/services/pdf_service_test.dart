@@ -12,6 +12,7 @@ Invoice _invoice({
   String? clientCompany = 'Acme',
   String? clientPhone = '555-1234',
   String? sentAt,
+  String? billedBy,
   List<String> entryIds = const ['e1'],
 }) =>
     Invoice(
@@ -26,6 +27,7 @@ Invoice _invoice({
       clientName: clientName,
       clientCompany: clientCompany,
       clientPhone: clientPhone,
+      billedBy: billedBy,
     );
 
 TimeEntry _entry({
@@ -369,6 +371,44 @@ void main() {
         getRate: _rate,
       );
       expect(bytes, isNotEmpty);
+    });
+  });
+
+  group('PdfService.invoiceFileName', () {
+    test('joins person, business, and mm-dd-yyyy date', () {
+      final inv = _invoice(clientName: 'Josh Duke', clientCompany: '1819 The Restaurant');
+      const settings = AppSettings(billingName: 'James & Whitney Mitchell');
+      expect(
+        PdfService.invoiceFileName(inv, settings),
+        'james-whitney-mitchell-1819-the-restaurant-invoice-04-01-2026.pdf',
+      );
+    });
+
+    test('uses the billedBy person when the invoice names one', () {
+      final inv = _invoice(clientCompany: '1819 The Restaurant', billedBy: 'Whitney');
+      const settings = AppSettings(billingName: 'James & Whitney Mitchell');
+      expect(
+        PdfService.invoiceFileName(inv, settings),
+        'whitney-mitchell-1819-the-restaurant-invoice-04-01-2026.pdf',
+      );
+    });
+
+    test('falls back to the client name when there is no company', () {
+      final inv = _invoice(clientName: 'Josh Duke', clientCompany: null, billedBy: 'Whitney');
+      const settings = AppSettings(billingName: 'Whitney Mitchell');
+      expect(
+        PdfService.invoiceFileName(inv, settings),
+        'whitney-mitchell-josh-duke-invoice-04-01-2026.pdf',
+      );
+    });
+
+    test('omits the business segment entirely when no client is set', () {
+      final inv = _invoice(clientName: null, clientCompany: null, billedBy: 'Whitney');
+      const settings = AppSettings(billingName: 'Whitney Mitchell');
+      expect(
+        PdfService.invoiceFileName(inv, settings),
+        'whitney-mitchell-invoice-04-01-2026.pdf',
+      );
     });
   });
 }
