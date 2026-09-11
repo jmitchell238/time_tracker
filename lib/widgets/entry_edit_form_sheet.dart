@@ -6,6 +6,7 @@ import '../providers/app_provider.dart';
 import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 import 'field_label.dart';
+import 'job_picker_dropdown.dart';
 import 'rate_input_field.dart';
 
 class EntryEditFormSheet extends StatefulWidget {
@@ -30,6 +31,7 @@ class _EntryEditFormSheetState extends State<EntryEditFormSheet> {
   late DateTime _date;
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
+  String? _selectedJobId;
   late final TextEditingController _hoursCtrl;
   late final TextEditingController _rateCtrl;
   late final TextEditingController _descCtrl;
@@ -40,6 +42,7 @@ class _EntryEditFormSheetState extends State<EntryEditFormSheet> {
   @override
   void initState() {
     super.initState();
+    _selectedJobId = widget.entry.jobId;
     final dp = widget.entry.date.split('-');
     _date = DateTime(int.parse(dp[0]), int.parse(dp[1]), int.parse(dp[2]));
 
@@ -138,6 +141,8 @@ class _EntryEditFormSheetState extends State<EntryEditFormSheet> {
 
     provider.updateEntry(
       widget.entry.id,
+      jobId: _selectedJobId,
+      clearJobId: _selectedJobId == null,
       date: dateStr,
       startTime: startStr,
       endTime: endStr,
@@ -170,6 +175,12 @@ class _EntryEditFormSheetState extends State<EntryEditFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final activeJobs = provider.jobs.where((j) => !j.isArchived).toList();
+    if (_selectedJobId != null && !activeJobs.any((j) => j.id == _selectedJobId)) {
+      final currentJob = provider.jobs.where((j) => j.id == _selectedJobId).firstOrNull;
+      if (currentJob != null) activeJobs.add(currentJob);
+    }
     return Padding(
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -222,6 +233,25 @@ class _EntryEditFormSheetState extends State<EntryEditFormSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    FieldLabel('Job'),
+                    JobPickerDropdown(
+                      jobs: activeJobs,
+                      selectedJobId: _selectedJobId,
+                      allowDeselect: true,
+                      maxDropdownHeight: 160,
+                      onJobSelected: (id) {
+                        setState(() => _selectedJobId = id);
+                        if (id == null) {
+                          _rateCtrl.clear();
+                        } else {
+                          final job = activeJobs.where((j) => j.id == id).firstOrNull;
+                          if (job?.rate != null && _rateCtrl.text.isEmpty) {
+                            _rateCtrl.text = job!.rate!.toStringAsFixed(2);
+                          }
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
                     FieldLabel('Date'),
                     _TapField(
                       value: _formatDate(_date),

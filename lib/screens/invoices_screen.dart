@@ -694,6 +694,19 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     newMethodCtrl.dispose();
   }
 
+  // ── Edit Invoice sheet ────────────────────────────────────────────────────
+
+  Future<void> _showEditInvoiceSheet(BuildContext context, AppProvider provider, Invoice inv) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.of(context).bgBase,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => _EditInvoiceSheet(provider: provider, invoice: inv),
+    );
+  }
+
   // ── Detail ────────────────────────────────────────────────────────────────
 
   Widget _buildDetail(AppProvider provider) {
@@ -702,8 +715,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) => setState(() => _detailId = null));
       return const SizedBox();
     }
-    final invEntries = provider.entries.where((e) => inv.entryIds.contains(e.id)).toList();
-    final invExpenses = provider.expenses.where((e) => inv.expenseIds.contains(e.id)).toList();
+    final invEntries = provider.entries.where((e) => inv.entryIds.contains(e.id)).toList()
+      ..sort(_compareEntriesByDate);
+    final invExpenses = provider.expenses.where((e) => inv.expenseIds.contains(e.id)).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
@@ -749,6 +764,24 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                     ],
                   ),
                 ],
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: AppColors.of(context).bgCard,
+                border: Border.all(color: AppColors.of(context).border),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: IconButton(
+                onPressed: () {
+                  Analytics.action('edit_invoice_tapped');
+                  _showEditInvoiceSheet(context, provider, inv);
+                },
+                icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.of(context).fg2),
+                tooltip: 'Edit Invoice',
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                padding: EdgeInsets.zero,
               ),
             ),
             _PdfButton(invoice: inv, provider: provider),
@@ -901,6 +934,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     );
   }
 
+  static int _compareEntriesByDate(TimeEntry a, TimeEntry b) {
+    final d = a.date.compareTo(b.date);
+    return d != 0 ? d : a.startTime.compareTo(b.startTime);
+  }
+
   List<Widget> _buildCategorizedEntries(AppProvider provider, List<TimeEntry> invEntries) {
     final categories = provider.categories;
 
@@ -911,10 +949,14 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       final key = job?.categoryId;
       grouped.putIfAbsent(key, () => []).add(e);
     }
+    for (final list in grouped.values) {
+      list.sort(_compareEntriesByDate);
+    }
 
     // If nothing is categorized, fall back to the flat list
     if (!grouped.keys.any((k) => k != null)) {
-      return invEntries.map((e) {
+      final sortedFlat = [...invEntries]..sort(_compareEntriesByDate);
+      return sortedFlat.map((e) {
         final job = provider.jobs.where((j) => j.id == e.jobId).firstOrNull;
         final rate = provider.getEntryRate(e);
         return Padding(
@@ -1084,6 +1126,140 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         ),
         child: active ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
       );
+}
+
+// ── Edit Invoice Sheet ────────────────────────────────────────────────────────
+
+class _EditInvoiceSheet extends StatefulWidget {
+  final AppProvider provider;
+  final Invoice invoice;
+
+  const _EditInvoiceSheet({required this.provider, required this.invoice});
+
+  @override
+  State<_EditInvoiceSheet> createState() => _EditInvoiceSheetState();
+}
+
+class _EditInvoiceSheetState extends State<_EditInvoiceSheet> {
+  late String _billedBy;
+  late final TextEditingController _clientNameCtrl;
+  late final TextEditingController _clientCompanyCtrl;
+  late final TextEditingController _clientPhoneCtrl;
+  late final TextEditingController _notesCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _billedBy = widget.invoice.billedBy ?? 'James';
+    _clientNameCtrl = TextEditingController(text: widget.invoice.clientName ?? '');
+    _clientCompanyCtrl = TextEditingController(text: widget.invoice.clientCompany ?? '');
+    _clientPhoneCtrl = TextEditingController(text: widget.invoice.clientPhone ?? '');
+    _notesCtrl = TextEditingController(text: widget.invoice.notes);
+  }
+
+  @override
+  void dispose() {
+    _clientNameCtrl.dispose();
+    _clientCompanyCtrl.dispose();
+    _clientPhoneCtrl.dispose();
+    _notesCtrl.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    Analytics.action('invoice_edit_saved');
+    widget.provider.updateInvoiceDetails(
+      widget.invoice.id,
+      notes: _notesCtrl.text.trim(),
+      clientName: _clientNameCtrl.text.trim(),
+      clientCompany: _clientCompanyCtrl.text.trim(),
+      clientPhone: _clientPhoneCtrl.text.trim(),
+      billedBy: _billedBy,
+    );
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: AppColors.of(context).border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Text('Edit Invoice', style: GoogleFonts.lora(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.of(context).fg)),
+          const SizedBox(height: 16),
+
+          Text('BILLED BY',
+              style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.of(context).fg2, letterSpacing: 0.6)),
+          const SizedBox(height: 8),
+          Row(
+            children: ['James', 'Whitney', 'Combined'].map((name) {
+              final active = _billedBy == name;
+              final isLast = name == 'Combined';
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _billedBy = name),
+                  child: Container(
+                    margin: EdgeInsets.only(right: isLast ? 0 : 8),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: active ? AppColors.primary : AppColors.of(context).bgCard,
+                      border: Border.all(color: active ? AppColors.primary : AppColors.of(context).border),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(name,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12, fontWeight: FontWeight.w700,
+                            color: active ? Colors.white : AppColors.of(context).fg2,
+                          )),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+
+          LabeledTextField(label: 'Client Name', controller: _clientNameCtrl, keyboardType: TextInputType.name),
+          const SizedBox(height: 8),
+          LabeledTextField(label: 'Company', controller: _clientCompanyCtrl),
+          const SizedBox(height: 8),
+          LabeledTextField(label: 'Phone', controller: _clientPhoneCtrl, keyboardType: TextInputType.phone),
+          const SizedBox(height: 8),
+          LabeledTextField(label: 'Notes', controller: _notesCtrl),
+          const SizedBox(height: 20),
+
+          SizedBox(
+            height: 48,
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+              child: Text('Save Changes', style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── PDF Button ────────────────────────────────────────────────────────────────

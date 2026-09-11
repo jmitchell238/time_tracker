@@ -600,6 +600,36 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateInvoiceDetails(
+    String id, {
+    String? notes,
+    String? clientName,
+    String? clientCompany,
+    String? clientPhone,
+    String? billedBy,
+  }) {
+    invoices = invoices.map((inv) {
+      if (inv.id != id) return inv;
+      return inv.copyWith(
+        notes: notes,
+        clientName: clientName == '' ? null : clientName,
+        clearClientName: clientName == '',
+        clientCompany: clientCompany == '' ? null : clientCompany,
+        clearClientCompany: clientCompany == '',
+        clientPhone: clientPhone == '' ? null : clientPhone,
+        clearClientPhone: clientPhone == '',
+        billedBy: billedBy == '' ? null : billedBy,
+        clearBilledBy: billedBy == '',
+      );
+    }).toList();
+    final updated = invoices.firstWhere((i) => i.id == id);
+    if (_workspaceId != null) {
+      _col('invoices').doc(id).set(updated.toJson());
+    }
+    Analytics.action('invoice_details_updated');
+    notifyListeners();
+  }
+
   void unmarkInvoicePaid(String id) {
     invoices = invoices.map((inv) {
       if (inv.id != id) return inv;

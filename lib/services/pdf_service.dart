@@ -27,6 +27,9 @@ class PdfService {
     List<ExpenseItem> expenses = const [],
     List<EntryCategory> categories = const [],
   }) async {
+    final sortedEntries = [...entries]..sort(_compareEntriesByDate);
+    final sortedExpenses = [...expenses]..sort((a, b) => a.date.compareTo(b.date));
+
     final doc = pw.Document();
 
     final bold = pw.Font.helveticaBold();
@@ -34,7 +37,7 @@ class PdfService {
     final oblique = pw.Font.helveticaOblique();
 
     final useCategorized = categories.isNotEmpty &&
-        entries.any((e) => jobs.where((j) => j.id == e.jobId).firstOrNull?.categoryId != null);
+        sortedEntries.any((e) => jobs.where((j) => j.id == e.jobId).firstOrNull?.categoryId != null);
 
     doc.addPage(
       pw.MultiPage(
@@ -46,17 +49,17 @@ class PdfService {
           _billingRow(invoice, settings, bold, regular),
           pw.SizedBox(height: 20),
           if (useCategorized)
-            ..._categorizedEntriesSections(entries, jobs, categories, getRate, bold, regular)
+            ..._categorizedEntriesSections(sortedEntries, jobs, categories, getRate, bold, regular)
           else
-            _entriesTable(invoice, entries, jobs, getRate, bold, regular),
-          if (expenses.isNotEmpty) ...[
+            _entriesTable(invoice, sortedEntries, jobs, getRate, bold, regular),
+          if (sortedExpenses.isNotEmpty) ...[
             pw.SizedBox(height: 16),
             _expensesSectionHeader(bold, regular),
             pw.SizedBox(height: 6),
-            _expensesTable(expenses, bold, regular),
+            _expensesTable(sortedExpenses, bold, regular),
           ],
           pw.SizedBox(height: 16),
-          _totalsBlock(invoice, expenses, bold, regular),
+          _totalsBlock(invoice, sortedExpenses, bold, regular),
           if (invoice.notes.isNotEmpty) ...[
             pw.SizedBox(height: 16),
             _notesBlock(invoice, regular, oblique),
@@ -83,6 +86,9 @@ class PdfService {
     for (final e in entries) {
       final job = jobs.where((j) => j.id == e.jobId).firstOrNull;
       grouped.putIfAbsent(job?.categoryId, () => []).add(e);
+    }
+    for (final list in grouped.values) {
+      list.sort(_compareEntriesByDate);
     }
 
     // Named categories alphabetically, uncategorized last
@@ -513,6 +519,11 @@ class PdfService {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  static int _compareEntriesByDate(TimeEntry a, TimeEntry b) {
+    final d = a.date.compareTo(b.date);
+    return d != 0 ? d : a.startTime.compareTo(b.startTime);
+  }
 
   static String _fmtDateShort(String d) {
     final dt = DateTime.parse('${d}T12:00:00');

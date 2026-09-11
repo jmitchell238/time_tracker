@@ -38,6 +38,16 @@ class Invoice {
   bool get isPaid => paidAt != null;
 
   Invoice copyWith({
+    String? number,
+    String? notes,
+    String? clientName,
+    bool clearClientName = false,
+    String? clientCompany,
+    bool clearClientCompany = false,
+    String? clientPhone,
+    bool clearClientPhone = false,
+    String? billedBy,
+    bool clearBilledBy = false,
     String? paidAt,
     bool clearPaidAt = false,
     String? paymentMethod,
@@ -45,7 +55,7 @@ class Invoice {
   }) {
     return Invoice(
       id: id,
-      number: number,
+      number: number ?? this.number,
       createdAt: createdAt,
       sentAt: sentAt,
       entryIds: entryIds,
@@ -53,11 +63,11 @@ class Invoice {
       totalHours: totalHours,
       totalAmount: totalAmount,
       expensesTotal: expensesTotal,
-      notes: notes,
-      clientName: clientName,
-      clientCompany: clientCompany,
-      clientPhone: clientPhone,
-      billedBy: billedBy,
+      notes: notes ?? this.notes,
+      clientName: clearClientName ? null : (clientName ?? this.clientName),
+      clientCompany: clearClientCompany ? null : (clientCompany ?? this.clientCompany),
+      clientPhone: clearClientPhone ? null : (clientPhone ?? this.clientPhone),
+      billedBy: clearBilledBy ? null : (billedBy ?? this.billedBy),
       paidAt: clearPaidAt ? null : (paidAt ?? this.paidAt),
       paymentMethod: clearPaymentMethod ? null : (paymentMethod ?? this.paymentMethod),
     );
