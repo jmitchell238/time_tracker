@@ -176,27 +176,27 @@ void main() {
   group('PdfService.fmtTimeRange', () {
     test('formats a normal entry as a 12-hour AM/PM range', () {
       final e = _entry(startTime: '08:00', endTime: '14:30');
-      expect(PdfService.fmtTimeRange(e), '8:00 AM – 2:30 PM');
+      expect(PdfService.fmtTimeRange(e), '8:00 AM - 2:30 PM');
     });
 
     test('midnight (00:00) formats as 12:00 AM', () {
       final e = _entry(startTime: '00:00', endTime: '01:00');
-      expect(PdfService.fmtTimeRange(e), '12:00 AM – 1:00 AM');
+      expect(PdfService.fmtTimeRange(e), '12:00 AM - 1:00 AM');
     });
 
     test('noon (12:00) formats as 12:00 PM', () {
       final e = _entry(startTime: '11:00', endTime: '12:00');
-      expect(PdfService.fmtTimeRange(e), '11:00 AM – 12:00 PM');
+      expect(PdfService.fmtTimeRange(e), '11:00 AM - 12:00 PM');
     });
 
     test('13:05 formats as 1:05 PM', () {
       final e = _entry(startTime: '13:05', endTime: '13:30');
-      expect(PdfService.fmtTimeRange(e), '1:05 PM – 1:30 PM');
+      expect(PdfService.fmtTimeRange(e), '1:05 PM - 1:30 PM');
     });
 
-    test('both times 00:00 renders an em dash instead of a fake range', () {
+    test('both times 00:00 renders a hyphen instead of a fake range', () {
       final e = _entry(startTime: '00:00', endTime: '00:00');
-      expect(PdfService.fmtTimeRange(e), '—');
+      expect(PdfService.fmtTimeRange(e), '-');
     });
   });
 }

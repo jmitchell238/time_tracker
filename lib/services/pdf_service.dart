@@ -134,9 +134,9 @@ class PdfService {
         final rate = getRate(e);
         return [
           _fmtDateShort(e.date),
+          job?.name ?? '-',
+          e.description.isEmpty ? '-' : e.description,
           _fmtTimeRange(e),
-          job?.name ?? '—',
-          e.description.isEmpty ? '—' : e.description,
           e.hours.toStringAsFixed(2),
           '\$${rate.toStringAsFixed(2)}',
           '\$${(e.hours * rate).toStringAsFixed(2)}',
@@ -144,7 +144,7 @@ class PdfService {
       }).toList();
 
       widgets.add(pw.TableHelper.fromTextArray(
-        headers: ['Date', 'Time', 'Job', 'Description', 'Hours', 'Rate', 'Amount'],
+        headers: ['Date', 'Job', 'Description', 'Time', 'Hours', 'Rate', 'Amount'],
         data: rows,
         headerStyle: pw.TextStyle(font: bold, fontSize: 8, color: PdfColors.white),
         cellStyle: pw.TextStyle(font: regular, fontSize: 8, color: _kFg),
@@ -155,9 +155,9 @@ class PdfService {
         cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         columnWidths: {
           0: const pw.FixedColumnWidth(52),
-          1: const pw.FixedColumnWidth(82),
-          2: const pw.FlexColumnWidth(2),
-          3: const pw.FlexColumnWidth(3),
+          1: const pw.FlexColumnWidth(2),
+          2: const pw.FlexColumnWidth(3),
+          3: const pw.FixedColumnWidth(82),
           4: const pw.FixedColumnWidth(40),
           5: const pw.FixedColumnWidth(46),
           6: const pw.FixedColumnWidth(56),
@@ -282,7 +282,7 @@ class PdfService {
           if (inv.clientName != null) inv.clientName!,
           if (inv.clientCompany != null) inv.clientCompany!,
           if (inv.clientPhone != null) inv.clientPhone!,
-          if (inv.clientName == null && inv.clientCompany == null) '—',
+          if (inv.clientName == null && inv.clientCompany == null) '-',
         ], bold, regular)),
       ],
     );
@@ -330,9 +330,9 @@ class PdfService {
       final amount = e.hours * rate;
       return [
         _fmtDateShort(e.date),
+        job?.name ?? '-',
+        e.description.isEmpty ? '-' : e.description,
         _fmtTimeRange(e),
-        job?.name ?? '—',
-        e.description.isEmpty ? '—' : e.description,
         e.hours.toStringAsFixed(2),
         '\$${rate.toStringAsFixed(2)}',
         '\$${amount.toStringAsFixed(2)}',
@@ -340,7 +340,7 @@ class PdfService {
     }).toList();
 
     return pw.TableHelper.fromTextArray(
-      headers: ['Date', 'Time', 'Job', 'Description', 'Hours', 'Rate', 'Amount'],
+      headers: ['Date', 'Job', 'Description', 'Time', 'Hours', 'Rate', 'Amount'],
       data: rows,
       headerStyle: pw.TextStyle(font: bold, fontSize: 8, color: PdfColors.white),
       cellStyle: pw.TextStyle(font: regular, fontSize: 8, color: _kFg),
@@ -352,9 +352,9 @@ class PdfService {
           const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       columnWidths: {
         0: const pw.FixedColumnWidth(52),
-        1: const pw.FixedColumnWidth(82),
-        2: const pw.FlexColumnWidth(2),
-        3: const pw.FlexColumnWidth(3),
+        1: const pw.FlexColumnWidth(2),
+        2: const pw.FlexColumnWidth(3),
+        3: const pw.FixedColumnWidth(82),
         4: const pw.FixedColumnWidth(40),
         5: const pw.FixedColumnWidth(46),
         6: const pw.FixedColumnWidth(56),
@@ -388,7 +388,7 @@ class PdfService {
           pw.Text('REIMBURSABLE EXPENSES',
               style: pw.TextStyle(font: bold, fontSize: 9, color: _kFg2, letterSpacing: 0.6)),
           pw.SizedBox(height: 2),
-          pw.Text('Out-of-pocket purchases paid by us — reimbursement requested',
+          pw.Text('Out-of-pocket purchases paid by us - reimbursement requested',
               style: pw.TextStyle(font: regular, fontSize: 8, color: _kFg2)),
         ],
       ),
@@ -549,8 +549,8 @@ class PdfService {
   static String fmtTimeRange(TimeEntry e) => _fmtTimeRange(e);
 
   static String _fmtTimeRange(TimeEntry e) {
-    if (e.startTime == '00:00' && e.endTime == '00:00') return '—';
-    return '${_fmt12(e.startTime)} – ${_fmt12(e.endTime)}';
+    if (e.startTime == '00:00' && e.endTime == '00:00') return '-';
+    return '${_fmt12(e.startTime)} - ${_fmt12(e.endTime)}';
   }
 
   static String _fmt12(String hhmm) {
